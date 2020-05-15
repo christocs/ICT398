@@ -26,15 +26,6 @@ static auto get_camera() -> Afk::Camera & {
   return Afk::Engine::get().camera;
 }
 
-static auto new_vec3(float x, float y, float z) -> glm::vec3 {
-  return glm::vec3{x, y, z};
-}
-static auto new_vec2(float x, float y) -> glm::vec2 {
-  return glm::vec2{x, y};
-}
-static auto new_quat(float x, float y, float z, float w) -> glm::quat {
-  return glm::quat{x, y, z, w};
-}
 static auto get_delta_time() -> float {
   return Afk::Engine::get().get_delta_time();
 }
@@ -97,9 +88,10 @@ static auto toggle_menu() -> void {
 
 using namespace luabridge;
 auto Afk::add_engine_bindings(lua_State *lua) -> void {
+
   getGlobalNamespace(lua)
       .beginClass<glm::vec3>("vector3")
-      .addStaticFunction("new", &new_vec3)
+      .addConstructor<void (*)(float, float, float)>()
       .addData("x", &glm::vec3::x)
       .addData("y", &glm::vec3::y)
       .addData("z", &glm::vec3::z)
@@ -116,7 +108,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .endNamespace()
 
       .beginClass<glm::vec2>("vector2")
-      .addStaticFunction("new", &new_vec2)
+      .addConstructor<void (*)(float, float)>()
       .addData("x", &glm::vec2::x)
       .addData("y", &glm::vec2::y)
       .addFunction("normalized", &vec_normal<glm::vec2>)
@@ -127,7 +119,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .endClass()
 
       .beginClass<glm::quat>("quaternion")
-      .addStaticFunction("new", &new_quat)
+      .addConstructor<void (*)(float, float, float, float)>()
       .addProperty("x", &glm::quat::x)
       .addProperty("y", &glm::quat::y)
       .addProperty("z", &glm::quat::y)
