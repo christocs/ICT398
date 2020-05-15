@@ -180,7 +180,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .endNamespace()
 
       .beginClass<Afk::Asset::Asset>("asset")
-      .addFunction("unwrap", &gameobject_get_entity)
+      .addFunction("unwrap_entity", &gameobject_get_entity)
       .endClass()
 
       .beginNamespace("engine")
