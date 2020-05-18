@@ -4,19 +4,23 @@ end
 function shutdown()
     print("power off!")
 end
+function start_to_off()
+    print("moving from start to off")
+end
 function leave_start()
     print("left start")
 end
 
 local fsm = engine.fsm_builder()
     :state("init")
-    :on("begin")
-        :go("start")
-        :call(begin)
+        :on("begin")
+            :go("start")
+            :call(begin)
     :state("start")
-    :on_exit(leave_start)
-    :on("poweroff")
-        :go("off")
+        :on_exit(leave_start)
+        :on("poweroff")
+            :call(start_to_off)
+            :go("off")
     :state("off")
         :on_enter(shutdown) -- upon entering the 'off' state, shutdown is called
     :initial("init")
