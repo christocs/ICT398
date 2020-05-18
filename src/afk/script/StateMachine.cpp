@@ -45,11 +45,11 @@ auto StateMachine::fire(std::string command) -> void {
     if (exit_callback != this->on_exit.end()) {
       exit_callback->second();
     }
-    if (enter_callback != this->on_enter.end()) {
-      enter_callback->second();
-    }
     if (transition->second.callback) {
       transition->second.callback();
+    }
+    if (enter_callback != this->on_enter.end()) {
+      enter_callback->second();
     }
   } else {
     throw std::runtime_error{"No transition was defined for receiving " +
