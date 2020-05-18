@@ -18,5 +18,15 @@ local fsm = engine.fsm_builder()
     :initial("init")
     :build()
 
-fsm:fire("begin") -- moves from state 'init' to 'start' when 'begin' is received
-fsm:fire("poweroff") -- moves from state 'start' to 'off' when 'poweroff' is received
+
+function kp(evt)
+    local key_pressed = evt:to_key().key
+    if key_pressed == key.B then
+        fsm:fire("begin")
+    elseif key_pressed == key.P then
+        fsm:fire("poweroff")
+    end
+
+end
+
+this:register_event(event.key_down, kp)
