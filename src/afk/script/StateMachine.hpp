@@ -1,7 +1,7 @@
 #pragma once
 #include <functional>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 // nomove
 #include "afk/script/LuaInclude.hpp"
@@ -21,32 +21,30 @@ namespace Afk {
     typedef std::function<void(void)> StateChangeCallback;
 
     friend class StateMachineBuilder;
-    std::string current_state;
     struct TransitionBaseState {
       TransitionBaseState()     = default;
       std::string current_state = {};
       std::string command_name  = {};
-      auto operator<(const TransitionBaseState &rhs) const -> bool;
       auto operator==(const TransitionBaseState &rhs) const -> bool;
+    };
+    struct Hasher {
+      auto operator()(const TransitionBaseState &self) const -> std::size_t;
     };
     struct TransitionGoal {
       TransitionGoal()             = default;
       std::string end_state        = {};
       StateChangeCallback callback = {};
     };
-    std::map<TransitionBaseState, TransitionGoal> transition_map = {};
-    std::map<std::string, StateChangeCallback> on_enter          = {};
-    std::map<std::string, StateChangeCallback> on_exit           = {};
+
+    std::string current_state;
+    std::unordered_map<TransitionBaseState, TransitionGoal, Hasher> transition_map = {};
+    std::unordered_map<std::string, StateChangeCallback> on_enter = {};
+    std::unordered_map<std::string, StateChangeCallback> on_exit  = {};
   };
 
   /**
    * @brief State Machine builder for Lua.
    * Define states with fluent-style syntax.
-   * Example:
-   * fsm.in("begin").on("start").go("started").call(startup)
-   * fsm.in("start").on("sleep").go("sleeping").on("power_off").go("end")
-   * fsm.init("begin")
-   * fsm.call("start")
    *
    * Inspired by https://github.com/appccelerate/statemachine
    */

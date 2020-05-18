@@ -36,7 +36,7 @@ auto StateMachineBuilder::build() -> StateMachine {
 }
 
 auto StateMachine::fire(std::string command) -> void {
-  auto transition = this->transition_map.find( // asdf
+  auto transition = this->transition_map.find(
       StateMachine::TransitionBaseState{this->current_state, command});
   if (transition != this->transition_map.end()) {
     auto exit_callback  = this->on_exit.find(this->current_state);
@@ -57,9 +57,9 @@ auto StateMachine::fire(std::string command) -> void {
   }
 }
 
-auto StateMachine::TransitionBaseState::operator<(const TransitionBaseState &rhs) const
-    -> bool {
-  return (this->command_name < rhs.command_name) && (this->current_state < rhs.current_state);
+auto StateMachine::Hasher::operator()(const TransitionBaseState &self) const -> std::size_t {
+  return std::hash<std::string>{}(self.current_state) ^
+         std::hash<std::string>{}(self.command_name);
 }
 
 auto StateMachine::TransitionBaseState::operator==(const TransitionBaseState &rhs) const
