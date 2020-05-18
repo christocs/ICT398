@@ -4,6 +4,9 @@ end
 function shutdown()
     print("power off!")
 end
+function leave_start()
+    print("left start")
+end
 
 local fsm = engine.fsm_builder()
     :state("init")
@@ -11,6 +14,7 @@ local fsm = engine.fsm_builder()
         :go("start")
         :call(begin)
     :state("start")
+    :on_exit(leave_start)
     :on("poweroff")
         :go("off")
     :state("off")
