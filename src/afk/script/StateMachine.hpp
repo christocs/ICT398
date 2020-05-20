@@ -15,7 +15,7 @@ namespace Afk {
   class StateMachine {
   public:
     StateMachine() = default;
-    auto fire(std::string command) -> void;
+    auto fire(const std::string &command) -> void;
 
   private:
     typedef std::function<void(void)> StateChangeCallback;
@@ -51,14 +51,14 @@ namespace Afk {
   class StateMachineBuilder {
   public:
     StateMachineBuilder() = default;
-    auto in(std::string state) -> StateMachineBuilder &;
+    auto in(const std::string &state) -> StateMachineBuilder &;
     auto on_enter(luabridge::LuaRef callback) -> StateMachineBuilder &;
     auto on_exit(luabridge::LuaRef callback) -> StateMachineBuilder &;
-    auto on(std::string command) -> StateMachineBuilder &;
-    auto go(std::string state) -> StateMachineBuilder &;
+    auto on(const std::string &command) -> StateMachineBuilder &;
+    auto go(const std::string &state) -> StateMachineBuilder &;
     auto call(luabridge::LuaRef callback) -> StateMachineBuilder &;
 
-    auto initial_state(std::string state) -> StateMachineBuilder &;
+    auto initial_state(const std::string &state) -> StateMachineBuilder &;
 
     auto build() -> StateMachine;
 
