@@ -100,7 +100,7 @@ auto Ui::draw_about() -> void {
 }
 
 auto Ui::draw_menu_bar() -> void {
-  auto &afk = Engine::get();
+  // auto &afk = Engine::get();
 
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("Tools")) {

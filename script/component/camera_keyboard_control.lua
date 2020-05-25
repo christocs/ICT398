@@ -4,18 +4,18 @@ function update(evt)
     local dt = upd8.delta
     local vel = speed * dt
     local cur_cam = camera.current()
-    local cur_cam_pos = cur_cam:get_pos()
+    local cur_cam_pos = cur_cam.pos
     if keyboard.is_pressed(key.W) then
-        cur_cam:set_pos(cur_cam_pos:vec_add(cur_cam:front():scalar_mul(vel)))
+        cur_cam.pos = cur_cam_pos:add(cur_cam:front():smul(vel))
     end
     if keyboard.is_pressed(key.S) then
-        cur_cam:set_pos(cur_cam_pos:vec_sub(cur_cam:front():scalar_mul(vel)))
+        cur_cam.pos = cur_cam_pos:sub(cur_cam:front():smul(vel))
     end
     if keyboard.is_pressed(key.A) then
-        cur_cam:set_pos(cur_cam_pos:vec_sub(cur_cam:right():scalar_mul(vel)))
+        cur_cam.pos = cur_cam_pos:sub(cur_cam:right():smul(vel))
     end
     if keyboard.is_pressed(key.D) then
-        cur_cam:set_pos(cur_cam_pos:vec_add(cur_cam:right():scalar_mul(vel)))
+        cur_cam.pos = cur_cam_pos:add(cur_cam:right():smul(vel))
     end
 end
 

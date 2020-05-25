@@ -26,15 +26,6 @@ static auto get_camera() -> Afk::Camera & {
   return Afk::Engine::get().camera;
 }
 
-static auto new_vec3(float x, float y, float z) -> glm::vec3 {
-  return glm::vec3{x, y, z};
-}
-static auto new_vec2(float x, float y) -> glm::vec2 {
-  return glm::vec2{x, y};
-}
-static auto new_quat(float x, float y, float z, float w) -> glm::quat {
-  return glm::quat{x, y, z, w};
-}
 static auto get_delta_time() -> float {
   return Afk::Engine::get().get_delta_time();
 }
@@ -52,22 +43,28 @@ static auto get_parent(T *bc) -> ENTT_ID_TYPE {
   return static_cast<ENTT_ID_TYPE>(bc->owning_entity);
 }
 
-static auto v3_add(glm::vec3 *a, glm::vec3 b) -> glm::vec3 {
-  auto n = glm::vec3{*a};
-  n += b;
-  return n;
+template<typename VecType>
+static auto vec_add(VecType *a, VecType b) -> VecType {
+  return *a + b;
 }
-static auto v3_sub(glm::vec3 *a, glm::vec3 b) -> glm::vec3 {
-  auto n = glm::vec3{*a};
-  n -= b;
-  return n;
+template<typename VecType>
+static auto vec_sub(VecType *a, VecType b) -> VecType {
+  return *a - b;
 }
-static auto v3_mul(glm::vec3 *a, float f) -> glm::vec3 {
-  auto n = glm::vec3{*a};
-  n *= f;
-  return n;
+template<typename VecType>
+static auto vec_smul(VecType *a, float f) -> VecType {
+  return *a * f;
 }
-static auto v3_normal(glm::vec3 *a) -> glm::vec3 {
+template<typename VecType>
+static auto vec_dot(VecType *a, VecType rhs) -> float {
+  return glm::dot(*a, rhs);
+}
+template<typename VecType>
+static auto vec_cross(VecType *a, VecType rhs) -> VecType {
+  return glm::cross(*a, rhs);
+}
+template<typename VecType>
+static auto vec_normal(VecType *a) -> VecType {
   return glm::normalize(*a);
 }
 
@@ -91,16 +88,19 @@ static auto toggle_menu() -> void {
 
 using namespace luabridge;
 auto Afk::add_engine_bindings(lua_State *lua) -> void {
+
   getGlobalNamespace(lua)
       .beginClass<glm::vec3>("vector3")
-      .addStaticFunction("new", &new_vec3)
+      .addConstructor<void (*)(float, float, float)>()
       .addData("x", &glm::vec3::x)
       .addData("y", &glm::vec3::y)
       .addData("z", &glm::vec3::z)
-      .addFunction("normalized", &v3_normal)
-      .addFunction("vec_add", &v3_add)
-      .addFunction("vec_sub", &v3_sub)
-      .addFunction("scalar_mul", &v3_mul)
+      .addFunction("normalized", &vec_normal<glm::vec3>)
+      .addFunction("add", &vec_add<glm::vec3>)
+      .addFunction("sub", &vec_sub<glm::vec3>)
+      .addFunction("smul", &vec_smul<glm::vec3>)
+      .addFunction("dot", &vec_dot<glm::vec3>)
+      .addFunction("cross", &vec_cross<glm::vec3>)
       .endClass()
 
       .beginNamespace("math")
@@ -108,13 +108,18 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .endNamespace()
 
       .beginClass<glm::vec2>("vector2")
-      .addStaticFunction("new", &new_vec2)
+      .addConstructor<void (*)(float, float)>()
       .addData("x", &glm::vec2::x)
       .addData("y", &glm::vec2::y)
+      .addFunction("normalized", &vec_normal<glm::vec2>)
+      .addFunction("add", &vec_add<glm::vec2>)
+      .addFunction("sub", &vec_sub<glm::vec2>)
+      .addFunction("smul", &vec_smul<glm::vec2>)
+      .addFunction("dot", &vec_dot<glm::vec2>)
       .endClass()
 
       .beginClass<glm::quat>("quaternion")
-      .addStaticFunction("new", &new_quat)
+      .addConstructor<void (*)(float, float, float, float)>()
       .addProperty("x", &glm::quat::x)
       .addProperty("y", &glm::quat::y)
       .addProperty("z", &glm::quat::y)
@@ -127,10 +132,8 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
 
       .beginClass<Afk::Camera>("camera")
       .addStaticFunction("current", &get_camera)
-      .addFunction("get_pos", &Afk::Camera::get_position)
-      .addFunction("set_pos", &Afk::Camera::set_position)
-      .addFunction("get_angle", &Afk::Camera::get_angles)
-      .addFunction("set_angle", &Afk::Camera::set_angles)
+      .addProperty("pos", &Afk::Camera::get_position, &Afk::Camera::set_position)
+      .addProperty("angle", &Afk::Camera::get_angles, &Afk::Camera::set_angles)
       .addFunction("front", &Afk::Camera::get_front)
       .addFunction("right", &Afk::Camera::get_right)
       .addFunction("up", &Afk::Camera::get_up)
@@ -177,7 +180,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .endNamespace()
 
       .beginClass<Afk::Asset::Asset>("asset")
-      .addFunction("unwrap", &gameobject_get_entity)
+      .addFunction("unwrap_entity", &gameobject_get_entity)
       .endClass()
 
       .beginNamespace("engine")
