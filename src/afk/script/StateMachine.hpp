@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <queue>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -16,9 +17,13 @@ namespace Afk {
   public:
     StateMachine() = default;
     auto fire(const std::string &command) -> void;
+    auto queue(const std::string &command) -> void;
+    auto pump() -> void;
 
   private:
     typedef std::function<void(void)> StateChangeCallback;
+
+    std::queue<std::string> queued_commands = {};
 
     friend class StateMachineBuilder;
     struct TransitionBaseState {

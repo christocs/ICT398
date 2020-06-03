@@ -34,7 +34,15 @@ auto StateMachineBuilder::initial_state(const std::string &state) -> StateMachin
 auto StateMachineBuilder::build() -> StateMachine {
   return this->machine;
 }
-
+auto StateMachine::pump() -> void {
+  while (!this->queued_commands.empty()) {
+    this->fire(this->queued_commands.front());
+    this->queued_commands.pop();
+  }
+}
+auto StateMachine::queue(const std::string &command) -> void {
+  this->queued_commands.push(command);
+}
 auto StateMachine::fire(const std::string &command) -> void {
   auto transition = this->transition_map.find(
       StateMachine::TransitionBaseState{this->current_state, command});
