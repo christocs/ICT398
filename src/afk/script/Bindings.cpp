@@ -164,6 +164,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("parent", &get_parent<Afk::ScriptsComponent>)
       .addFunction("add", &Afk::ScriptsComponent::add_script)
       .addFunction("remove", &Afk::ScriptsComponent::remove_script)
+      .addFunction("get_data", &Afk::ScriptsComponent::get_script_table)
       .endClass()
 
       .beginClass<Afk::ModelSource>("model_component")
@@ -251,5 +252,6 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
   auto script_class = luabridge::getGlobalNamespace(lua)
                           .beginClass<LuaScript>("__AFK__SCRIPT")
                           .addFunction("register_event", &Afk::LuaScript::register_fn)
+                          .addData("data", &Afk::LuaScript::my_table, true)
                           .endClass();
 }

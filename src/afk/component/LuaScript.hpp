@@ -24,7 +24,7 @@ namespace Afk {
 
   class LuaScript {
   public:
-    LuaScript(EventManager *events);
+    LuaScript(EventManager *events, lua_State *lua);
     // required for luabridge to work
     LuaScript(const LuaScript &other);
     LuaScript(LuaScript &&other);
@@ -32,12 +32,21 @@ namespace Afk {
     auto operator=(const LuaScript &other) -> LuaScript &;
     auto operator=(LuaScript &&other) -> LuaScript &;
     ~LuaScript();
-    auto load(const std::filesystem::path &filename, lua_State *lua) -> void;
+    auto load(const std::filesystem::path &filename) -> void;
     auto unload() -> void;
     /**
      * Allows script to register its functions into the event system
      */
     auto register_fn(int event_val, LuaRef func) -> void;
+
+    /**
+     * The lua state
+     */
+    lua_State *lua;
+    /**
+     * self data storage
+     */
+    LuaRef my_table;
 
   private:
     EventManager *event_manager;

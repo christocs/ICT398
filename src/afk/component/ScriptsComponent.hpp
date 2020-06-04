@@ -21,6 +21,7 @@ namespace Afk {
     auto add_script(const path &script_path, lua_State *l, EventManager *evt)
         -> ScriptsComponent &;
     auto remove_script(const path &script_path) -> void;
+    auto get_script_table(const path &script_path, lua_State *lua) -> LuaRef;
 
   private:
     std::map<path, std::shared_ptr<Afk::LuaScript>> loaded_files;

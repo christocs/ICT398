@@ -16,13 +16,14 @@ auto LuaScript::register_fn(int event_val, LuaRef func) -> void {
   event_manager->register_event(event_type, evt.callback);
 }
 
-auto LuaScript::load(const std::filesystem::path &filename, lua_State *lua) -> void {
+auto LuaScript::load(const std::filesystem::path &filename) -> void {
   this->unload();
-  luabridge::setGlobal(lua, this, "this");
-  auto lua_ret = luaL_dofile(lua, filename.string().c_str());
+  luabridge::setGlobal(this->lua, this, "this");
+  this->my_table = luabridge::newTable(lua);
+  auto lua_ret   = luaL_dofile(this->lua, filename.string().c_str());
   if (lua_ret != 0) {
     throw std::runtime_error{"Error loading "s + filename.string() + ": "s +
-                             lua_tostring(lua, -1)};
+                             lua_tostring(this->lua, -1)};
   }
 }
 
@@ -34,8 +35,8 @@ auto LuaScript::unload() -> void {
   }
 }
 
-LuaScript::LuaScript(Afk::EventManager *events)
-  : event_manager(events),
+LuaScript::LuaScript(Afk::EventManager *events, lua_State *lua_state)
+  : lua(lua_state), my_table(lua_state), event_manager(events),
     registered_events(std::make_shared<std::vector<Afk::RegisteredLuaCall>>()) {
   afk_assert(event_manager != nullptr, "Event manager must not be null.");
 }
@@ -44,21 +45,27 @@ LuaScript::~LuaScript() {
 }
 
 auto LuaScript::operator=(LuaScript &&other) -> LuaScript & {
+  this->lua               = other.lua;
+  this->my_table          = other.my_table;
   this->event_manager     = other.event_manager;
   this->registered_events = std::move(other.registered_events);
   return *this;
 }
-LuaScript::LuaScript(LuaScript &&other) {
+LuaScript::LuaScript(LuaScript &&other) : my_table(other.my_table) {
+  this->lua               = other.lua;
   this->event_manager     = other.event_manager;
   this->registered_events = std::move(other.registered_events);
 }
 
 auto LuaScript::operator=(const LuaScript &other) -> LuaScript & {
+  this->lua               = other.lua;
+  this->my_table          = other.my_table;
   this->event_manager     = other.event_manager;
   this->registered_events = other.registered_events;
   return *this;
 }
-LuaScript::LuaScript(const LuaScript &other) {
+LuaScript::LuaScript(const LuaScript &other) : my_table(other.my_table) {
+  this->lua               = other.lua;
   this->event_manager     = other.event_manager;
   this->registered_events = other.registered_events;
 }
