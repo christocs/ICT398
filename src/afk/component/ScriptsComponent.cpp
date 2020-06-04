@@ -8,15 +8,15 @@
 
 using Afk::ScriptsComponent;
 
-ScriptsComponent::ScriptsComponent(GameObject e)
-  : loaded_files(), last_write() {
+ScriptsComponent::ScriptsComponent(GameObject e, lua_State *lua_state)
+  : lua(lua_state), loaded_files(), last_write() {
   this->owning_entity = e;
 }
 
-auto ScriptsComponent::add_script(const path &script_path, lua_State *lua,
-                                  EventManager *evt_mgr) -> ScriptsComponent & {
+auto ScriptsComponent::add_script(const path &script_path, EventManager *evt_mgr)
+    -> ScriptsComponent & {
   const auto abs_path = Afk::get_absolute_path(script_path);
-  auto lua_script     = std::shared_ptr<LuaScript>(new LuaScript{evt_mgr, lua});
+  auto lua_script = std::shared_ptr<LuaScript>(new LuaScript{evt_mgr, this->lua});
   lua_script->load(abs_path);
   this->loaded_files.emplace(abs_path, lua_script);
   this->last_write.emplace(abs_path, std::filesystem::last_write_time(abs_path));
@@ -27,15 +27,15 @@ auto ScriptsComponent::remove_script(const path &script_path) -> void {
   this->loaded_files.erase(abs_path);
 }
 
-auto ScriptsComponent::get_script_table(const path &script_path, lua_State *lua) -> LuaRef {
+auto ScriptsComponent::get_script_table(const path &script_path) -> LuaRef {
   auto f = this->loaded_files.find(script_path);
   if (f != this->loaded_files.end()) {
     return f->second->my_table;
   }
-  return LuaRef(lua);
+  return LuaRef(this->lua);
 }
 
-auto ScriptsComponent::check_live_reload(lua_State *lua) -> void {
+auto ScriptsComponent::check_live_reload() -> void {
   for (auto &script : this->loaded_files) {
     const auto &script_path = script.first;
     auto recent_write       = std::filesystem::last_write_time(script_path);
