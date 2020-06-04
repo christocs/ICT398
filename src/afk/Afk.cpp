@@ -67,10 +67,10 @@ auto Engine::initialize() -> void {
   Afk::Asset::game_asset_factory("asset/basketball.lua");
 
   auto cam = registry.create();
-  registry.assign<Afk::ScriptsComponent>(cam, cam)
-      .add_script("script/component/camera_keyboard_control.lua", this->lua, &this->event_manager)
-      .add_script("script/component/camera_mouse_control.lua", this->lua, &this->event_manager)
-      .add_script("script/component/debug.lua", this->lua, &this->event_manager);
+  registry.assign<Afk::ScriptsComponent>(cam, cam, this->lua)
+      .add_script("script/component/camera_keyboard_control.lua", &this->event_manager)
+      .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
+      .add_script("script/component/debug.lua", &this->event_manager);
 
   this->is_initialized = true;
 }
