@@ -108,6 +108,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     frozen::frozen
     ctti
     fastnoise-simd
+    ozz_animation
 )
 
 # Symlink resources to the binary location.

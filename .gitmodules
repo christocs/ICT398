@@ -42,3 +42,6 @@
 [submodule "lib/fastnoise-simd/fastnoise-simd"]
 	path = lib/fastnoise-simd/fastnoise-simd
 	url = https://github.com/opeik/FastNoiseSIMD
+[submodule "lib/ozz"]
+	path = lib/ozz_animation
+	url = https://github.com/guillaumeblanc/ozz-animation.git
