@@ -19,11 +19,4 @@ function update(evt)
     end
 end
 
-function render()
-    imgui.begin("hello")
-    imgui.text("thing")
-    imgui.end_()
-end
-
 this:register_event(event.update, update)
-this:register_event(event.render, render)
