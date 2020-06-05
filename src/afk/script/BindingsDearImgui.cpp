@@ -15,6 +15,9 @@ using luabridge::LuaRef;
 
 namespace ImBind {
   namespace Wrap {
+    /**
+     * mmmm templates
+     */
     template<void (*Wrapped)(const char *fmt, ...)>
     static auto Fmt(const std::string &fmt) -> void {
       Wrapped("%s", fmt.c_str());
