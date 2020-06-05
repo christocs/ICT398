@@ -9,7 +9,7 @@
 using Afk::ScriptsComponent;
 
 ScriptsComponent::ScriptsComponent(GameObject e, lua_State *lua_state)
-  : lua(lua_state), loaded_files(), last_write() {
+  : loaded_files(), last_write(), lua(lua_state) {
   this->owning_entity = e;
 }
 
