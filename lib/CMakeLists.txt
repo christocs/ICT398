@@ -15,6 +15,14 @@ option(GLFW_BUILD_EXAMPLES OFF)
 option(GLFW_BUILD_TESTS OFF)
 option(GLFW_BUILD_DOCS OFF)
 option(GLFW_USE_HYBRID_HPG ON)
+# ozz-animation
+option(ozz_build_tools "Build tools" OFF)
+option(ozz_build_fbx "Build Fbx pipeline (Requires Fbx SDK)" ON)
+option(ozz_build_gltf "Build glTF importer (Requires c++11)" ON)
+option(ozz_build_samples "Build samples" OFF)
+option(ozz_build_howtos "Build howtos" OFF)
+option(ozz_build_tests "Build unit tests" OFF)
+option(ozz_build_postfix "Use per config postfix name" OFF)
 
 # Fixes an entt warning on UNIX systems.
 if (UNIX)
@@ -49,6 +57,7 @@ add_subdirectory(imgui)
 add_subdirectory(fastnoise-simd)
 add_subdirectory(frozen)
 add_subdirectory(ctti)
+add_subdirectory(ozz_animation)
 
 # DLLs were a mistake.
 set_target_properties(reactphysics3d PROPERTIES ENABLE_EXPORTS ON)
@@ -62,6 +71,7 @@ set_target_properties(lua PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(glfw PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(glad PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(imgui PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(ozz_animation PROPERTIES DEBUG_POSTFIX "")
 
 # Ignore header warnings in our libraries.
 target_ignore_header_warnings(EnTT INTERFACE)
@@ -77,3 +87,5 @@ target_ignore_header_warnings(glad INTERFACE)
 target_ignore_header_warnings(imgui INTERFACE)
 target_ignore_header_warnings(frozen INTERFACE)
 target_ignore_header_warnings(ctti INTERFACE)
+target_ignore_header_warnings(ctti INTERFACE)
+target_ignore_header_warnings(ozz_animation INTERFACE)
