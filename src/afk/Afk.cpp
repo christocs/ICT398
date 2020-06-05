@@ -91,6 +91,7 @@ auto Engine::render() -> void {
   this->renderer.clear_screen({135.0f, 206.0f, 235.0f, 1.0f});
   this->ui.prepare();
   this->renderer.draw();
+  this->event_manager.pump_render();
   this->ui.draw();
   this->renderer.swap_buffers();
 }

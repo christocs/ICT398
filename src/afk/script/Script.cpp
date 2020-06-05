@@ -17,6 +17,7 @@ const auto Script::events = vector<Script::Event>{
     {"mouse_scroll", static_cast<int>(::Afk::Event::Type::MouseScroll)},
     {"text_enter", static_cast<int>(::Afk::Event::Type::TextEnter)},
     {"update", static_cast<int>(::Afk::Event::Type::Update)},
+    {"render", static_cast<int>(::Afk::Event::Type::Render)},
 };
 
 const auto Script::mouse_buttons = vector<Script::Mouse>{
