@@ -16,6 +16,7 @@ extern "C" {
 #include "afk/physics/PhysicsBody.hpp"
 #include "afk/physics/Transform.hpp"
 #include "afk/renderer/Camera.hpp"
+#include "afk/script/BindingsDearImgui.hpp"
 #include "afk/script/Script.hpp"
 #include "afk/script/StateMachine.hpp"
 #include "afk/ui/Ui.hpp"
@@ -204,6 +205,8 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .endClass()
       .endNamespace();
 
+  Afk::add_imgui_bindings(lua);
+
   auto key_ns = luabridge::getGlobalNamespace(lua).beginNamespace("key");
   for (const auto &key : Afk::Script::keys) {
     // key.code can't be changed from lua's side
@@ -247,6 +250,8 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .beginClass<Afk::Event::Update>("update")
       .addData("delta", &Afk::Event::Update::dt, false)
       .endClass()
+      .beginClass<Afk::Event::Render>("render")
+      .endClass()
       .endNamespace();
 
   auto afk_event_class =
@@ -261,6 +266,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
   afk_event_class.addFunction("to_mouse_scroll", &Afk::Event::get<Afk::Event::MouseScroll>);
   afk_event_class.addFunction("to_text", &Afk::Event::get<Afk::Event::Text>);
   afk_event_class.addFunction("to_update", &Afk::Event::get<Afk::Event::Update>);
+  afk_event_class.addFunction("to_render", &Afk::Event::get<Afk::Event::Render>);
   afk_event_class.endClass();
 
   auto script_class = luabridge::getGlobalNamespace(lua)
