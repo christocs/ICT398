@@ -1,5 +1,7 @@
 #include "afk/script/StateMachine.hpp"
 
+#include "afk/io/Log.hpp"
+
 using Afk::StateMachine;
 using Afk::StateMachineBuilder;
 
@@ -60,8 +62,8 @@ auto StateMachine::fire(const std::string &command) -> void {
       enter_callback->second();
     }
   } else {
-    throw std::runtime_error{"No transition was defined for receiving " +
-                             command + " for state " + this->current_state};
+    Afk::Io::log << "No transition was defined for receiving " << command
+                 << " for state " << this->current_state << '\n';
   }
 }
 
