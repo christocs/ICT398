@@ -58,6 +58,7 @@ add_subdirectory(fastnoise-simd)
 add_subdirectory(frozen)
 add_subdirectory(ctti)
 add_subdirectory(ozz_animation)
+add_subdirectory(recastnavigation)
 
 # DLLs were a mistake.
 set_target_properties(reactphysics3d PROPERTIES ENABLE_EXPORTS ON)
