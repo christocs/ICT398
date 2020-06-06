@@ -1,8 +1,10 @@
 #include "LuaScript.hpp"
 
+#include "afk/component/ScriptsComponent.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/event/EventManager.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/script/Bindings.hpp"
 #include "afk/script/Script.hpp"
 
 using namespace std::string_literals;
@@ -18,13 +20,30 @@ auto LuaScript::register_fn(int event_val, LuaRef func) -> void {
 
 auto LuaScript::load(const std::filesystem::path &filename) -> void {
   this->unload();
-  luabridge::setGlobal(this->lua, this, "this");
-  this->my_table = luabridge::newTable(lua);
-  auto lua_ret   = luaL_dofile(this->lua, filename.string().c_str());
+  // this isn't working
+  luaL_loadfile(this->lua, filename.string().c_str()); // stack: FILE
+
+  lua_newtable(this->lua); // new _ENV for file // stack: FILE ENV
+
+  lua_pushstring(this->lua, "this"); // stack: FILE ENV STRING
+  luabridge::push(this->lua, this);  // stack: FILE ENV STRING THIS
+  lua_settable(this->lua, -3);       // stack: FILE ENV
+
+  lua_pushstring(this->lua, "_G"); // stack: FILE ENV STRING
+  lua_pushglobaltable(this->lua);  // stack: FILE ENV STRING GLOBALS
+  lua_settable(this->lua, -3);     // stack: FILE ENV
+
+  lua_setupvalue(this->lua, -1, 1); // stack: FILE
+  auto lua_ret = lua_pcall(this->lua, 0, 0, 0);
+  // end this isn't working
   if (lua_ret != 0) {
     throw std::runtime_error{"Error loading "s + filename.string() + ": "s +
                              lua_tostring(this->lua, -1)};
   }
+}
+
+auto LuaScript::get_owning_entity() -> GameObject {
+  return this->my_owner->owning_entity;
 }
 
 auto LuaScript::unload() -> void {
@@ -35,9 +54,10 @@ auto LuaScript::unload() -> void {
   }
 }
 
-LuaScript::LuaScript(Afk::EventManager *events, lua_State *lua_state)
+LuaScript::LuaScript(Afk::EventManager *events, lua_State *lua_state, ScriptsComponent *owner)
   : lua(lua_state), my_table(lua_state), event_manager(events),
-    registered_events(std::make_shared<std::vector<Afk::RegisteredLuaCall>>()) {
+    registered_events(std::make_shared<std::vector<Afk::RegisteredLuaCall>>()),
+    my_owner(owner) {
   afk_assert(event_manager != nullptr, "Event manager must not be null.");
 }
 LuaScript::~LuaScript() {
@@ -46,6 +66,7 @@ LuaScript::~LuaScript() {
 
 auto LuaScript::operator=(LuaScript &&other) -> LuaScript & {
   this->lua               = other.lua;
+  this->my_owner          = other.my_owner;
   this->my_table          = other.my_table;
   this->event_manager     = other.event_manager;
   this->registered_events = std::move(other.registered_events);
@@ -53,12 +74,14 @@ auto LuaScript::operator=(LuaScript &&other) -> LuaScript & {
 }
 LuaScript::LuaScript(LuaScript &&other) : my_table(other.my_table) {
   this->lua               = other.lua;
+  this->my_owner          = other.my_owner;
   this->event_manager     = other.event_manager;
   this->registered_events = std::move(other.registered_events);
 }
 
 auto LuaScript::operator=(const LuaScript &other) -> LuaScript & {
   this->lua               = other.lua;
+  this->my_owner          = other.my_owner;
   this->my_table          = other.my_table;
   this->event_manager     = other.event_manager;
   this->registered_events = other.registered_events;
@@ -66,6 +89,7 @@ auto LuaScript::operator=(const LuaScript &other) -> LuaScript & {
 }
 LuaScript::LuaScript(const LuaScript &other) : my_table(other.my_table) {
   this->lua               = other.lua;
+  this->my_owner          = other.my_owner;
   this->event_manager     = other.event_manager;
   this->registered_events = other.registered_events;
 }

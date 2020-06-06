@@ -252,6 +252,6 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
   auto script_class = luabridge::getGlobalNamespace(lua)
                           .beginClass<LuaScript>("__AFK__SCRIPT")
                           .addFunction("register_event", &Afk::LuaScript::register_fn)
-                          .addData("data", &Afk::LuaScript::my_table, true)
+                          .addFunction("entity", &Afk::LuaScript::get_owning_entity)
                           .endClass();
 }

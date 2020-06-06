@@ -15,6 +15,7 @@ extern "C" {
 using luabridge::LuaRef;
 
 namespace Afk {
+  class ScriptsComponent;
   // Script needs to remember what calls it has registered to the event manager
   // so it can get rid of them later
   struct RegisteredLuaCall {
@@ -24,7 +25,7 @@ namespace Afk {
 
   class LuaScript {
   public:
-    LuaScript(EventManager *events, lua_State *lua);
+    LuaScript(EventManager *events, lua_State *lua, ScriptsComponent *owner);
     // required for luabridge to work
     LuaScript(const LuaScript &other);
     LuaScript(LuaScript &&other);
@@ -48,8 +49,14 @@ namespace Afk {
      */
     LuaRef my_table;
 
+    auto get_owning_entity() -> GameObject;
+
   private:
     EventManager *event_manager;
     std::shared_ptr<std::vector<RegisteredLuaCall>> registered_events;
+    /**
+     * owning data
+     */
+    ScriptsComponent *my_owner;
   };
 }

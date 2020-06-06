@@ -16,7 +16,7 @@ ScriptsComponent::ScriptsComponent(GameObject e, lua_State *lua_state)
 auto ScriptsComponent::add_script(const path &script_path, EventManager *evt_mgr)
     -> ScriptsComponent & {
   const auto abs_path = Afk::get_absolute_path(script_path);
-  auto lua_script = std::shared_ptr<LuaScript>(new LuaScript{evt_mgr, this->lua});
+  auto lua_script = std::shared_ptr<LuaScript>(new LuaScript{evt_mgr, this->lua, this});
   lua_script->load(abs_path);
   this->loaded_files.emplace(abs_path, lua_script);
   this->last_write.emplace(abs_path, std::filesystem::last_write_time(abs_path));
