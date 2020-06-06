@@ -33,7 +33,7 @@ auto LuaScript::load(const std::filesystem::path &filename) -> void {
   lua_pushglobaltable(this->lua);  // stack: FILE ENV STRING GLOBALS
   lua_settable(this->lua, -3);     // stack: FILE ENV
 
-  lua_setupvalue(this->lua, -1, 1); // stack: FILE
+  lua_setupvalue(this->lua, -2, 1); // stack: FILE
   auto lua_ret = lua_pcall(this->lua, 0, 0, 0);
   // end this isn't working
   if (lua_ret != 0) {
