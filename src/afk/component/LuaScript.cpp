@@ -20,10 +20,16 @@ auto LuaScript::register_fn(int event_val, LuaRef func) -> void {
 
 auto LuaScript::load(const std::filesystem::path &filename) -> void {
   this->unload();
-  // this isn't working
   luaL_loadfile(this->lua, filename.string().c_str()); // stack: FILE
 
-  lua_newtable(this->lua); // new _ENV for file // stack: FILE ENV
+  auto f = this->my_owner->global_tables.find(filename);
+  if (f != this->my_owner->global_tables.end()) {
+    f->second.push();
+  } else {
+    auto new_tbl = LuaRef::newTable(this->lua);
+    this->my_owner->global_tables.emplace(filename, new_tbl);
+    new_tbl.push();
+  } // stack: FILE ENV
 
   luabridge::push(this->lua, this);    // stack: FILE ENV THIS
   lua_setfield(this->lua, -2, "this"); // stack: FILE ENV
@@ -36,15 +42,11 @@ auto LuaScript::load(const std::filesystem::path &filename) -> void {
   lua_setupvalue(this->lua, -2, 1); // stack: FILE
 
   auto lua_ret = lua_pcall(this->lua, 0, 0, 0);
-  // end this isn't working
+
   if (lua_ret != 0) {
     throw std::runtime_error{"Error loading "s + filename.string() + ": "s +
                              lua_tostring(this->lua, -1)};
   }
-}
-
-auto LuaScript::get_owning_entity() -> GameObject {
-  return this->my_owner->owning_entity;
 }
 
 auto LuaScript::unload() -> void {
@@ -56,9 +58,8 @@ auto LuaScript::unload() -> void {
 }
 
 LuaScript::LuaScript(Afk::EventManager *events, lua_State *lua_state, ScriptsComponent *owner)
-  : lua(lua_state), my_table(lua_state), event_manager(events),
-    registered_events(std::make_shared<std::vector<Afk::RegisteredLuaCall>>()),
-    my_owner(owner) {
+  : lua(lua_state), my_owner(owner), event_manager(events),
+    registered_events(std::make_shared<std::vector<Afk::RegisteredLuaCall>>()) {
   afk_assert(event_manager != nullptr, "Event manager must not be null.");
 }
 LuaScript::~LuaScript() {
@@ -68,12 +69,11 @@ LuaScript::~LuaScript() {
 auto LuaScript::operator=(LuaScript &&other) -> LuaScript & {
   this->lua               = other.lua;
   this->my_owner          = other.my_owner;
-  this->my_table          = other.my_table;
   this->event_manager     = other.event_manager;
   this->registered_events = std::move(other.registered_events);
   return *this;
 }
-LuaScript::LuaScript(LuaScript &&other) : my_table(other.my_table) {
+LuaScript::LuaScript(LuaScript &&other) {
   this->lua               = other.lua;
   this->my_owner          = other.my_owner;
   this->event_manager     = other.event_manager;
@@ -83,12 +83,11 @@ LuaScript::LuaScript(LuaScript &&other) : my_table(other.my_table) {
 auto LuaScript::operator=(const LuaScript &other) -> LuaScript & {
   this->lua               = other.lua;
   this->my_owner          = other.my_owner;
-  this->my_table          = other.my_table;
   this->event_manager     = other.event_manager;
   this->registered_events = other.registered_events;
   return *this;
 }
-LuaScript::LuaScript(const LuaScript &other) : my_table(other.my_table) {
+LuaScript::LuaScript(const LuaScript &other) {
   this->lua               = other.lua;
   this->my_owner          = other.my_owner;
   this->event_manager     = other.event_manager;

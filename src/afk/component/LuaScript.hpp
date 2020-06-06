@@ -45,18 +45,12 @@ namespace Afk {
      */
     lua_State *lua;
     /**
-     * self data storage
+     * owning data
      */
-    LuaRef my_table;
-
-    auto get_owning_entity() -> GameObject;
+    ScriptsComponent *my_owner;
 
   private:
     EventManager *event_manager;
     std::shared_ptr<std::vector<RegisteredLuaCall>> registered_events;
-    /**
-     * owning data
-     */
-    ScriptsComponent *my_owner;
   };
 }

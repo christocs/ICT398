@@ -27,12 +27,15 @@ auto ScriptsComponent::remove_script(const path &script_path) -> void {
   this->loaded_files.erase(abs_path);
 }
 
-auto ScriptsComponent::get_script_table(const path &script_path) -> LuaRef {
-  auto f = this->loaded_files.find(script_path);
-  if (f != this->loaded_files.end()) {
-    return f->second->my_table;
+auto ScriptsComponent::get_script_table(const std::string &script_path) -> LuaRef {
+  const auto full_path = Afk::get_absolute_path(script_path);
+  auto f               = this->global_tables.find(full_path);
+  if (f != this->global_tables.end()) {
+    return f->second;
   }
-  return LuaRef(this->lua);
+  auto new_tbl = LuaRef::newTable(this->lua);
+  this->global_tables.emplace(full_path, new_tbl);
+  return new_tbl;
 }
 
 auto ScriptsComponent::check_live_reload() -> void {

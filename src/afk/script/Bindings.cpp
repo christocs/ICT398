@@ -38,6 +38,13 @@ struct GameObjectWrapped {
   }
 };
 
+static auto get_owning_entity(Afk::LuaScript *self) -> GameObjectWrapped {
+  return GameObjectWrapped{self->my_owner->owning_entity};
+}
+static auto script_data(GameObjectWrapped *entity, const std::string &path) -> LuaRef {
+  return entity->get_component<Afk::ScriptsComponent>()->get_script_table(path);
+}
+
 template<typename T>
 static auto get_parent(T *bc) -> ENTT_ID_TYPE {
   return static_cast<ENTT_ID_TYPE>(bc->owning_entity);
@@ -144,6 +151,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("get_physics", &GameObjectWrapped::get_component<PhysicsBody>)
       .addFunction("get_model", &GameObjectWrapped::get_component<ModelSource>)
       .addFunction("get_script", &GameObjectWrapped::get_component<ScriptsComponent>)
+      .addFunction("script_data", &script_data)
       .endClass()
 
       .beginClass<Afk::PhysicsBody>("physics_component")
@@ -252,6 +260,6 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
   auto script_class = luabridge::getGlobalNamespace(lua)
                           .beginClass<LuaScript>("__AFK__SCRIPT")
                           .addFunction("register_event", &Afk::LuaScript::register_fn)
-                          .addFunction("entity", &Afk::LuaScript::get_owning_entity)
+                          .addFunction("entity", &get_owning_entity)
                           .endClass();
 }
