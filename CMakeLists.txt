@@ -109,6 +109,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ctti
     fastnoise-simd
     ozz_animation
+    Recast
+    Detour
 )
 
 # Symlink resources to the binary location.
