@@ -1,6 +1,6 @@
 local last_x = 0
 local last_y = 0
-function mouse_move(evt)
+local function mouse_move(evt)
     local mouse_evt = evt:to_mouse_move()
     local MAX_YAW = 89.0
     local sensitivity = 0.1
