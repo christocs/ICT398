@@ -82,6 +82,7 @@ auto Engine::get() -> Engine & {
 }
 
 auto Engine::exit() -> void {
+  lua_close(this->lua);
   this->is_running = false;
 }
 
