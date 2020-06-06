@@ -25,15 +25,16 @@ auto LuaScript::load(const std::filesystem::path &filename) -> void {
 
   lua_newtable(this->lua); // new _ENV for file // stack: FILE ENV
 
-  lua_pushstring(this->lua, "this"); // stack: FILE ENV STRING
-  luabridge::push(this->lua, this);  // stack: FILE ENV STRING THIS
-  lua_settable(this->lua, -3);       // stack: FILE ENV
+  luabridge::push(this->lua, this);    // stack: FILE ENV THIS
+  lua_setfield(this->lua, -2, "this"); // stack: FILE ENV
 
-  lua_pushstring(this->lua, "_G"); // stack: FILE ENV STRING
-  lua_pushglobaltable(this->lua);  // stack: FILE ENV STRING GLOBALS
-  lua_settable(this->lua, -3);     // stack: FILE ENV
+  lua_newtable(this->lua);                // stack: FILE ENV METATABLE
+  lua_getglobal(this->lua, "_G");         // stack: FILE ENV METATABLE GLOBAL
+  lua_setfield(this->lua, -2, "__index"); // stack: FILE ENV METATABLE
+  lua_setmetatable(this->lua, -2);
 
   lua_setupvalue(this->lua, -2, 1); // stack: FILE
+
   auto lua_ret = lua_pcall(this->lua, 0, 0, 0);
   // end this isn't working
   if (lua_ret != 0) {
