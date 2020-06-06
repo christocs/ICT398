@@ -17,6 +17,7 @@ extern "C" {
 #include "afk/physics/Transform.hpp"
 #include "afk/renderer/Camera.hpp"
 #include "afk/script/Script.hpp"
+#include "afk/script/StateMachine.hpp"
 #include "afk/ui/Ui.hpp"
 
 // todo move to keyboard mgmt
@@ -196,6 +197,20 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("delta_time", &get_delta_time)
       .addFunction("load_asset", &Afk::Asset::game_asset_factory)
       .addFunction("toggle_wireframe", &toggle_wireframe)
+      .beginClass<Afk::StateMachineBuilder>("fsm_builder")
+      .addConstructor<void (*)(void)>()
+      .addFunction("state", &Afk::StateMachineBuilder::in)
+      .addFunction("on", &Afk::StateMachineBuilder::on)
+      .addFunction("go", &Afk::StateMachineBuilder::go)
+      .addFunction("call", &Afk::StateMachineBuilder::call)
+      .addFunction("on_enter", &Afk::StateMachineBuilder::on_enter)
+      .addFunction("on_exit", &Afk::StateMachineBuilder::on_exit)
+      .addFunction("initial", &Afk::StateMachineBuilder::initial_state)
+      .addFunction("build", &Afk::StateMachineBuilder::build)
+      .endClass()
+      .beginClass<Afk::StateMachine>("fsm")
+      .addFunction("fire", &Afk::StateMachine::fire)
+      .endClass()
       .endNamespace();
 
   auto key_ns = luabridge::getGlobalNamespace(lua).beginNamespace("key");
