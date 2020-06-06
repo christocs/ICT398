@@ -45,3 +45,6 @@
 [submodule "lib/ozz"]
 	path = lib/ozz_animation
 	url = https://github.com/guillaumeblanc/ozz-animation.git
+[submodule "lib/recastnavigation"]
+	path = lib/recastnavigation
+	url = git@github.com:christocs/recastnavigation.git
