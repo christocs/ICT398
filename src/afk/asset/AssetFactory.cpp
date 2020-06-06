@@ -27,9 +27,9 @@ enum class Shape { Box, Sphere };
 
 static auto load_script(lua_State *lua, LuaRef tbl, Afk::GameObject owner)
     -> Afk::ScriptsComponent {
-  auto script = Afk::ScriptsComponent{owner};
+  auto script = Afk::ScriptsComponent{owner, lua};
   for (int i = 1; i <= tbl.length(); i++) {
-    script.add_script(tbl[i], lua, &Afk::Engine::get().event_manager);
+    script.add_script(tbl[i], &Afk::Engine::get().event_manager);
   }
   return script;
 }
