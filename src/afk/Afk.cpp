@@ -84,9 +84,10 @@ auto Engine::initialize() -> void {
 
   Afk::Asset::game_asset_factory("asset/basketball.lua");
 
-  auto test_agent       = registry.create();
-  auto agent_transform  = Afk::Transform{test_agent};
-  agent_transform.scale = {0.2, 0.2, 0.2};
+  auto test_agent             = registry.create();
+  auto agent_transform        = Afk::Transform{test_agent};
+  agent_transform.translation = {3, 3, 3};
+  agent_transform.scale       = {0.2, 0.2, 0.2};
   registry.assign<Afk::Transform>(test_agent, agent_transform);
   registry.assign<Afk::ModelSource>(test_agent, test_agent, "res/model/nanosuit/nanosuit.fbx",
                                     "shader/default.prog");
