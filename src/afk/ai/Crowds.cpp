@@ -11,8 +11,10 @@ auto Crowds::update(float dt_seconds) -> void {
 }
 
 auto Crowds::init(dtNavMesh *nav_mesh) -> void {
-  this->crowd->init(1000,    // max agents
-                    10.f,    // max agent radius
-                    nav_mesh // nav mesh
-  );
+  if (!this->crowd->init(100,     // max agents
+                         10.f,    // max agent radius
+                         nav_mesh // nav mesh
+                         )) {
+    throw std::runtime_error{"Unable to init crowds"};
+  }
 }
