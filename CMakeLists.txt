@@ -37,7 +37,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  ${PROJECT_BINARY_DIR}/out)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE  ${PROJECT_BINARY_DIR}/out/lib)
 
 # Define the executable.
-add_executable(${PROJECT_NAME})
+add_executable(${PROJECT_NAME} src/afk/ai/NavMeshManager.cpp src/afk/ai/NavMeshManager.hpp)
 
 # Set C++ standard and output directory.
 set_target_properties(${PROJECT_NAME} PROPERTIES
