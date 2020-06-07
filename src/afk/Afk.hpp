@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "afk/ai/Crowds.hpp"
-#include "afk/ai/NavMeshManager.hpp
+#include "afk/ai/NavMeshManager.hpp"
 #include "afk/event/EventManager.hpp"
 #include "afk/physics/PhysicsBodySystem.hpp"
 #include "afk/renderer/Camera.hpp"

@@ -1,9 +1,8 @@
 #pragma once
 
+#include <DetourCrowd.h>
 #include <memory>
 #include <unordered_set>
-
-#include <DetourCrowd/Include/DetourCrowd.h>
 
 namespace Afk {
   namespace AI {

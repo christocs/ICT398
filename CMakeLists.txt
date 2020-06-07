@@ -111,6 +111,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ozz_animation
     Recast
     Detour
+    DetourCrowd
 )
 
 # Symlink resources to the binary location.
