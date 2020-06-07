@@ -8,8 +8,7 @@
 #include "DetourNavMeshQuery.h"
 #include "afk/io/Log.hpp"
 
-using Afk::Ai::AgentConfig;
-using Afk::Ai::NavMeshManager;
+using Afk::AI::NavMeshManager;
 
 bool NavMeshManager::initialise(const std::filesystem::path &file_path,
                                         const Afk::Mesh &mesh,

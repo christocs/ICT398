@@ -12,7 +12,7 @@
 #include "afk/renderer/Model.hpp"
 
 namespace Afk {
-  namespace Ai {
+  namespace AI {
     using AgentConfig = rcConfig;
     class NavMeshManager {
     public:

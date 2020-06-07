@@ -24,7 +24,7 @@ namespace Afk {
     Ui ui                               = {};
     Camera camera                       = {};
     TerrainManager terrain_manager      = {};
-    Ai::NavMeshManager nav_mesh_manager = {};
+    AI::NavMeshManager nav_mesh_manager = {};
     AI::Crowds crowds                   = {};
 
     entt::registry registry;
