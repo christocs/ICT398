@@ -28,10 +28,14 @@ namespace Afk {
 
       const Model& get_height_field_model();
 
-    private:
-      dtNavMesh* navMesh = nullptr;
+      const Model& get_nav_mesh_model();
 
-      Model heightFieldModel = {};
+    private:
+      dtNavMesh* nav_mesh = nullptr;
+
+      Model height_field_model = {};
+
+      Model nav_mesh_model = {};
 
       dtNavMesh* get_nav_mesh();
 
@@ -40,6 +44,10 @@ namespace Afk {
       static glm::vec3 transform_pos(const glm::vec3& input, const Afk::Transform& transform);
 
       void create_height_field_model(const rcHeightfield& heightField);
+
+      void create_nav_mesh_model(const dtNavMesh& navMesh);
+
+      static void process_nav_mesh_model_poly(const dtNavMesh& navMesh, Afk::Mesh& mesh, dtPolyRef ref);
     };
 
   }

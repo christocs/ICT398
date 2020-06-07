@@ -11,8 +11,7 @@
 using Afk::AI::NavMeshManager;
 
 bool NavMeshManager::initialise(const std::filesystem::path &file_path,
-                                        const Afk::Mesh &mesh,
-                                        const Afk::Transform &transform) {
+                                const Afk::Mesh &mesh, const Afk::Transform &transform) {
   if (!this->load(file_path)) {
     if (this->bake(file_path, mesh, transform)) {
       if (!this->save(file_path)) {
@@ -25,13 +24,13 @@ bool NavMeshManager::initialise(const std::filesystem::path &file_path,
 }
 
 bool NavMeshManager::bake(const std::filesystem::path &file_path,
-                                   const Afk::Mesh &mesh, const Afk::Transform &transform) {
+                          const Afk::Mesh &mesh, const Afk::Transform &transform) {
   // use default values from demo
   rcConfig config                 = {};
   config.cs                       = 0.3f; // cell size
   config.ch                       = 0.2f; // cell height
-  config.walkableSlopeAngle       = 45.0f;
-  const auto agentHeight          = 2.0f;
+  config.walkableSlopeAngle       = 45.0f; // 45
+  const auto agentHeight          = 2.0f; // 2.0
   config.walkableHeight           = (int)ceilf(agentHeight / config.ch);
   const auto agentMaxClimb        = 0.9f;
   config.walkableClimb            = (int)floorf(agentMaxClimb / config.ch);
@@ -202,11 +201,13 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   tempStatus             = dtCreateNavMeshData(&params, &navData, &navDataSize);
   afk_assert(tempStatus, "Failed to allocate nav mesh data");
 
-  navMesh = dtAllocNavMesh();
-  afk_assert(navMesh, "Failed to allocate nav mesh");
+  nav_mesh = dtAllocNavMesh();
+  afk_assert(nav_mesh, "Failed to allocate nav mesh");
 
-  dtStatus detourStatus = navMesh->init(navData, navDataSize, DT_TILE_FREE_DATA);
+  dtStatus detourStatus = nav_mesh->init(navData, navDataSize, DT_TILE_FREE_DATA);
   afk_assert(!dtStatusFailed(detourStatus), "Could not init detour navmesh");
+
+  this->create_nav_mesh_model(*nav_mesh);
 
   // should be successful, if something failed afk_assert should have picked it up
   return true;
@@ -244,7 +245,11 @@ void NavMeshManager::get_min_max_bounds(const Afk::Mesh &mesh, const Afk::Transf
 }
 
 const Afk::Model &NavMeshManager::get_height_field_model() {
-  return heightFieldModel;
+  return height_field_model;
+}
+
+const Afk::Model &NavMeshManager::get_nav_mesh_model() {
+  return nav_mesh_model;
 }
 
 // todo: implement
@@ -266,14 +271,15 @@ glm::vec3 NavMeshManager::transform_pos(const glm::vec3 &input,
 }
 
 void NavMeshManager::create_height_field_model(const rcHeightfield &heightField) {
-  heightFieldModel.file_path = "recast/height_field";
-  heightFieldModel.file_dir  = "recast";
-  Mesh heightFieldMesh       = {};
+  height_field_model           = {};
+  height_field_model.file_path = "recast/height_field";
+  height_field_model.file_dir  = "recast";
+  Mesh heightFieldMesh         = {};
 
   for (int y = 0; y < heightField.height; y++) {
     for (int x = 0; x < heightField.width; x++) {
-      float minx      = heightField.bmin[0] + x * heightField.cs;
-      float minz      = heightField.bmin[2] + y * heightField.cs;
+      const auto minx = heightField.bmin[0] + x * heightField.cs;
+      const auto minz = heightField.bmin[2] + y * heightField.cs;
       const rcSpan *s = heightField.spans[x + y * heightField.width];
       while (s) {
         const auto vertexOffset = heightFieldMesh.vertices.size();
@@ -282,6 +288,7 @@ void NavMeshManager::create_height_field_model(const rcHeightfield &heightField)
         const auto maxy = heightField.bmin[1] + s->smax * heightField.ch;
         const auto maxz = minz * heightField.cs;
 
+        // duplicate vertices may be created
         Vertex vertex   = {};
         vertex.position = glm::vec3(minx, miny, minz);
         heightFieldMesh.vertices.push_back(vertex);
@@ -360,9 +367,84 @@ void NavMeshManager::create_height_field_model(const rcHeightfield &heightField)
     }
   }
 
-  heightFieldModel.meshes.push_back(std::move(heightFieldMesh));
+  height_field_model.meshes.push_back(std::move(heightFieldMesh));
+}
+
+void NavMeshManager::create_nav_mesh_model(const dtNavMesh &navMesh) {
+  nav_mesh_model           = {};
+  nav_mesh_model.file_path = "recast/nav_mesh";
+  nav_mesh_model.file_dir  = "recast";
+  Mesh mesh                = {};
+
+  const auto SAMPLE_POLYFLAGS_DISABLED = 0x10;
+  for (int i = 0; i < navMesh.getMaxTiles(); i++) {
+    const dtMeshTile *tile = navMesh.getTile(i);
+    if (!tile->header) {
+      continue;
+    }
+
+    dtPolyRef base = navMesh.getPolyRefBase(tile);
+
+    for (int j = 0; j < tile->header->polyCount; j++) {
+      const dtPoly *p = &tile->polys[j];
+
+      // what does this do???
+      if ((p->flags & SAMPLE_POLYFLAGS_DISABLED)) {
+        continue;
+      }
+
+      const auto ref = base | (dtPolyRef)j; // ???
+      NavMeshManager::process_nav_mesh_model_poly(navMesh, mesh, ref);
+    }
+  }
+
+  nav_mesh_model.meshes.push_back(std::move(mesh));
+}
+
+void NavMeshManager::process_nav_mesh_model_poly(const dtNavMesh &navMesh,
+                                                          Afk::Mesh &mesh,
+                                                          dtPolyRef ref) {
+  // todo: set to nullptr if it lets me
+  const dtMeshTile* tile = 0;
+  const dtPoly* poly = 0;
+  if (dtStatusFailed(navMesh.getTileAndPolyByRef(ref, &tile, &poly))) {
+    return;
+  }
+
+  // assume type isn't DT_POLYTYPE_OFFMESH_CONNECTION
+  if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION) {
+    return;
+  }
+
+  const unsigned int ip = (poly - tile->polys);
+  const dtPolyDetail* pd = &tile->detailMeshes[ip];
+
+  Vertex vertex = {};
+  for (int i = 0; i < pd->triCount; i++) {
+    const unsigned char* t = &tile->detailTris[(pd->triBase+i)*4];
+
+    const auto vertexOffset = mesh.vertices.size();
+    // duplicate vertices may be created
+    for (int j = 0; j < 3; j++) {
+      float* pos = nullptr;
+      if (t[j] < poly->vertCount) {
+        pos = &tile->verts[poly->verts[t[j]]*3];
+      } else {
+        pos = &tile->detailVerts[(pd->vertBase+t[j]-poly->vertCount)*3];
+      }
+      afk_assert(pos != nullptr, "vertex not found");
+      vertex.position.x = pos[0];
+      vertex.position.y = pos[1];
+      vertex.position.z = pos[2];
+      mesh.vertices.push_back(vertex);
+
+      mesh.indices.push_back(vertexOffset);
+      mesh.indices.push_back(vertexOffset+1);
+      mesh.indices.push_back(vertexOffset+2);
+    }
+  }
 }
 
 dtNavMesh *NavMeshManager::get_nav_mesh() {
-  return this->navMesh;
+  return this->nav_mesh;
 }
