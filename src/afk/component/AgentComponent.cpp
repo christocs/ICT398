@@ -12,6 +12,9 @@ AgentComponent::~AgentComponent() {
 }
 auto AgentComponent::target(const glm::vec3 &target_pos) -> void {
   auto agent = Afk::Engine::get().crowds.current_crowd().getEditableAgent(this->id);
+  if (!agent->active) {
+    throw new std::runtime_error{"Agent not active!"};
+  }
   agent->targetPos[0] = target_pos.x;
   agent->targetPos[1] = target_pos.y;
   agent->targetPos[2] = target_pos.z;
