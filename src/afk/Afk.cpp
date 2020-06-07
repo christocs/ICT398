@@ -100,7 +100,7 @@ auto Engine::initialize() -> void {
   registry.assign<Afk::ModelSource>(test_agent, test_agent, "res/model/nanosuit/nanosuit.fbx",
                                     "shader/default.prog");
   dtCrowdAgentParams p = {};
-  p.radius             = 3;
+  p.radius             = 1;
   p.maxSpeed           = 1;
   p.maxAcceleration    = 1;
   p.height             = 1;
