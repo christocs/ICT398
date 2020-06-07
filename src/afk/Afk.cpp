@@ -45,6 +45,11 @@ auto Engine::initialize() -> void {
   this->event_manager.initialize(this->renderer.window);
   //  this->renderer.set_wireframe(true);
 
+  // load the navmesh before adding components to things
+  // init crowds with the navmesh
+  // then add components
+  // this->crowds.init(nullptr);
+
   this->ui.initialize(this->renderer.window);
   this->lua = luaL_newstate();
   luaL_openlibs(this->lua);
@@ -57,9 +62,9 @@ auto Engine::initialize() -> void {
 //  this->terrain_manager.generate_flat_plane(terrain_width, terrain_length);
   this->renderer.load_model(this->terrain_manager.get_model());
 
-  auto terrain_entity           = registry.create();
-  auto terrain_transform        = Transform{terrain_entity};
-//  terrain_transform.translation = glm::vec3{0.0f, -10.0f, 0.0f};
+  auto terrain_entity    = registry.create();
+  auto terrain_transform = Transform{terrain_entity};
+  //  terrain_transform.translation = glm::vec3{0.0f, -10.0f, 0.0f};
   registry.assign<Afk::ModelSource>(terrain_entity, terrain_entity,
                                     terrain_manager.get_model().file_path,
                                     "shader/terrain.prog");
@@ -111,6 +116,8 @@ auto Engine::render() -> void {
 
 auto Engine::update() -> void {
   this->event_manager.pump_events();
+
+  this->crowds.update(this->get_delta_time());
 
   if (glfwWindowShouldClose(this->renderer.window)) {
     this->is_running = false;
