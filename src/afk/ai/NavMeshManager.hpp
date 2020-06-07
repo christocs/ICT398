@@ -32,6 +32,8 @@ namespace Afk {
 
       const Model &get_nav_mesh_model();
 
+      const Model& get_height_field_model();
+
     private:
       dtNavMesh *nav_mesh = nullptr;
 
