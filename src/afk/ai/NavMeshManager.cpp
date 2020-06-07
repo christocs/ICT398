@@ -27,10 +27,10 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
                           const Afk::Mesh &mesh, const Afk::Transform &transform) {
   // use default values from demo
   rcConfig config                 = {};
-  config.cs                       = 0.3f; // cell size
-  config.ch                       = 0.2f; // cell height
+  config.cs                       = 0.3f;  // cell size
+  config.ch                       = 0.2f;  // cell height
   config.walkableSlopeAngle       = 45.0f; // 45
-  const auto agentHeight          = 2.0f; // 2.0
+  const auto agentHeight          = 2.0f;  // 2.0
   config.walkableHeight           = (int)ceilf(agentHeight / config.ch);
   const auto agentMaxClimb        = 0.9f;
   config.walkableClimb            = (int)floorf(agentMaxClimb / config.ch);
@@ -74,17 +74,23 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   const auto &meshVertices = mesh.vertices;
   size_t vertexCount       = 0;
   for (const auto &meshVertex : meshVertices) {
-    vertices[vertexCount++] = meshVertex.position.z;
-    vertices[vertexCount++] = meshVertex.position.y;
     vertices[vertexCount++] = meshVertex.position.x;
+    vertices[vertexCount++] = meshVertex.position.y;
+    vertices[vertexCount++] = meshVertex.position.z;
   }
 
   const size_t ntriangles = mesh.indices.size() / 3; // should be an integer
 
   // copy indicies into array of ints (afk stores them as unsigned int)
-  const auto &indicies = mesh.indices;
+  const auto &indices = mesh.indices;
   const std::unique_ptr<int[]> triangles(new int[mesh.indices.size()]);
-  std::copy(indicies.data(), indicies.data() + indicies.size(), triangles.get());
+  // flip order of indices
+    for (size_t i = 0; i < indices.size();) {
+      triangles[i]     = indices[i];
+      triangles[i + 1] = indices[i + 2];
+      triangles[i + 2] = indices[i + 1];
+      i += 3;
+    }
 
   // Find triangles which are walkable based on their slope and rasterize them. If your input data is multiple meshes, you can transform them here, calculate the are type for each of the meshes and rasterize them.
   const std::unique_ptr<unsigned char[]> areas(new unsigned char[ntriangles]);
@@ -98,9 +104,11 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
                                     *heightField, config.walkableClimb);
   afk_assert(tempStatus, "Could not rasterize triangles");
 
-  rcFilterLowHangingWalkableObstacles(&context, config.walkableClimb, *heightField);
-  rcFilterLedgeSpans(&context, config.walkableHeight, config.walkableClimb, *heightField);
-  rcFilterWalkableLowHeightSpans(&context, config.walkableHeight, *heightField);
+    rcFilterLowHangingWalkableObstacles(&context, config.walkableClimb, *heightField);
+    rcFilterLedgeSpans(&context, config.walkableHeight, config.walkableClimb, *heightField);
+    rcFilterWalkableLowHeightSpans(&context, config.walkableHeight, *heightField);
+
+  this->create_height_field_model(*heightField);
 
   int spanCount = 0;
   for (int y = 0; y < heightField->height; ++y) {
@@ -112,8 +120,6 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
     }
   }
   afk_assert(spanCount, "no spans found");
-
-  this->create_height_field_model(*heightField);
 
   // compact version
   auto compactHeightField = rcAllocCompactHeightfield();
@@ -402,11 +408,10 @@ void NavMeshManager::create_nav_mesh_model(const dtNavMesh &navMesh) {
 }
 
 void NavMeshManager::process_nav_mesh_model_poly(const dtNavMesh &navMesh,
-                                                          Afk::Mesh &mesh,
-                                                          dtPolyRef ref) {
+                                                 Afk::Mesh &mesh, dtPolyRef ref) {
   // todo: set to nullptr if it lets me
-  const dtMeshTile* tile = 0;
-  const dtPoly* poly = 0;
+  const dtMeshTile *tile = 0;
+  const dtPoly *poly     = 0;
   if (dtStatusFailed(navMesh.getTileAndPolyByRef(ref, &tile, &poly))) {
     return;
   }
@@ -416,21 +421,21 @@ void NavMeshManager::process_nav_mesh_model_poly(const dtNavMesh &navMesh,
     return;
   }
 
-  const unsigned int ip = (poly - tile->polys);
-  const dtPolyDetail* pd = &tile->detailMeshes[ip];
+  const unsigned int ip  = (poly - tile->polys);
+  const dtPolyDetail *pd = &tile->detailMeshes[ip];
 
   Vertex vertex = {};
   for (int i = 0; i < pd->triCount; i++) {
-    const unsigned char* t = &tile->detailTris[(pd->triBase+i)*4];
+    const unsigned char *t = &tile->detailTris[(pd->triBase + i) * 4];
 
     const auto vertexOffset = mesh.vertices.size();
     // duplicate vertices may be created
     for (int j = 0; j < 3; j++) {
-      float* pos = nullptr;
+      float *pos = nullptr;
       if (t[j] < poly->vertCount) {
-        pos = &tile->verts[poly->verts[t[j]]*3];
+        pos = &tile->verts[poly->verts[t[j]] * 3];
       } else {
-        pos = &tile->detailVerts[(pd->vertBase+t[j]-poly->vertCount)*3];
+        pos = &tile->detailVerts[(pd->vertBase + t[j] - poly->vertCount) * 3];
       }
       afk_assert(pos != nullptr, "vertex not found");
       vertex.position.x = pos[0];
@@ -439,8 +444,8 @@ void NavMeshManager::process_nav_mesh_model_poly(const dtNavMesh &navMesh,
       mesh.vertices.push_back(vertex);
 
       mesh.indices.push_back(vertexOffset);
-      mesh.indices.push_back(vertexOffset+1);
-      mesh.indices.push_back(vertexOffset+2);
+      mesh.indices.push_back(vertexOffset + 1);
+      mesh.indices.push_back(vertexOffset + 2);
     }
   }
 }
