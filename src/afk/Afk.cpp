@@ -9,11 +9,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-#include "DetourNavMesh.h"
-#include "DetourNavMeshBuilder.h"
-#include "DetourNavMeshQuery.h"
-#include "Recast.h"
 #include "afk/asset/AssetFactory.hpp"
+#include "afk/component/AgentComponent.hpp"
 #include "afk/component/GameObject.hpp"
 #include "afk/component/ScriptsComponent.hpp"
 #include "afk/debug/Assert.hpp"
@@ -48,7 +45,6 @@ auto Engine::initialize() -> void {
   // load the navmesh before adding components to things
   // init crowds with the navmesh
   // then add components
-  // this->crowds.init(nullptr);
 
   this->ui.initialize(this->renderer.window);
   this->lua = luaL_newstate();
@@ -58,8 +54,8 @@ auto Engine::initialize() -> void {
   this->terrain_manager.initialize();
   const int terrain_width  = 32;
   const int terrain_length = 32;
-    this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
-//  this->terrain_manager.generate_flat_plane(terrain_width, terrain_length);
+  this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
+  //  this->terrain_manager.generate_flat_plane(terrain_width, terrain_length);
   this->renderer.load_model(this->terrain_manager.get_model());
 
   auto terrain_entity    = registry.create();
@@ -74,16 +70,33 @@ auto Engine::initialize() -> void {
   //                                    true, Afk::RigidBodyType::STATIC,
   //                                    this->terrain_manager.height_map);
 
-  this->nav_mesh_manager.initialise("ai/nav_mesh", this->terrain_manager.get_model().meshes[0], terrain_transform);
+  this->nav_mesh_manager.initialise(
+      "ai/nav_mesh", this->terrain_manager.get_model().meshes[0], terrain_transform);
+  this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
+
   this->renderer.load_model(this->nav_mesh_manager.get_height_field_model());
 
-  auto nav_mesh_entity           = registry.create();
-  registry.assign<Afk::ModelSource>(nav_mesh_entity, nav_mesh_entity,
-                                    this->nav_mesh_manager.get_height_field_model().file_path,
-                                    "shader/heightfield.prog");
-  registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_entity);
+  auto nav_mesh_entity = registry.create();
+  registry.assign<Afk::ModelSource>(
+      nav_mesh_entity, nav_mesh_entity,
+      this->nav_mesh_manager.get_height_field_model().file_path, "shader/heightfield.prog");
+  registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_entity).translation = {0, 0, 0};
 
   Afk::Asset::game_asset_factory("asset/basketball.lua");
+
+  auto test_agent       = registry.create();
+  auto agent_transform  = Afk::Transform{test_agent};
+  agent_transform.scale = {0.2, 0.2, 0.2};
+  registry.assign<Afk::Transform>(test_agent, agent_transform);
+  registry.assign<Afk::ModelSource>(test_agent, test_agent, "res/model/nanosuit/nanosuit.fbx",
+                                    "shader/default.prog");
+  dtCrowdAgentParams p = {};
+  p.radius             = 3;
+  p.maxSpeed           = 1;
+  p.maxAcceleration    = 1;
+  p.height             = 1;
+  registry.assign<Afk::AI::AgentComponent>(test_agent, test_agent,
+                                           agent_transform.translation, p);
 
   auto cam = registry.create();
   registry.assign<Afk::ScriptsComponent>(cam, cam)
@@ -116,8 +129,13 @@ auto Engine::render() -> void {
 
 auto Engine::update() -> void {
   this->event_manager.pump_events();
-
+  auto pos = this->camera.get_position();
   this->crowds.update(this->get_delta_time());
+  for (auto &agent_ent : this->registry.view<Afk::AI::AgentComponent>()) {
+    auto &agent = this->registry.get<Afk::AI::AgentComponent>(agent_ent);
+    agent.target(pos);
+    agent.update();
+  }
 
   if (glfwWindowShouldClose(this->renderer.window)) {
     this->is_running = false;

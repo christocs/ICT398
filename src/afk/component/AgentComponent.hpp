@@ -1,6 +1,6 @@
 #pragma once
 
-#include <DetourCrowd/Include/DetourCrowd.h>
+#include <DetourCrowd.h>
 
 #include "afk/ai/Crowds.hpp"
 #include "afk/component/BaseComponent.hpp"
@@ -12,14 +12,18 @@ namespace Afk {
       /**
        * \todo: facade dtCrowdAgentParams (once i know that pathfinding works)
        */
-      AgentComponent(GameObject e, Transform *t, dtCrowdAgentParams &p);
+      AgentComponent(GameObject e, const glm::vec3 &initial_position, dtCrowdAgentParams &p);
+      // AgentComponent(AgentComponent &e)  = delete;
+      // AgentComponent(AgentComponent &&e) = delete;
+      // auto operator=(AgentComponent &e) -> AgentComponent & = delete;
+      // auto operator=(AgentComponent &&e) -> AgentComponent & = delete;
       ~AgentComponent();
 
       auto target(const glm::vec3 &target_pos) -> void;
+      auto update() -> void;
 
     private:
       float radius;
-      Transform *transform        = nullptr;
       Afk::AI::Crowds::AgentID id = -1;
     };
   }

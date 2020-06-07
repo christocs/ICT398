@@ -1,18 +1,18 @@
 #include "NavMeshManager.hpp"
 
+#include <DetourNavMesh.h>
+#include <DetourNavMeshBuilder.h>
+#include <DetourNavMeshQuery.h>
+
 #include <afk/debug/Assert.hpp>
 #include <glm/gtc/type_ptr.inl>
 
-#include "DetourNavMesh.h"
-#include "DetourNavMeshBuilder.h"
-#include "DetourNavMeshQuery.h"
 #include "afk/io/Log.hpp"
 
 using Afk::AI::NavMeshManager;
 
 bool NavMeshManager::initialise(const std::filesystem::path &file_path,
-                                        const Afk::Mesh &mesh,
-                                        const Afk::Transform &transform) {
+                                const Afk::Mesh &mesh, const Afk::Transform &transform) {
   if (!this->load(file_path)) {
     if (this->bake(file_path, mesh, transform)) {
       if (!this->save(file_path)) {
@@ -25,7 +25,7 @@ bool NavMeshManager::initialise(const std::filesystem::path &file_path,
 }
 
 bool NavMeshManager::bake(const std::filesystem::path &file_path,
-                                   const Afk::Mesh &mesh, const Afk::Transform &transform) {
+                          const Afk::Mesh &mesh, const Afk::Transform &transform) {
   // use default values from demo
   rcConfig config                 = {};
   config.cs                       = 0.3f; // cell size
@@ -363,6 +363,6 @@ void NavMeshManager::create_height_field_model(const rcHeightfield &heightField)
   heightFieldModel.meshes.push_back(std::move(heightFieldMesh));
 }
 
-dtNavMesh *NavMeshManager::get_nav_mesh() {
+auto NavMeshManager::get_nav_mesh() -> dtNavMesh * {
   return this->navMesh;
 }
