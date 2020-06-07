@@ -32,7 +32,7 @@ namespace Afk {
 
       const Model &get_nav_mesh_model();
 
-      const Model& get_height_field_model();
+      const Model &get_height_field_model();
 
     private:
       dtNavMesh *nav_mesh = nullptr;
@@ -43,8 +43,7 @@ namespace Afk {
 
       static glm::vec3 transform_pos(const glm::vec3 &input, const Afk::Transform &transform);
 
-      void get_min_max_bounds(const Afk::Mesh &mesh, const Afk::Transform &transform,
-                              glm::vec3 &min, glm::vec3 &max);
+      static void get_min_max_bounds(const Afk::Mesh &mesh, glm::vec3 &min, glm::vec3 &max);
 
       void create_height_field_model(const rcHeightfield &heightField);
 

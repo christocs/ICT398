@@ -49,7 +49,9 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
 
   glm::vec3 bmin = {};
   glm::vec3 bmax = {};
-  this->get_min_max_bounds(mesh, transform, bmin, bmax);
+  this->get_min_max_bounds(mesh, bmin, bmax);
+  bmin = this->transform_pos(bmin, transform);
+  bmax = this->transform_pos(bmax, transform);
   config.bmin[0] = bmin.x;
   config.bmin[1] = bmin.y;
   config.bmin[2] = bmin.z;
@@ -74,9 +76,10 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   const auto &meshVertices = mesh.vertices;
   size_t vertexCount       = 0;
   for (const auto &meshVertex : meshVertices) {
-    vertices[vertexCount++] = meshVertex.position.x;
-    vertices[vertexCount++] = meshVertex.position.y;
-    vertices[vertexCount++] = meshVertex.position.z;
+    const auto pos = this->transform_pos(meshVertex.position, transform);
+    vertices[vertexCount++] = pos.x;
+    vertices[vertexCount++] = pos.y;
+    vertices[vertexCount++] = pos.z;
   }
 
   const size_t ntriangles = mesh.indices.size() / 3; // should be an integer
@@ -85,12 +88,12 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   const auto &indices = mesh.indices;
   const std::unique_ptr<int[]> triangles(new int[mesh.indices.size()]);
   // flip order of indices
-    for (size_t i = 0; i < indices.size();) {
-      triangles[i]     = indices[i];
-      triangles[i + 1] = indices[i + 2];
-      triangles[i + 2] = indices[i + 1];
-      i += 3;
-    }
+  for (size_t i = 0; i < indices.size();) {
+    triangles[i]     = indices[i];
+    triangles[i + 1] = indices[i + 2];
+    triangles[i + 2] = indices[i + 1];
+    i += 3;
+  }
 
   // Find triangles which are walkable based on their slope and rasterize them. If your input data is multiple meshes, you can transform them here, calculate the are type for each of the meshes and rasterize them.
   const std::unique_ptr<unsigned char[]> areas(new unsigned char[ntriangles]);
@@ -104,9 +107,9 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
                                     *heightField, config.walkableClimb);
   afk_assert(tempStatus, "Could not rasterize triangles");
 
-    rcFilterLowHangingWalkableObstacles(&context, config.walkableClimb, *heightField);
-    rcFilterLedgeSpans(&context, config.walkableHeight, config.walkableClimb, *heightField);
-    rcFilterWalkableLowHeightSpans(&context, config.walkableHeight, *heightField);
+  rcFilterLowHangingWalkableObstacles(&context, config.walkableClimb, *heightField);
+  rcFilterLedgeSpans(&context, config.walkableHeight, config.walkableClimb, *heightField);
+  rcFilterWalkableLowHeightSpans(&context, config.walkableHeight, *heightField);
 
   this->create_height_field_model(*heightField);
 
@@ -219,8 +222,8 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   return true;
 }
 
-void NavMeshManager::get_min_max_bounds(const Afk::Mesh &mesh, const Afk::Transform &transform,
-                                        glm::vec3 &min, glm::vec3 &max) {
+void NavMeshManager::get_min_max_bounds(const Afk::Mesh &mesh, glm::vec3 &min,
+                                        glm::vec3 &max) {
   min.x = 0.0f;
   min.y = 0.0f;
   min.z = 0.0f;
@@ -246,8 +249,6 @@ void NavMeshManager::get_min_max_bounds(const Afk::Mesh &mesh, const Afk::Transf
       max.z = vertex.position.z;
     }
   }
-  min = NavMeshManager::transform_pos(min, transform);
-  max = NavMeshManager::transform_pos(max, transform);
 }
 
 const Afk::Model &NavMeshManager::get_height_field_model() {

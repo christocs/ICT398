@@ -58,9 +58,9 @@ auto Engine::initialize() -> void {
   //  this->terrain_manager.generate_flat_plane(terrain_width, terrain_length);
   this->renderer.load_model(this->terrain_manager.get_model());
 
-  auto terrain_entity    = registry.create();
-  auto terrain_transform = Transform{terrain_entity};
-  //  terrain_transform.translation = glm::vec3{0.0f, -10.0f, 0.0f};
+  auto terrain_entity           = registry.create();
+  auto terrain_transform        = Transform{terrain_entity};
+  terrain_transform.translation = glm::vec3{0.0f, -10.0f, 0.0f};
   registry.assign<Afk::ModelSource>(terrain_entity, terrain_entity,
                                     terrain_manager.get_model().file_path,
                                     "shader/terrain.prog");
@@ -69,19 +69,18 @@ auto Engine::initialize() -> void {
   //                                    terrain_transform, 0.3f, 0.0f, 0.0f, 0.0f,
   //                                    true, Afk::RigidBodyType::STATIC,
   //                                    this->terrain_manager.height_map);
-
   this->nav_mesh_manager.initialise(
       "ai/nav_mesh", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
+
   /*
   this->renderer.load_model(this->nav_mesh_manager.get_height_field_model());
   auto height_field_entity = registry.create();
   registry.assign<Afk::ModelSource>(
       height_field_entity, height_field_entity,
-                                    this->nav_mesh_manager.get_height_field_model().file_path,
-                                    "shader/heightfield.prog");
+      this->nav_mesh_manager.get_height_field_model().file_path, "shader/heightfield.prog");
   registry.assign<Afk::Transform>(height_field_entity, height_field_entity);
-   */
+  /**/
 
   this->renderer.load_model(this->nav_mesh_manager.get_nav_mesh_model());
   auto nav_mesh_entity = registry.create();
@@ -89,12 +88,13 @@ auto Engine::initialize() -> void {
                                     this->nav_mesh_manager.get_nav_mesh_model().file_path,
                                     "shader/heightfield.prog");
   registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_entity);
+    /**/
 
   Afk::Asset::game_asset_factory("asset/basketball.lua");
 
   auto test_agent             = registry.create();
   auto agent_transform        = Afk::Transform{test_agent};
-  agent_transform.translation = {3, 3, 3};
+  agent_transform.translation = {3, -6.75, 3};
   agent_transform.scale       = {0.2, 0.2, 0.2};
   registry.assign<Afk::Transform>(test_agent, agent_transform);
   registry.assign<Afk::ModelSource>(test_agent, test_agent, "res/model/nanosuit/nanosuit.fbx",
