@@ -45,6 +45,11 @@ auto Engine::initialize() -> void {
   this->event_manager.initialize(this->renderer.window);
   //  this->renderer.set_wireframe(true);
 
+  // load the navmesh before adding components to things
+  // init crowds with the navmesh
+  // then add components
+  // this->crowds.init(nullptr);
+
   this->ui.initialize(this->renderer.window);
   this->lua = luaL_newstate();
   luaL_openlibs(this->lua);
@@ -53,13 +58,13 @@ auto Engine::initialize() -> void {
   this->terrain_manager.initialize();
   const int terrain_width  = 1024;
   const int terrain_length = 1024;
-    this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
-//  this->terrain_manager.generate_flat_plane(terrain_width, terrain_length);
+  this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
+  //  this->terrain_manager.generate_flat_plane(terrain_width, terrain_length);
   this->renderer.load_model(this->terrain_manager.get_model());
 
-  auto terrain_entity           = registry.create();
-  auto terrain_transform        = Transform{terrain_entity};
-//  terrain_transform.translation = glm::vec3{0.0f, -10.0f, 0.0f};
+  auto terrain_entity    = registry.create();
+  auto terrain_transform = Transform{terrain_entity};
+  //  terrain_transform.translation = glm::vec3{0.0f, -10.0f, 0.0f};
   registry.assign<Afk::ModelSource>(terrain_entity, terrain_entity,
                                     terrain_manager.get_model().file_path,
                                     "shader/terrain.prog");
@@ -87,9 +92,9 @@ auto Engine::initialize() -> void {
   const auto &meshVertices = this->terrain_manager.mesh.vertices;
   size_t vertexCount       = 0;
   for (const auto &meshVertex : meshVertices) {
-//    vertices[vertexCount++] = meshVertex.position.x;
-//    vertices[vertexCount++] = meshVertex.position.y;
-//    vertices[vertexCount++] = meshVertex.position.z;
+    //    vertices[vertexCount++] = meshVertex.position.x;
+    //    vertices[vertexCount++] = meshVertex.position.y;
+    //    vertices[vertexCount++] = meshVertex.position.z;
     vertices[vertexCount++] = meshVertex.position.z;
     vertices[vertexCount++] = meshVertex.position.y;
     vertices[vertexCount++] = meshVertex.position.x;
@@ -144,13 +149,13 @@ auto Engine::initialize() -> void {
 
   const int w = heightField->width;
   const int h = heightField->height;
-//  for (int y = 0; y < h; ++y) {
-//    for (int x = 0; x < w; ++x) {
-//      for (rcSpan *s = heightField->spans[x + y * w]; s; s = s->next) {
-//        std::cout << static_cast<int>(s->area) << std::endl;
-//      }
-//    }
-//  }
+  //  for (int y = 0; y < h; ++y) {
+  //    for (int x = 0; x < w; ++x) {
+  //      for (rcSpan *s = heightField->spans[x + y * w]; s; s = s->next) {
+  //        std::cout << static_cast<int>(s->area) << std::endl;
+  //      }
+  //    }
+  //  }
 
   // Find triangles which are walkable based on their slope and rasterize them. If your input data is multiple meshes, you can transform them here, calculate the are type for each of the meshes and rasterize them.
   const std::unique_ptr<unsigned char[]> areas(new unsigned char[ntriangles]);
@@ -170,9 +175,9 @@ auto Engine::initialize() -> void {
   //  }
   rcMarkWalkableTriangles(&context, config.walkableSlopeAngle, vertices.get(),
                           nvertices, triangles.get(), ntriangles, areas.get());
-//  for (int i = 0; i < ntriangles; ++i) {
-//    std::cout << static_cast<int>(areas[i]) << std::endl;
-//  }
+  //  for (int i = 0; i < ntriangles; ++i) {
+  //    std::cout << static_cast<int>(areas[i]) << std::endl;
+  //  }
   if (!rcRasterizeTriangles(&context, vertices.get(), nvertices, triangles.get(),
                             areas.get(), ntriangles, *heightField, config.walkableClimb)) {
     std::cout << "could not rasterize triangles " << std::endl;
@@ -211,7 +216,7 @@ auto Engine::initialize() -> void {
   for (int y = 0; y < h; ++y) {
     for (int x = 0; x < w; ++x) {
       for (rcSpan *s = heightField->spans[x + y * w]; s; s = s->next) {
-//        std::cout << s->area << std::endl;
+        //        std::cout << s->area << std::endl;
         if (s->area != RC_NULL_AREA)
           spanCount++;
       }
@@ -328,7 +333,7 @@ auto Engine::initialize() -> void {
     //    status = navMeshQuery->init(navMesh, 2048);
   } else {
     std::cout << "too many polygons" << std::endl;
-  }/**/
+  } /**/
 
   this->is_initialized = true;
 }
@@ -355,6 +360,8 @@ auto Engine::render() -> void {
 
 auto Engine::update() -> void {
   this->event_manager.pump_events();
+
+  this->crowds.update(this->get_delta_time());
 
   if (glfwWindowShouldClose(this->renderer.window)) {
     this->is_running = false;

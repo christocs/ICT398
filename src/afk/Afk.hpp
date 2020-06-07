@@ -3,6 +3,7 @@
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 
+#include "afk/ai/Crowds.hpp"
 #include "afk/event/EventManager.hpp"
 #include "afk/physics/PhysicsBodySystem.hpp"
 #include "afk/renderer/Camera.hpp"
@@ -21,6 +22,8 @@ namespace Afk {
     Ui ui                          = {};
     Camera camera                  = {};
     TerrainManager terrain_manager = {};
+    AI::Crowds crowds              = {};
+
     entt::registry registry;
     Afk::PhysicsBodySystem physics_body_system;
     lua_State *lua;
