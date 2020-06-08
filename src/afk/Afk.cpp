@@ -65,16 +65,16 @@ auto Engine::initialize() -> void {
                                     terrain_manager.get_model().file_path,
                                     "shader/terrain.prog");
   registry.assign<Afk::Transform>(terrain_entity, terrain_transform);
-  //  registry.assign<Afk::PhysicsBody>(terrain_entity, terrain_entity, &this->physics_body_system,
-  //                                    terrain_transform, 0.3f, 0.0f, 0.0f, 0.0f,
-  //                                    true, Afk::RigidBodyType::STATIC,
-  //                                    this->terrain_manager.height_map);
+    registry.assign<Afk::PhysicsBody>(terrain_entity, terrain_entity, &this->physics_body_system,
+                                      terrain_transform, 0.3f, 0.0f, 0.0f, 0.0f,
+                                      true, Afk::RigidBodyType::STATIC,
+                                      this->terrain_manager.height_map);
+//  this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh",
+//                                    this->terrain_manager.get_model().meshes[0],
+//                                    terrain_transform);
   this->nav_mesh_manager.initialise(
-      "res/gen/navmesh/human.nmesh", this->terrain_manager.get_model().meshes[0], terrain_transform);
-//  this->nav_mesh_manager.initialise(
-//      "res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
+        "res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
-
 
   /*
   this->renderer.load_model(this->nav_mesh_manager.get_height_field_model());
