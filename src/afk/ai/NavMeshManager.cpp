@@ -2,6 +2,7 @@
 
 #include <afk/debug/Assert.hpp>
 #include <glm/gtc/type_ptr.inl>
+#include <fstream>
 
 #include "DetourNavMesh.h"
 #include "DetourNavMeshBuilder.h"
@@ -17,8 +18,12 @@ bool NavMeshManager::initialise(const std::filesystem::path &file_path,
       if (!this->save(file_path)) {
         Afk::Io::log << "Failed to bake nav mesh" << '\n';
         return false;
+      } else {
+        std::cout << "file bake saved" << std::endl;
       }
     }
+  } else {
+    std::cout << "file loaded" << std::endl;
   }
   return true;
 }
@@ -259,14 +264,100 @@ const Afk::Model &NavMeshManager::get_nav_mesh_model() {
   return nav_mesh_model;
 }
 
-// todo: implement
+// save files may not necessarily be compatible between different systems
 bool NavMeshManager::load(const std::filesystem::path &file_path) {
-  return false;
+  bool output = false;
+
+  std::ifstream in(file_path, std::ios::binary);
+  if (in) {
+    // todo: check if enough data exists
+    NavMeshSetHeader header = {};
+    in.read(reinterpret_cast<char*>(&header), sizeof(NavMeshSetHeader));
+    if (header.magic == NAVMESHSET_MAGIC && header.version == NAVMESHSET_VERSION) {
+      // fix memory leak
+      nav_mesh = dtAllocNavMesh();
+      if (nav_mesh) {
+        dtStatus status = nav_mesh->init(&header.params);
+        if (!dtStatusFailed(status)) {
+          // read tiles
+          for (int i = 0; i < header.numTiles; i++) {
+            NavMeshTileHeader tile_header = {};
+            in.read(reinterpret_cast<char *>(&tile_header), sizeof(NavMeshTileHeader));
+
+            if (!tile_header.tileRef || !tile_header.dataSize) {
+              output = false;
+              break;
+            }
+
+            // todo: fix
+            auto* data = (unsigned char*)dtAlloc(tile_header.dataSize, DT_ALLOC_PERM);
+            if (!data) {
+              output = false;
+              break;
+            }
+
+            memset(data, 0, tile_header.dataSize);
+            // todo: check if you can read ahead
+            in.read(reinterpret_cast<char*>(data), tile_header.dataSize);
+
+            nav_mesh->addTile(data, tile_header.dataSize, DT_TILE_FREE_DATA, tile_header.tileRef, 0);
+            output = true;
+          }
+          create_nav_mesh_model(*nav_mesh);
+        }
+      }
+    }
+
+    in.close();
+  }
+
+  return output;
 }
 
-// todo: implement
+// save files may not necessarily be compatible between different systems
 bool NavMeshManager::save(const std::filesystem::path &file_path) {
-  return false;
+  bool output = false;
+
+  const dtNavMesh* mesh = nav_mesh;
+
+  if (mesh) {
+    std::ofstream out(file_path, std::ios::binary);
+    if (out) {
+      NavMeshSetHeader header = {};
+      header.magic = NAVMESHSET_MAGIC;
+      header.version = NAVMESHSET_VERSION;
+      header.params = *(mesh->getParams()); // double check if this is ok
+      header.numTiles = 0;
+      for (int i = 0; i < mesh->getMaxTiles(); i++) {
+        const dtMeshTile* tile = mesh->getTile(i);
+        if (!tile || !tile->header || !tile->dataSize) {
+          continue;
+        }
+        header.numTiles++;
+      }
+      out.write(reinterpret_cast<char*>(&header), sizeof(NavMeshSetHeader));
+
+      // store tiles
+      for (int i = 0; i < mesh->getMaxTiles(); i++) {
+        const dtMeshTile* tile = mesh->getTile(i);
+        if (!tile || !tile->header | !tile->dataSize) {
+          continue;
+        }
+
+        NavMeshTileHeader tile_header = {};
+        tile_header.tileRef = mesh->getTileRef(tile);
+        tile_header.dataSize = tile->dataSize;
+        out.write(reinterpret_cast<char*>(&tile_header), sizeof(NavMeshTileHeader));
+        out.write(reinterpret_cast<char*>(tile->data), tile->dataSize);
+      }
+
+      out.close();
+
+      output = true;
+    }
+  }
+
+  return output;
 }
 
 // todo: apply transforms other tran translate
@@ -279,8 +370,8 @@ glm::vec3 NavMeshManager::transform_pos(const glm::vec3 &input,
 
 void NavMeshManager::create_height_field_model(const rcHeightfield &heightField) {
   height_field_model           = {};
-  height_field_model.file_path = "recast/height_field";
-  height_field_model.file_dir  = "recast";
+  height_field_model.file_path = "res/gen/heightfield/model";
+  height_field_model.file_dir  = "res/gen/heightfield";
   Mesh heightFieldMesh         = {};
 
   for (int y = 0; y < heightField.height; y++) {
@@ -379,8 +470,8 @@ void NavMeshManager::create_height_field_model(const rcHeightfield &heightField)
 
 void NavMeshManager::create_nav_mesh_model(const dtNavMesh &navMesh) {
   nav_mesh_model           = {};
-  nav_mesh_model.file_path = "recast/nav_mesh";
-  nav_mesh_model.file_dir  = "recast";
+  nav_mesh_model.file_path = "res/gen/navmesh/model";
+  nav_mesh_model.file_dir  = "res/gen/navmesh";
   Mesh mesh                = {};
 
   const auto SAMPLE_POLYFLAGS_DISABLED = 0x10;

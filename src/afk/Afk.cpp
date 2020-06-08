@@ -70,7 +70,9 @@ auto Engine::initialize() -> void {
   //                                    true, Afk::RigidBodyType::STATIC,
   //                                    this->terrain_manager.height_map);
   this->nav_mesh_manager.initialise(
-      "ai/nav_mesh", this->terrain_manager.get_model().meshes[0], terrain_transform);
+      "res/gen/navmesh/human.nmesh", this->terrain_manager.get_model().meshes[0], terrain_transform);
+//  this->nav_mesh_manager.initialise(
+//      "res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
 
 
