@@ -1,8 +1,9 @@
 #include "NavMeshManager.hpp"
 
+#include <fstream>
+
 #include <afk/debug/Assert.hpp>
 #include <glm/gtc/type_ptr.inl>
-#include <fstream>
 
 #include "DetourNavMesh.h"
 #include "DetourNavMeshBuilder.h"
@@ -54,9 +55,9 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
 
   glm::vec3 bmin = {};
   glm::vec3 bmax = {};
-  this->get_min_max_bounds(mesh, bmin, bmax);
-  bmin = this->transform_pos(bmin, transform);
-  bmax = this->transform_pos(bmax, transform);
+  NavMeshManager::get_min_max_bounds(mesh, bmin, bmax);
+  bmin           = NavMeshManager::transform_pos(bmin, transform);
+  bmax           = NavMeshManager::transform_pos(bmax, transform);
   config.bmin[0] = bmin.x;
   config.bmin[1] = bmin.y;
   config.bmin[2] = bmin.z;
@@ -70,8 +71,8 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   afk_assert(heightField, "Could not allocate height field");
 
   rcContext context = {};
-  auto tempStatus   = false;
-  tempStatus = rcCreateHeightfield(&context, *heightField, config.width, config.height,
+  auto tempStatus =
+      rcCreateHeightfield(&context, *heightField, config.width, config.height,
                                    config.bmin, config.bmax, config.cs, config.ch);
   afk_assert(tempStatus, "Could not create height field");
 
@@ -81,7 +82,7 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   const auto &meshVertices = mesh.vertices;
   size_t vertexCount       = 0;
   for (const auto &meshVertex : meshVertices) {
-    const auto pos = this->transform_pos(meshVertex.position, transform);
+    const auto pos = NavMeshManager::transform_pos(meshVertex.position, transform);
     vertices[vertexCount++] = pos.x;
     vertices[vertexCount++] = pos.y;
     vertices[vertexCount++] = pos.z;
@@ -179,6 +180,13 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   // build detour nav mesh
   afk_assert(config.maxVertsPerPoly <= DT_VERTS_PER_POLYGON,
              "Too many vertices per poly");
+
+  // update poly flags from areas
+  for (int i = 0; i < polyMesh->npolys; ++i) {
+    if (polyMesh->areas[i] == RC_WALKABLE_AREA) {
+      polyMesh->flags[i] = POLYFLAGS_WALK;
+    }
+  }
   dtNavMeshCreateParams params = {};
   params.verts                 = polyMesh->verts;
   params.vertCount             = polyMesh->nverts;
@@ -272,7 +280,7 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
   if (in) {
     // todo: check if enough data exists
     NavMeshSetHeader header = {};
-    in.read(reinterpret_cast<char*>(&header), sizeof(NavMeshSetHeader));
+    in.read(reinterpret_cast<char *>(&header), sizeof(NavMeshSetHeader));
     if (header.magic == NAVMESHSET_MAGIC && header.version == NAVMESHSET_VERSION) {
       // fix memory leak
       nav_mesh = dtAllocNavMesh();
@@ -290,7 +298,7 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
             }
 
             // todo: fix
-            auto* data = (unsigned char*)dtAlloc(tile_header.dataSize, DT_ALLOC_PERM);
+            auto *data = (unsigned char *)dtAlloc(tile_header.dataSize, DT_ALLOC_PERM);
             if (!data) {
               output = false;
               break;
@@ -298,9 +306,9 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
 
             memset(data, 0, tile_header.dataSize);
             // todo: check if you can read ahead
-            in.read(reinterpret_cast<char*>(data), tile_header.dataSize);
-
-            nav_mesh->addTile(data, tile_header.dataSize, DT_TILE_FREE_DATA, tile_header.tileRef, 0);
+            in.read(reinterpret_cast<char *>(data), tile_header.dataSize);
+            nav_mesh->addTile(data, tile_header.dataSize, DT_TILE_FREE_DATA,
+                              tile_header.tileRef, nullptr);
             output = true;
           }
           create_nav_mesh_model(*nav_mesh);
@@ -318,37 +326,37 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
 bool NavMeshManager::save(const std::filesystem::path &file_path) {
   bool output = false;
 
-  const dtNavMesh* mesh = nav_mesh;
+  const dtNavMesh *mesh = nav_mesh;
 
   if (mesh) {
     std::ofstream out(file_path, std::ios::binary);
     if (out) {
       NavMeshSetHeader header = {};
-      header.magic = NAVMESHSET_MAGIC;
-      header.version = NAVMESHSET_VERSION;
-      header.params = *(mesh->getParams()); // double check if this is ok
+      header.magic            = NAVMESHSET_MAGIC;
+      header.version          = NAVMESHSET_VERSION;
+      header.params   = *(mesh->getParams()); // double check if this is ok
       header.numTiles = 0;
       for (int i = 0; i < mesh->getMaxTiles(); i++) {
-        const dtMeshTile* tile = mesh->getTile(i);
+        const dtMeshTile *tile = mesh->getTile(i);
         if (!tile || !tile->header || !tile->dataSize) {
           continue;
         }
         header.numTiles++;
       }
-      out.write(reinterpret_cast<char*>(&header), sizeof(NavMeshSetHeader));
+      out.write(reinterpret_cast<char *>(&header), sizeof(NavMeshSetHeader));
 
       // store tiles
       for (int i = 0; i < mesh->getMaxTiles(); i++) {
-        const dtMeshTile* tile = mesh->getTile(i);
+        const dtMeshTile *tile = mesh->getTile(i);
         if (!tile || !tile->header | !tile->dataSize) {
           continue;
         }
 
         NavMeshTileHeader tile_header = {};
-        tile_header.tileRef = mesh->getTileRef(tile);
-        tile_header.dataSize = tile->dataSize;
-        out.write(reinterpret_cast<char*>(&tile_header), sizeof(NavMeshTileHeader));
-        out.write(reinterpret_cast<char*>(tile->data), tile->dataSize);
+        tile_header.tileRef           = mesh->getTileRef(tile);
+        tile_header.dataSize          = tile->dataSize;
+        out.write(reinterpret_cast<char *>(&tile_header), sizeof(NavMeshTileHeader));
+        out.write(reinterpret_cast<char *>(tile->data), tile->dataSize);
       }
 
       out.close();

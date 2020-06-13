@@ -52,8 +52,8 @@ auto Engine::initialize() -> void {
   Afk::add_engine_bindings(this->lua);
 
   this->terrain_manager.initialize();
-  const int terrain_width  = 32;
-  const int terrain_length = 32;
+  const int terrain_width  = 128;
+  const int terrain_length = 128;
   this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
   //  this->terrain_manager.generate_flat_plane(terrain_width, terrain_length);
   this->renderer.load_model(this->terrain_manager.get_model());
@@ -65,15 +65,14 @@ auto Engine::initialize() -> void {
                                     terrain_manager.get_model().file_path,
                                     "shader/terrain.prog");
   registry.assign<Afk::Transform>(terrain_entity, terrain_transform);
-    registry.assign<Afk::PhysicsBody>(terrain_entity, terrain_entity, &this->physics_body_system,
-                                      terrain_transform, 0.3f, 0.0f, 0.0f, 0.0f,
-                                      true, Afk::RigidBodyType::STATIC,
-                                      this->terrain_manager.height_map);
-//  this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh",
-//                                    this->terrain_manager.get_model().meshes[0],
-//                                    terrain_transform);
-  this->nav_mesh_manager.initialise(
-        "res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
+  registry.assign<Afk::PhysicsBody>(terrain_entity, terrain_entity, &this->physics_body_system,
+                                    terrain_transform, 0.3f, 0.0f, 0.0f, 0.0f,
+                                    true, Afk::RigidBodyType::STATIC,
+                                    this->terrain_manager.height_map);
+  this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh",
+                                    this->terrain_manager.get_model().meshes[0],
+                                    terrain_transform);
+  //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
 
   /*
@@ -88,20 +87,21 @@ auto Engine::initialize() -> void {
   /**/
 
   this->renderer.load_model(this->nav_mesh_manager.get_nav_mesh_model());
-  auto nav_mesh_entity = registry.create();
+  auto nav_mesh_entity    = registry.create();
   auto nav_mesh_transform = Transform{nav_mesh_entity};
-  nav_mesh_transform.translation = glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
+  nav_mesh_transform.translation =
+      glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
   registry.assign<Afk::ModelSource>(nav_mesh_entity, nav_mesh_entity,
                                     this->nav_mesh_manager.get_nav_mesh_model().file_path,
                                     "shader/navmesh.prog");
   registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_transform);
-    /**/
+  /**/
 
   Afk::Asset::game_asset_factory("asset/basketball.lua");
 
   auto test_agent             = registry.create();
   auto agent_transform        = Afk::Transform{test_agent};
-  agent_transform.translation = {3, -6.75, 3};
+  agent_transform.translation = {5, -6.75, 5};
   agent_transform.scale       = {0.2, 0.2, 0.2};
   registry.assign<Afk::Transform>(test_agent, agent_transform);
   registry.assign<Afk::ModelSource>(test_agent, test_agent, "res/model/nanosuit/nanosuit.fbx",

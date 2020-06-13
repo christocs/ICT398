@@ -52,21 +52,27 @@ namespace Afk {
       static void process_nav_mesh_model_poly(const dtNavMesh &navMesh,
                                               Afk::Mesh &mesh, dtPolyRef ref);
 
-      static const int NAVMESHSET_MAGIC = 'M'<<24 | 'S'<<16 | 'E'<<8 | 'T'; //'MSET';
+      static const int NAVMESHSET_MAGIC = 'M' << 24 | 'S' << 16 | 'E' << 8 | 'T'; //'MSET';
       static const int NAVMESHSET_VERSION = 1;
 
-      struct NavMeshSetHeader
-      {
+      struct NavMeshSetHeader {
         int magic;
         int version;
         int numTiles;
         dtNavMeshParams params;
       };
 
-      struct NavMeshTileHeader
-      {
+      struct NavMeshTileHeader {
         dtTileRef tileRef;
         int dataSize;
+      };
+
+      enum PolyFlags {
+        POLYFLAGS_WALK     = 1,  // Ability to walk (ground, grass, road)
+        POLYFLAGS_SWIM     = 2,  // Ability to swim (water).
+        POLYFLAGS_DOOR     = 4,  // Ability to move through doors.
+        POLYFLAGS_JUMP     = 8,  // Ability to jump.
+        POLYFLAGS_DISABLED = 16,  // Disabled polygon
       };
     };
 
