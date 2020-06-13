@@ -1,4 +1,5 @@
 #include "afk/ai/Crowds.hpp"
+#include <stdexcept>
 
 using Afk::AI::Crowds;
 
