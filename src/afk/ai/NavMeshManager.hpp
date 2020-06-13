@@ -13,10 +13,11 @@
 
 namespace Afk {
   namespace AI {
-    using AgentConfig = rcConfig;
     class NavMeshManager {
     public:
       NavMeshManager() = default;
+
+      using nav_mesh_ptr = std::shared_ptr<dtNavMesh>;
 
       bool initialise(const std::filesystem::path &file_path,
                       const Afk::Mesh &mesh, const Afk::Transform &transform);
@@ -28,14 +29,14 @@ namespace Afk {
 
       bool save(const std::filesystem::path &file_path);
 
-      auto get_nav_mesh() -> dtNavMesh *;
+      auto get_nav_mesh() -> nav_mesh_ptr;
 
       const Model &get_nav_mesh_model();
 
       const Model &get_height_field_model();
 
     private:
-      dtNavMesh *nav_mesh = nullptr;
+      nav_mesh_ptr nav_mesh = nav_mesh_ptr{dtAllocNavMesh(), &dtFreeNavMesh};
 
       Model height_field_model = {};
 
@@ -72,7 +73,6 @@ namespace Afk {
         POLYFLAGS_SWIM     = 2,  // Ability to swim (water).
         POLYFLAGS_DOOR     = 4,  // Ability to move through doors.
         POLYFLAGS_JUMP     = 8,  // Ability to jump.
-        POLYFLAGS_DISABLED = 16,  // Disabled polygon
       };
     };
 

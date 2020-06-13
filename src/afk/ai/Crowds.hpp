@@ -3,6 +3,7 @@
 #include <DetourCrowd.h>
 #include <memory>
 #include <unordered_set>
+#include "afk/ai/NavMeshManager.hpp"
 
 namespace Afk {
   namespace AI {
@@ -15,7 +16,7 @@ namespace Afk {
       auto operator=(Crowds &&other) -> Crowds & = delete;
 
       auto update(float dt_seconds) -> void;
-      auto init(dtNavMesh *nav_mesh) -> void;
+      auto init(NavMeshManager::nav_mesh_ptr nav_mesh) -> void;
       auto current_crowd() -> dtCrowd &;
 
       typedef int AgentID;

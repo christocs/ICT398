@@ -67,18 +67,17 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
 
   rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
 
-  const auto heightField = rcAllocHeightfield();
-  afk_assert(heightField, "Could not allocate height field");
+  auto heightField = std::unique_ptr<rcHeightfield, decltype(&rcFreeHeightField)>{rcAllocHeightfield(), &rcFreeHeightField};
 
   rcContext context = {};
   auto tempStatus =
       rcCreateHeightfield(&context, *heightField, config.width, config.height,
-                                   config.bmin, config.bmax, config.cs, config.ch);
+                          config.bmin, config.bmax, config.cs, config.ch);
   afk_assert(tempStatus, "Could not create height field");
 
   const size_t nvertices = mesh.vertices.size();
 
-  const std::unique_ptr<float[]> vertices(new float[nvertices * 3]);
+  const auto vertices = std::unique_ptr<float[]>(new float[nvertices*3]);
   const auto &meshVertices = mesh.vertices;
   size_t vertexCount       = 0;
   for (const auto &meshVertex : meshVertices) {
@@ -92,7 +91,7 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
 
   // copy indicies into array of ints (afk stores them as unsigned int)
   const auto &indices = mesh.indices;
-  const std::unique_ptr<int[]> triangles(new int[mesh.indices.size()]);
+  const auto triangles = std::unique_ptr<int[]>(new int[mesh.indices.size()]);
   // flip order of indices
   for (size_t i = 0; i < indices.size();) {
     triangles[i]     = indices[i];
@@ -102,7 +101,7 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   }
 
   // Find triangles which are walkable based on their slope and rasterize them. If your input data is multiple meshes, you can transform them here, calculate the are type for each of the meshes and rasterize them.
-  const std::unique_ptr<unsigned char[]> areas(new unsigned char[ntriangles]);
+  const auto areas = std::unique_ptr<unsigned char[]>(new unsigned char[ntriangles]);
   memset(areas.get(), 0, ntriangles * sizeof(unsigned char));
 
   rcMarkWalkableTriangles(&context, config.walkableSlopeAngle, vertices.get(),
@@ -131,14 +130,11 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   afk_assert(spanCount, "no spans found");
 
   // compact version
-  auto compactHeightField = rcAllocCompactHeightfield();
-  afk_assert(compactHeightField, "Could not allocate compact height field");
+  const auto compactHeightField = std::unique_ptr<rcCompactHeightfield, decltype(&rcFreeCompactHeightfield)>{rcAllocCompactHeightfield(), &rcFreeCompactHeightfield};
 
   tempStatus = rcBuildCompactHeightfield(&context, config.walkableHeight, config.walkableClimb,
                                          *heightField, *compactHeightField);
   afk_assert(tempStatus, "Could not build compact height field");
-
-  rcFreeHeightField(heightField);
 
   // Erode the walkable area by agent radius.
   tempStatus = rcErodeWalkableArea(&context, config.walkableRadius, *compactHeightField);
@@ -149,11 +145,8 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
                                       config.minRegionArea, config.mergeRegionArea);
   afk_assert(tempStatus, "Could not build monotone regions");
 
-  //
-  // Step 5. Trace and simplify region contours.
-  //
-  auto contours = rcAllocContourSet();
-  afk_assert(contours, "Could not allocate contours set");
+  // trace and simplify region contours.
+  auto contours = std::unique_ptr<rcContourSet, decltype(&rcFreeContourSet)>{rcAllocContourSet(), &rcFreeContourSet};
 
   tempStatus = rcBuildContours(&context, *compactHeightField, config.maxSimplificationError,
                                config.maxEdgeLen, *contours);
@@ -173,9 +166,6 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
                                      config.detailSampleDist,
                                      config.detailSampleMaxError, *detailMesh);
   afk_assert(tempStatus, "Could not build polymesh detail");
-
-  rcFreeCompactHeightfield(compactHeightField);
-  rcFreeContourSet(contours);
 
   // build detour nav mesh
   afk_assert(config.maxVertsPerPoly <= DT_VERTS_PER_POLYGON,
@@ -223,8 +213,7 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   tempStatus             = dtCreateNavMeshData(&params, &navData, &navDataSize);
   afk_assert(tempStatus, "Failed to allocate nav mesh data");
 
-  nav_mesh = dtAllocNavMesh();
-  afk_assert(nav_mesh, "Failed to allocate nav mesh");
+  nav_mesh = nav_mesh_ptr{dtAllocNavMesh(), &dtFreeNavMesh};
 
   dtStatus detourStatus = nav_mesh->init(navData, navDataSize, DT_TILE_FREE_DATA);
   afk_assert(!dtStatusFailed(detourStatus), "Could not init detour navmesh");
@@ -282,37 +271,34 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
     NavMeshSetHeader header = {};
     in.read(reinterpret_cast<char *>(&header), sizeof(NavMeshSetHeader));
     if (header.magic == NAVMESHSET_MAGIC && header.version == NAVMESHSET_VERSION) {
-      // fix memory leak
-      nav_mesh = dtAllocNavMesh();
-      if (nav_mesh) {
-        dtStatus status = nav_mesh->init(&header.params);
-        if (!dtStatusFailed(status)) {
-          // read tiles
-          for (int i = 0; i < header.numTiles; i++) {
-            NavMeshTileHeader tile_header = {};
-            in.read(reinterpret_cast<char *>(&tile_header), sizeof(NavMeshTileHeader));
+      nav_mesh        = nav_mesh_ptr{dtAllocNavMesh(), &dtFreeNavMesh};
+      dtStatus status = nav_mesh->init(&header.params);
+      if (!dtStatusFailed(status)) {
+        // read tiles
+        for (int i = 0; i < header.numTiles; i++) {
+          NavMeshTileHeader tile_header = {};
+          in.read(reinterpret_cast<char *>(&tile_header), sizeof(NavMeshTileHeader));
 
-            if (!tile_header.tileRef || !tile_header.dataSize) {
-              output = false;
-              break;
-            }
-
-            // todo: fix
-            auto *data = (unsigned char *)dtAlloc(tile_header.dataSize, DT_ALLOC_PERM);
-            if (!data) {
-              output = false;
-              break;
-            }
-
-            memset(data, 0, tile_header.dataSize);
-            // todo: check if you can read ahead
-            in.read(reinterpret_cast<char *>(data), tile_header.dataSize);
-            nav_mesh->addTile(data, tile_header.dataSize, DT_TILE_FREE_DATA,
-                              tile_header.tileRef, nullptr);
-            output = true;
+          if (!tile_header.tileRef || !tile_header.dataSize) {
+            output = false;
+            break;
           }
-          create_nav_mesh_model(*nav_mesh);
+
+          // todo: fix
+          auto *data = (unsigned char *)dtAlloc(tile_header.dataSize, DT_ALLOC_PERM);
+          if (!data) {
+            output = false;
+            break;
+          }
+
+          memset(data, 0, tile_header.dataSize);
+          // todo: check if you can read ahead
+          in.read(reinterpret_cast<char *>(data), tile_header.dataSize);
+          nav_mesh->addTile(data, tile_header.dataSize, DT_TILE_FREE_DATA,
+                            tile_header.tileRef, nullptr);
+          output = true;
         }
+        create_nav_mesh_model(*nav_mesh);
       }
     }
 
@@ -326,7 +312,7 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
 bool NavMeshManager::save(const std::filesystem::path &file_path) {
   bool output = false;
 
-  const dtNavMesh *mesh = nav_mesh;
+  const auto* mesh = nav_mesh.get();
 
   if (mesh) {
     std::ofstream out(file_path, std::ios::binary);
@@ -550,6 +536,6 @@ void NavMeshManager::process_nav_mesh_model_poly(const dtNavMesh &navMesh,
   }
 }
 
-dtNavMesh *NavMeshManager::get_nav_mesh() {
+auto NavMeshManager::get_nav_mesh() -> NavMeshManager::nav_mesh_ptr {
   return this->nav_mesh;
 }
