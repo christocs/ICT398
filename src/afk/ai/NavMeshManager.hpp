@@ -5,8 +5,8 @@
 #include <filesystem>
 #include <memory>
 
-#include <glm/glm.hpp>
 #include <entt/entt.hpp>
+#include <glm/glm.hpp>
 
 #include "afk/physics/Transform.hpp"
 #include "afk/renderer/Mesh.hpp"
@@ -22,7 +22,7 @@ namespace Afk {
 
       bool initialise(const std::filesystem::path &file_path, entt::registry *registry);
 
-      bool bake(const std::filesystem::path &file_path, entt::registry *registry);
+      bool bake(entt::registry *registry);
 
       bool load(const std::filesystem::path &file_path);
 
@@ -44,9 +44,10 @@ namespace Afk {
       static glm::vec3 transform_pos(const glm::vec3 &input, const Afk::Transform &transform);
 
       // vertex data is flat, order is [x][y][z]
-      static void get_min_max_bounds(const std::vector<float> &vertices, glm::vec3 &min, glm::vec3 &max);
+      static void get_min_max_bounds(const std::vector<float> &vertices,
+                                     glm::vec3 &min, glm::vec3 &max);
 
-      void create_height_field_model(const rcHeightfield &heightField);
+      void create_height_field_model(const rcHeightfield &height_field);
 
       void create_nav_mesh_model(const dtNavMesh &navMesh);
 
@@ -69,10 +70,11 @@ namespace Afk {
       };
 
       enum PolyFlags {
-        POLYFLAGS_WALK     = 1,  // Ability to walk (ground, grass, road)
-        POLYFLAGS_SWIM     = 2,  // Ability to swim (water).
-        POLYFLAGS_DOOR     = 4,  // Ability to move through doors.
-        POLYFLAGS_JUMP     = 8,  // Ability to jump.
+        POLYFLAGS_NONE = 0,
+        POLYFLAGS_WALK = 1, // Ability to walk (ground, grass, road)
+        POLYFLAGS_SWIM = 2, // Ability to swim (water).
+        POLYFLAGS_DOOR = 4, // Ability to move through doors.
+        POLYFLAGS_JUMP = 8, // Ability to jump.
       };
     };
 
