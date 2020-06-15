@@ -34,6 +34,7 @@ PhysicsBody::PhysicsBody(GameObject e, Afk::PhysicsBodySystem *physics_system,
       this->body->setType(rp3d::BodyType::DYNAMIC);
       break;
   }
+  this->rigid_body_type = body_type;
 
   afk_assert(linear_dampening >= 0, "Linear dampening cannot be negative");
   this->body->setLinearDamping(static_cast<rp3d::decimal>(linear_dampening));
@@ -77,6 +78,7 @@ PhysicsBody::PhysicsBody(GameObject e, Afk::PhysicsBodySystem *physics_system,
       this->body->setType(rp3d::BodyType::DYNAMIC);
       break;
   }
+  this->rigid_body_type = body_type;
 
   afk_assert(linear_dampening >= 0, "Linear dampening cannot be negative");
   this->body->setLinearDamping(static_cast<rp3d::decimal>(linear_dampening));
@@ -133,6 +135,7 @@ PhysicsBody::PhysicsBody(GameObject e, Afk::PhysicsBodySystem *physics_system, A
       this->body->setType(rp3d::BodyType::DYNAMIC);
       break;
   }
+  this->rigid_body_type = body_type;
 
   afk_assert(linear_dampening >= 0, "Linear dampening cannot be negative");
   this->body->setLinearDamping(static_cast<rp3d::decimal>(linear_dampening));
@@ -161,4 +164,9 @@ void PhysicsBody::apply_force(glm::vec3 force) {
 
 void PhysicsBody::apply_torque(glm::vec3 torque) {
   this->body->applyTorque(rp3d::Vector3{torque.x, torque.y, torque.z});
+}
+
+Afk::RigidBodyType PhysicsBody::get_type() const
+{
+  return rigid_body_type;
 }

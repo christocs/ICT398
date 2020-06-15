@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include <afk/debug/Assert.hpp>
+#include <afk/io/ModelSource.hpp>
 #include <glm/gtc/type_ptr.inl>
 
 #include "DetourNavMesh.h"
@@ -13,24 +14,103 @@
 using Afk::AI::NavMeshManager;
 
 bool NavMeshManager::initialise(const std::filesystem::path &file_path,
-                                const Afk::Mesh &mesh, const Afk::Transform &transform) {
-  if (!this->load(file_path)) {
-    if (this->bake(file_path, mesh, transform)) {
-      if (!this->save(file_path)) {
-        Afk::Io::log << "Failed to bake nav mesh" << '\n';
-        return false;
-      } else {
-        std::cout << "file bake saved" << std::endl;
-      }
-    }
-  } else {
-    std::cout << "file loaded" << std::endl;
-  }
+                                entt::registry *registry) {
+  //  if (!this->load(file_path)) {
+  //    if (this->bake(file_path, registry)) {
+  //      if (!this->save(file_path)) {
+  //        Afk::Io::log << "Failed to bake nav mesh" << '\n';
+  //        return false;
+  //      } else {
+  //        std::cout << "file bake saved" << std::endl;
+  //      }
+  //    }
+  //  } else {
+  //    std::cout << "file loaded" << std::endl;
+  //  }
+  this->bake(file_path, registry);
   return true;
 }
 
-bool NavMeshManager::bake(const std::filesystem::path &file_path,
-                          const Afk::Mesh &mesh, const Afk::Transform &transform) {
+bool NavMeshManager::bake(const std::filesystem::path &file_path, entt::registry *registry) {
+  auto physics_model_view =
+      registry->view<Afk::Transform, Afk::Model, Afk::PhysicsBody>();
+
+  size_t nvertices = 0;
+  size_t nindices  = 0;
+  for (const auto &entity : physics_model_view) {
+    const auto &model_component = physics_model_view.get<Afk::Model>(entity);
+    const auto &model_physics_body = physics_model_view.get<Afk::PhysicsBody>(entity);
+    if (model_physics_body.get_type() == Afk::RigidBodyType::STATIC) {
+      for (const auto &mesh : model_component.meshes) {
+        nvertices += mesh.vertices.size();
+        nindices += mesh.indices.size();
+      }
+    }
+  }
+  const size_t ntriangles = nindices / 3; // should be an integer
+
+  // vertex positions are flattened out
+  std::vector<float> vertices = {};
+  vertices.reserve(nvertices * 3);
+  // triangles are made of 3 index positions in a row
+  std::vector<int> triangles = {};
+  triangles.reserve(nindices);
+
+  size_t vertex_offset = 0;
+  size_t index_offset  = 0;
+  for (const auto &entity : physics_model_view) {
+    std::cout << "physics model size: " << physics_model_view.size() << std::endl;
+    const auto &model_component = physics_model_view.get<Afk::Model>(entity);
+    const auto &model_transform = physics_model_view.get<Afk::Transform>(entity);
+    const auto &model_physics_body = physics_model_view.get<Afk::PhysicsBody>(entity);
+    if (model_physics_body.get_type() == Afk::RigidBodyType::STATIC) {
+      for (const auto &mesh : model_component.meshes) {
+        std::cout << "meshes " << model_component.meshes.size() << std::endl;
+        // add vertices for mesh
+        const auto &meshVertices = mesh.vertices;
+        for (const auto &meshVertex : meshVertices) {
+          // todo: make sure parent and child transform are in the correct order
+//          const auto pos = NavMeshManager::transform_pos(
+//              NavMeshManager::transform_pos(meshVertex.position, mesh.transform), model_transform);
+          const auto pos = NavMeshManager::transform_pos(
+              NavMeshManager::transform_pos(meshVertex.position, model_transform), mesh.transform);
+          //          const auto pos = meshVertex.position;
+          vertices.push_back(pos.x);
+          vertices.push_back(pos.y);
+          vertices.push_back(pos.z);
+          //          std::cout << "vertex: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
+        }
+
+        // add indices for mesh, these need ot be converted from unsigned int to int and have their order reversed
+        const auto &indices = mesh.indices;
+        for (size_t i = 0; i < indices.size(); i += 3) {
+                    triangles.push_back(indices[i] + vertex_offset);
+                    triangles.push_back(indices[i + 2] + vertex_offset);
+                    triangles.push_back(indices[i + 1] + vertex_offset);
+//          triangles.push_back(indices[i]);
+//          triangles.push_back(indices[i + 2]);
+//          triangles.push_back(indices[i + 1]);
+          //          std::cout << indices[i] << ", " << indices[i + 2] << ", " << indices[i + 1] << std::endl;
+          //          std::cout << vertices[indices[i]] << ", " << vertices[indices[i+2]] << ", " << vertices[indices[i+1]] << std::endl;
+        }
+
+        vertex_offset += mesh.vertices.size();
+        index_offset += mesh.indices.size();
+        std::cout << "index offset: " << index_offset << " " << indices.size() << std::endl;
+        std::cout << "vertex offset: " << vertex_offset << std::endl;
+      }
+    }
+  }
+  std::cout << "nindices: " << nindices << std::endl;
+  std::cout << "nvervtices: " << nvertices << std::endl;
+
+  glm::vec3 bmin = {};
+  glm::vec3 bmax = {};
+  NavMeshManager::get_min_max_bounds(vertices, bmin, bmax);
+
+  std::cout << "bmin: " << bmin.x << ", " << bmin.y << ", " << bmin.z << std::endl;
+  std::cout << "bmax: " << bmax.x << ", " << bmax.y << ", " << bmax.z << std::endl;
+
   // use default values from demo
   rcConfig config                 = {};
   config.cs                       = 0.3f;  // cell size
@@ -53,11 +133,6 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   const auto detailSampleMaxError = 1.0f;
   config.detailSampleMaxError     = config.ch * detailSampleMaxError;
 
-  glm::vec3 bmin = {};
-  glm::vec3 bmax = {};
-  NavMeshManager::get_min_max_bounds(mesh, bmin, bmax);
-  bmin           = NavMeshManager::transform_pos(bmin, transform);
-  bmax           = NavMeshManager::transform_pos(bmax, transform);
   config.bmin[0] = bmin.x;
   config.bmin[1] = bmin.y;
   config.bmin[2] = bmin.z;
@@ -67,7 +142,8 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
 
   rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
 
-  auto heightField = std::unique_ptr<rcHeightfield, decltype(&rcFreeHeightField)>{rcAllocHeightfield(), &rcFreeHeightField};
+  auto heightField = std::unique_ptr<rcHeightfield, decltype(&rcFreeHeightField)>{
+      rcAllocHeightfield(), &rcFreeHeightField};
 
   rcContext context = {};
   auto tempStatus =
@@ -75,40 +151,15 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
                           config.bmin, config.bmax, config.cs, config.ch);
   afk_assert(tempStatus, "Could not create height field");
 
-  const size_t nvertices = mesh.vertices.size();
-
-  const auto vertices = std::unique_ptr<float[]>(new float[nvertices*3]);
-  const auto &meshVertices = mesh.vertices;
-  size_t vertexCount       = 0;
-  for (const auto &meshVertex : meshVertices) {
-    const auto pos = NavMeshManager::transform_pos(meshVertex.position, transform);
-    vertices[vertexCount++] = pos.x;
-    vertices[vertexCount++] = pos.y;
-    vertices[vertexCount++] = pos.z;
-  }
-
-  const size_t ntriangles = mesh.indices.size() / 3; // should be an integer
-
-  // copy indicies into array of ints (afk stores them as unsigned int)
-  const auto &indices = mesh.indices;
-  const auto triangles = std::unique_ptr<int[]>(new int[mesh.indices.size()]);
-  // flip order of indices
-  for (size_t i = 0; i < indices.size();) {
-    triangles[i]     = indices[i];
-    triangles[i + 1] = indices[i + 2];
-    triangles[i + 2] = indices[i + 1];
-    i += 3;
-  }
-
   // Find triangles which are walkable based on their slope and rasterize them. If your input data is multiple meshes, you can transform them here, calculate the are type for each of the meshes and rasterize them.
   const auto areas = std::unique_ptr<unsigned char[]>(new unsigned char[ntriangles]);
   memset(areas.get(), 0, ntriangles * sizeof(unsigned char));
 
-  rcMarkWalkableTriangles(&context, config.walkableSlopeAngle, vertices.get(),
-                          nvertices, triangles.get(), ntriangles, areas.get());
+  rcMarkWalkableTriangles(&context, config.walkableSlopeAngle, vertices.data(),
+                          nvertices, triangles.data(), ntriangles, areas.get());
 
-  tempStatus = rcRasterizeTriangles(&context, vertices.get(), nvertices,
-                                    triangles.get(), areas.get(), ntriangles,
+  tempStatus = rcRasterizeTriangles(&context, vertices.data(), nvertices,
+                                    triangles.data(), areas.get(), ntriangles,
                                     *heightField, config.walkableClimb);
   afk_assert(tempStatus, "Could not rasterize triangles");
 
@@ -130,7 +181,9 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   afk_assert(spanCount, "no spans found");
 
   // compact version
-  const auto compactHeightField = std::unique_ptr<rcCompactHeightfield, decltype(&rcFreeCompactHeightfield)>{rcAllocCompactHeightfield(), &rcFreeCompactHeightfield};
+  const auto compactHeightField =
+      std::unique_ptr<rcCompactHeightfield, decltype(&rcFreeCompactHeightfield)>{
+          rcAllocCompactHeightfield(), &rcFreeCompactHeightfield};
 
   tempStatus = rcBuildCompactHeightfield(&context, config.walkableHeight, config.walkableClimb,
                                          *heightField, *compactHeightField);
@@ -146,7 +199,8 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   afk_assert(tempStatus, "Could not build monotone regions");
 
   // trace and simplify region contours.
-  auto contours = std::unique_ptr<rcContourSet, decltype(&rcFreeContourSet)>{rcAllocContourSet(), &rcFreeContourSet};
+  auto contours = std::unique_ptr<rcContourSet, decltype(&rcFreeContourSet)>{
+      rcAllocContourSet(), &rcFreeContourSet};
 
   tempStatus = rcBuildContours(&context, *compactHeightField, config.maxSimplificationError,
                                config.maxEdgeLen, *contours);
@@ -224,31 +278,42 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path,
   return true;
 }
 
-void NavMeshManager::get_min_max_bounds(const Afk::Mesh &mesh, glm::vec3 &min,
-                                        glm::vec3 &max) {
-  min.x = 0.0f;
-  min.y = 0.0f;
-  min.z = 0.0f;
-  max.x = 0.0f;
-  max.y = 0.0f;
-  max.z = 0.0f;
-  for (const auto &vertex : mesh.vertices) {
-    if (vertex.position.x < min.x) {
-      min.x = vertex.position.x;
-    } else if (vertex.position.x > max.x) {
-      max.x = vertex.position.x;
-    }
+void NavMeshManager::get_min_max_bounds(const std::vector<float> &vertices,
+                                        glm::vec3 &min, glm::vec3 &max) {
+  if (vertices.size() < 3) {
+    min.x = 0.0f;
+    min.y = 0.0f;
+    min.z = 0.0f;
+    max.x = 0.0f;
+    max.y = 0.0f;
+    max.z = 0.0f;
+  } else {
+    min.x = vertices[0];
+    min.y = vertices[1];
+    min.z = vertices[2];
+    max.x = vertices[0];
+    max.y = vertices[1];
+    max.z = vertices[2];
 
-    if (vertex.position.y < min.y) {
-      min.y = vertex.position.y;
-    } else if (vertex.position.y > max.y) {
-      max.y = vertex.position.y;
-    }
+    std::cout << "vertices.size() " << vertices.size() << std::endl;
+    for (size_t i = 3; i < vertices.size(); i += 3) {
+      if (vertices[i] < min.x) {
+        min.x = vertices[i];
+      } else if (vertices[i] > max.x) {
+        max.x = vertices[i];
+      }
 
-    if (vertex.position.z < min.z) {
-      min.z = vertex.position.z;
-    } else if (vertex.position.z > max.z) {
-      max.z = vertex.position.z;
+      if (vertices[i + 1] < min.y) {
+        min.y = vertices[i + 1];
+      } else if (vertices[i + 1] > max.y) {
+        max.y = vertices[i + 1];
+      }
+
+      if (vertices[i + 2] < min.z) {
+        min.z = vertices[i + 2];
+      } else if (vertices[i + 2] > max.z) {
+        max.z = vertices[i + 2];
+      }
     }
   }
 }
@@ -312,7 +377,7 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
 bool NavMeshManager::save(const std::filesystem::path &file_path) {
   bool output = false;
 
-  const auto* mesh = nav_mesh.get();
+  const auto *mesh = nav_mesh.get();
 
   if (mesh) {
     std::ofstream out(file_path, std::ios::binary);
@@ -366,7 +431,8 @@ void NavMeshManager::create_height_field_model(const rcHeightfield &heightField)
   height_field_model           = {};
   height_field_model.file_path = "res/gen/heightfield/model";
   height_field_model.file_dir  = "res/gen/heightfield";
-  Mesh heightFieldMesh         = {};
+  Mesh mesh                    = {};
+  mesh.transform.translation = glm::vec3(0.0f);
 
   for (int y = 0; y < heightField.height; y++) {
     for (int x = 0; x < heightField.width; x++) {
@@ -374,7 +440,7 @@ void NavMeshManager::create_height_field_model(const rcHeightfield &heightField)
       const auto minz = heightField.bmin[2] + y * heightField.cs;
       const rcSpan *s = heightField.spans[x + y * heightField.width];
       while (s) {
-        const auto vertexOffset = heightFieldMesh.vertices.size();
+        const auto vertexOffset = mesh.vertices.size();
         const auto miny = heightField.bmin[1] + s->smin * heightField.ch;
         const auto maxx = minx + heightField.cs;
         const auto maxy = heightField.bmin[1] + s->smax * heightField.ch;
@@ -383,83 +449,83 @@ void NavMeshManager::create_height_field_model(const rcHeightfield &heightField)
         // duplicate vertices may be created
         Vertex vertex   = {};
         vertex.position = glm::vec3(minx, miny, minz);
-        heightFieldMesh.vertices.push_back(vertex);
+        mesh.vertices.push_back(vertex);
 
         vertex.position = glm::vec3(maxx, miny, minz);
-        heightFieldMesh.vertices.push_back(vertex);
+        mesh.vertices.push_back(vertex);
 
         vertex.position = glm::vec3(maxx, miny, maxz);
-        heightFieldMesh.vertices.push_back(vertex);
+        mesh.vertices.push_back(vertex);
 
         vertex.position = glm::vec3(minx, miny, maxz);
-        heightFieldMesh.vertices.push_back(vertex);
+        mesh.vertices.push_back(vertex);
 
         vertex.position = glm::vec3(minx, maxy, minz);
-        heightFieldMesh.vertices.push_back(vertex);
+        mesh.vertices.push_back(vertex);
 
         vertex.position = glm::vec3(maxx, maxy, minz);
-        heightFieldMesh.vertices.push_back(vertex);
+        mesh.vertices.push_back(vertex);
 
         vertex.position = glm::vec3(maxx, maxy, maxz);
-        heightFieldMesh.vertices.push_back(vertex);
+        mesh.vertices.push_back(vertex);
 
         vertex.position = glm::vec3(minx, maxy, maxz);
-        heightFieldMesh.vertices.push_back(vertex);
+        mesh.vertices.push_back(vertex);
 
         // face
-        heightFieldMesh.indices.push_back(vertexOffset);
-        heightFieldMesh.indices.push_back(vertexOffset + 1);
-        heightFieldMesh.indices.push_back(vertexOffset + 5);
-        heightFieldMesh.indices.push_back(vertexOffset + 0);
-        heightFieldMesh.indices.push_back(vertexOffset + 5);
-        heightFieldMesh.indices.push_back(vertexOffset + 4);
+        mesh.indices.push_back(vertexOffset);
+        mesh.indices.push_back(vertexOffset + 1);
+        mesh.indices.push_back(vertexOffset + 5);
+        mesh.indices.push_back(vertexOffset + 0);
+        mesh.indices.push_back(vertexOffset + 5);
+        mesh.indices.push_back(vertexOffset + 4);
 
         // face
-        heightFieldMesh.indices.push_back(vertexOffset + 0);
-        heightFieldMesh.indices.push_back(vertexOffset + 1);
-        heightFieldMesh.indices.push_back(vertexOffset + 2);
-        heightFieldMesh.indices.push_back(vertexOffset + 0);
-        heightFieldMesh.indices.push_back(vertexOffset + 2);
-        heightFieldMesh.indices.push_back(vertexOffset + 3);
+        mesh.indices.push_back(vertexOffset + 0);
+        mesh.indices.push_back(vertexOffset + 1);
+        mesh.indices.push_back(vertexOffset + 2);
+        mesh.indices.push_back(vertexOffset + 0);
+        mesh.indices.push_back(vertexOffset + 2);
+        mesh.indices.push_back(vertexOffset + 3);
 
         // face
-        heightFieldMesh.indices.push_back(vertexOffset + 3);
-        heightFieldMesh.indices.push_back(vertexOffset + 2);
-        heightFieldMesh.indices.push_back(vertexOffset + 6);
-        heightFieldMesh.indices.push_back(vertexOffset + 3);
-        heightFieldMesh.indices.push_back(vertexOffset + 6);
-        heightFieldMesh.indices.push_back(vertexOffset + 7);
+        mesh.indices.push_back(vertexOffset + 3);
+        mesh.indices.push_back(vertexOffset + 2);
+        mesh.indices.push_back(vertexOffset + 6);
+        mesh.indices.push_back(vertexOffset + 3);
+        mesh.indices.push_back(vertexOffset + 6);
+        mesh.indices.push_back(vertexOffset + 7);
 
         // face
-        heightFieldMesh.indices.push_back(vertexOffset + 4);
-        heightFieldMesh.indices.push_back(vertexOffset + 5);
-        heightFieldMesh.indices.push_back(vertexOffset + 6);
-        heightFieldMesh.indices.push_back(vertexOffset + 4);
-        heightFieldMesh.indices.push_back(vertexOffset + 6);
-        heightFieldMesh.indices.push_back(vertexOffset + 7);
+        mesh.indices.push_back(vertexOffset + 4);
+        mesh.indices.push_back(vertexOffset + 5);
+        mesh.indices.push_back(vertexOffset + 6);
+        mesh.indices.push_back(vertexOffset + 4);
+        mesh.indices.push_back(vertexOffset + 6);
+        mesh.indices.push_back(vertexOffset + 7);
 
         // face
-        heightFieldMesh.indices.push_back(vertexOffset + 0);
-        heightFieldMesh.indices.push_back(vertexOffset + 3);
-        heightFieldMesh.indices.push_back(vertexOffset + 7);
-        heightFieldMesh.indices.push_back(vertexOffset + 0);
-        heightFieldMesh.indices.push_back(vertexOffset + 7);
-        heightFieldMesh.indices.push_back(vertexOffset + 4);
+        mesh.indices.push_back(vertexOffset + 0);
+        mesh.indices.push_back(vertexOffset + 3);
+        mesh.indices.push_back(vertexOffset + 7);
+        mesh.indices.push_back(vertexOffset + 0);
+        mesh.indices.push_back(vertexOffset + 7);
+        mesh.indices.push_back(vertexOffset + 4);
 
         // face
-        heightFieldMesh.indices.push_back(vertexOffset + 1);
-        heightFieldMesh.indices.push_back(vertexOffset + 2);
-        heightFieldMesh.indices.push_back(vertexOffset + 6);
-        heightFieldMesh.indices.push_back(vertexOffset + 1);
-        heightFieldMesh.indices.push_back(vertexOffset + 6);
-        heightFieldMesh.indices.push_back(vertexOffset + 5);
+        mesh.indices.push_back(vertexOffset + 1);
+        mesh.indices.push_back(vertexOffset + 2);
+        mesh.indices.push_back(vertexOffset + 6);
+        mesh.indices.push_back(vertexOffset + 1);
+        mesh.indices.push_back(vertexOffset + 6);
+        mesh.indices.push_back(vertexOffset + 5);
 
         s = s->next;
       }
     }
   }
 
-  height_field_model.meshes.push_back(std::move(heightFieldMesh));
+  height_field_model.meshes.push_back(std::move(mesh));
 }
 
 void NavMeshManager::create_nav_mesh_model(const dtNavMesh &navMesh) {
@@ -467,6 +533,7 @@ void NavMeshManager::create_nav_mesh_model(const dtNavMesh &navMesh) {
   nav_mesh_model.file_path = "res/gen/navmesh/model";
   nav_mesh_model.file_dir  = "res/gen/navmesh";
   Mesh mesh                = {};
+  mesh.transform.translation = glm::vec3(0.0f);
 
   const auto SAMPLE_POLYFLAGS_DISABLED = 0x10;
   for (int i = 0; i < navMesh.getMaxTiles(); i++) {

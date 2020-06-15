@@ -6,6 +6,7 @@
 #include <memory>
 
 #include <glm/glm.hpp>
+#include <entt/entt.hpp>
 
 #include "afk/physics/Transform.hpp"
 #include "afk/renderer/Mesh.hpp"
@@ -19,11 +20,9 @@ namespace Afk {
 
       using nav_mesh_ptr = std::shared_ptr<dtNavMesh>;
 
-      bool initialise(const std::filesystem::path &file_path,
-                      const Afk::Mesh &mesh, const Afk::Transform &transform);
+      bool initialise(const std::filesystem::path &file_path, entt::registry *registry);
 
-      bool bake(const std::filesystem::path &file_path, const Afk::Mesh &mesh,
-                const Afk::Transform &transform);
+      bool bake(const std::filesystem::path &file_path, entt::registry *registry);
 
       bool load(const std::filesystem::path &file_path);
 
@@ -44,7 +43,8 @@ namespace Afk {
 
       static glm::vec3 transform_pos(const glm::vec3 &input, const Afk::Transform &transform);
 
-      static void get_min_max_bounds(const Afk::Mesh &mesh, glm::vec3 &min, glm::vec3 &max);
+      // vertex data is flat, order is [x][y][z]
+      static void get_min_max_bounds(const std::vector<float> &vertices, glm::vec3 &min, glm::vec3 &max);
 
       void create_height_field_model(const rcHeightfield &heightField);
 

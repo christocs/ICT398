@@ -52,8 +52,8 @@ auto Engine::initialize() -> void {
   Afk::add_engine_bindings(this->lua);
 
   this->terrain_manager.initialize();
-  const int terrain_width  = 128;
-  const int terrain_length = 128;
+  const int terrain_width  = 32;
+  const int terrain_length = 32;
   this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
   //  this->terrain_manager.generate_flat_plane(terrain_width, terrain_length);
   this->renderer.load_model(this->terrain_manager.get_model());
@@ -64,18 +64,18 @@ auto Engine::initialize() -> void {
   registry.assign<Afk::ModelSource>(terrain_entity, terrain_entity,
                                     terrain_manager.get_model().file_path,
                                     "shader/terrain.prog");
+  registry.assign<Afk::Model>(terrain_entity, terrain_entity, terrain_manager.get_model());
+
   registry.assign<Afk::Transform>(terrain_entity, terrain_transform);
   registry.assign<Afk::PhysicsBody>(terrain_entity, terrain_entity, &this->physics_body_system,
                                     terrain_transform, 0.3f, 0.0f, 0.0f, 0.0f,
                                     true, Afk::RigidBodyType::STATIC,
                                     this->terrain_manager.height_map);
-  this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh",
-                                    this->terrain_manager.get_model().meshes[0],
-                                    terrain_transform);
+  this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh", &this->registry);
   //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
 
-  /*
+/*
   this->renderer.load_model(this->nav_mesh_manager.get_height_field_model());
   auto height_field_entity = registry.create();
   auto height_field_transform = Transform{height_field_entity};
@@ -85,6 +85,7 @@ auto Engine::initialize() -> void {
       this->nav_mesh_manager.get_height_field_model().file_path, "shader/heightfield.prog");
   registry.assign<Afk::Transform>(height_field_entity, height_field_transform);
   /**/
+
 
   this->renderer.load_model(this->nav_mesh_manager.get_nav_mesh_model());
   auto nav_mesh_entity    = registry.create();

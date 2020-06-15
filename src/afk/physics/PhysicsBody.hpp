@@ -53,10 +53,15 @@ namespace Afk {
     // apply torque for the next physics update
     void apply_torque(glm::vec3 force);
 
+    // get rigid body type
+    Afk::RigidBodyType get_type() const;
+
   private:
     RigidBody *body;
     ProxyShape *proxy_shape;
     std::unique_ptr<CollisionShape> collision_shape;
+
+    Afk::RigidBodyType rigid_body_type;
 
     friend class PhysicsBodySystem;
   };
