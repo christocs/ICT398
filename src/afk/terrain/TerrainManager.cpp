@@ -48,8 +48,8 @@ auto TerrainManager::generate_height_map(int width, int length, float roughness,
       ++index;
     }
   }
-
   FastNoiseSIMD::FreeNoiseSet(noise_set);
+  delete noise;
 }
 
 auto TerrainManager::generate_flat_plane(int width, int length) -> void {
