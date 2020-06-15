@@ -18,19 +18,18 @@ using Afk::AI::NavMeshManager;
 // todo: remove cout
 bool NavMeshManager::initialise(const std::filesystem::path &file_path,
                                 entt::registry *registry) {
-//  if (!this->load(file_path)) {
-//    if (this->bake(file_path, registry)) {
-//      if (!this->save(file_path)) {
-//        Afk::Io::log << "Failed to bake nav mesh" << '\n';
-//        return false;
-//      } else {
-//        Afk::Io::log << "Failed to bake nav mesh" << '\n';
-//      }
-//    }
-//  } else {
-//    Afk::Io::log << "Nav mesh successfully loaded" << '\n';
-//  }
-  this->bake(file_path, registry);
+  if (!this->load(file_path)) {
+    if (this->bake(file_path, registry)) {
+      if (!this->save(file_path)) {
+        Afk::Io::log << "Failed to bake nav mesh" << '\n';
+        return false;
+      } else {
+        Afk::Io::log << "Failed to bake nav mesh" << '\n';
+      }
+    }
+  } else {
+    Afk::Io::log << "Nav mesh successfully loaded" << '\n';
+  }
   return true;
 }
 

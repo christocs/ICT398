@@ -52,8 +52,8 @@ auto Engine::initialize() -> void {
   Afk::add_engine_bindings(this->lua);
 
   this->terrain_manager.initialize();
-  const int terrain_width  = 32;
-  const int terrain_length = 32;
+  const int terrain_width  = 128;
+  const int terrain_length = 128;
   this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
   this->renderer.load_model(this->terrain_manager.get_model());
 
@@ -73,7 +73,7 @@ auto Engine::initialize() -> void {
 
   auto box_entity           = registry.create();
   auto box_transform        = Transform{box_entity};
-  box_transform.translation = glm::vec3{0.0f, -10.0f, 0.0f};
+  box_transform.translation = glm::vec3{0.0f, -15.0f, 0.0f};
   box_transform.scale = glm::vec3(5.0f);
   auto box_model = Model(box_entity, "res/model/box/box.obj");
   this->renderer.load_model(box_model);
