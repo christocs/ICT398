@@ -18,18 +18,19 @@ using Afk::AI::NavMeshManager;
 // todo: remove cout
 bool NavMeshManager::initialise(const std::filesystem::path &file_path,
                                 entt::registry *registry) {
-  if (!this->load(file_path)) {
-    if (this->bake(file_path, registry)) {
-      if (!this->save(file_path)) {
-        Afk::Io::log << "Failed to bake nav mesh" << '\n';
-        return false;
-      } else {
-        Afk::Io::log << "Failed to bake nav mesh" << '\n';
-      }
-    }
-  } else {
-    Afk::Io::log << "Nav mesh successfully loaded" << '\n';
-  }
+//  if (!this->load(file_path)) {
+//    if (this->bake(file_path, registry)) {
+//      if (!this->save(file_path)) {
+//        Afk::Io::log << "Failed to bake nav mesh" << '\n';
+//        return false;
+//      } else {
+//        Afk::Io::log << "Failed to bake nav mesh" << '\n';
+//      }
+//    }
+//  } else {
+//    Afk::Io::log << "Nav mesh successfully loaded" << '\n';
+//  }
+  this->bake(file_path, registry);
   return true;
 }
 
@@ -78,12 +79,13 @@ bool NavMeshManager::bake(const std::filesystem::path &file_path, entt::registry
           vertices.push_back(pos.z);
         }
 
-        // add indices for mesh, these need ot be converted from unsigned int to int and have their order reversed
+        // add indices for mesh, these need ot be converted from unsigned int to int
+        // make sure the order of the indices is correct!
         const auto &indices = mesh.indices;
         for (size_t i = 0; i < indices.size(); i += 3) {
           triangles.push_back(indices[i] + vertex_offset);
-          triangles.push_back(indices[i + 2] + vertex_offset);
           triangles.push_back(indices[i + 1] + vertex_offset);
+          triangles.push_back(indices[i + 2] + vertex_offset);
         }
 
         vertex_offset += mesh.vertices.size();

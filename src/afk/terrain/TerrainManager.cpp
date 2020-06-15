@@ -86,12 +86,12 @@ auto TerrainManager::generate_flat_plane(int width, int length) -> void {
       auto start = y * w + x;
 
       this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start);
-      this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1);
       this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + w);
+      this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1);
 
       this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1);
-      this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1 + w);
       this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + w);
+      this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1 + w);
     }
   }
 }
