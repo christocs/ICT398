@@ -12,5 +12,5 @@ auto Chase::update(const glm::vec3 &current_pos) -> glm::vec3 {
   const auto &goal_pos =
       Afk::Engine::get().registry.get<Transform>(this->target).translation;
   // don't chase past max distance
-  return (goal_pos - current_pos).length() < max_dist ? goal_pos : current_pos;
+  return glm::length(goal_pos - current_pos) < max_dist ? goal_pos : current_pos;
 }
