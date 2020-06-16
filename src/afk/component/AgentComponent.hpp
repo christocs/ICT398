@@ -21,11 +21,13 @@ namespace Afk {
       // auto operator=(AgentComponent &&e) -> AgentComponent & = delete;
       ~AgentComponent();
 
-      auto chase(const GameObject &target) -> void;
+      auto chase(const GameObject &target, float max_dist) -> void;
+      auto move_to(const glm::vec3 &target) -> void;
+
       auto update() -> void;
 
     private:
-      float radius;
+      // float radius;
       Afk::AI::Crowds::AgentID id = -1;
       typedef std::shared_ptr<Afk::AI::BaseBehaviour> Behaviour;
 

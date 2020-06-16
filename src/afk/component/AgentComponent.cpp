@@ -1,7 +1,6 @@
 #include "AgentComponent.hpp"
 
 #include "afk/Afk.hpp"
-#include "afk/ai/behaviour/Chase.hpp"
 
 using Afk::AI::AgentComponent;
 
@@ -19,8 +18,13 @@ AgentComponent::~AgentComponent() {
   Afk::Engine::get().crowds.current_crowd().removeAgent(this->id);
 }
 
-auto AgentComponent::chase(const GameObject &target) -> void {
-  this->current_behaviour = Behaviour{new Afk::AI::Chase{target, 500.f}};
+#include "afk/ai/behaviour/Chase.hpp"
+auto AgentComponent::chase(const GameObject &target, float max_dist) -> void {
+  this->current_behaviour = Behaviour{new Afk::AI::Chase{target, max_dist}};
+}
+#include "afk/ai/behaviour/MoveTo.hpp"
+auto AgentComponent::move_to(const glm::vec3 &target) -> void {
+  this->current_behaviour = Behaviour{new Afk::AI::MoveTo{target}};
 }
 
 auto AgentComponent::update() -> void {
