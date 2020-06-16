@@ -123,13 +123,13 @@ auto Engine::initialize() -> void {
 
   auto test_agent             = registry.create();
   auto agent_transform        = Afk::Transform{test_agent};
-  agent_transform.translation = {5, -6.75, 5};
+  agent_transform.translation = {5, -6, 5};
   agent_transform.scale       = {.1f, .1f, .1f};
   registry.assign<Afk::Transform>(test_agent, agent_transform);
   registry.assign<Afk::ModelSource>(test_agent, test_agent, "res/model/nanosuit/nanosuit.fbx",
                                     "shader/default.prog");
   dtCrowdAgentParams p = {};
-  p.radius             = 1;
+  p.radius             = .1;
   p.maxSpeed           = 1;
   p.maxAcceleration    = 1;
   p.height             = 1;

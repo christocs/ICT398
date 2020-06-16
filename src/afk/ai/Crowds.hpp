@@ -13,6 +13,8 @@ namespace Afk {
   namespace AI {
     class Crowds {
     public:
+      typedef int AgentID;
+
       Crowds()               = default;
       Crowds(Crowds &other)  = delete;
       Crowds(Crowds &&other) = delete;
@@ -25,8 +27,7 @@ namespace Afk {
 
       auto nearest_pos(glm::vec3 req, float search_dist = 10.f)
           -> std::optional<glm::vec3>;
-
-      typedef int AgentID;
+      auto request_move(AgentID id, glm::vec3 pos, float search_dist = 10.f) -> void;
 
     private:
       typedef std::unique_ptr<dtCrowd, decltype(&dtFreeCrowd)> crowd_ptr;

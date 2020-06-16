@@ -27,6 +27,16 @@ auto Crowds::nearest_pos(glm::vec3 pos, float search_dist) -> std::optional<glm:
   }
   return std::optional{nearest_pos};
 }
+auto Crowds::request_move(AgentID id, glm::vec3 pos, float search_dist) -> void {
+  auto query             = this->crowd->getNavMeshQuery();
+  const auto extents     = glm::vec3{search_dist, search_dist, search_dist};
+  const auto filter      = dtQueryFilter{};
+  dtPolyRef nearest_poly = {};
+  auto nearest_pos       = glm::vec3{0, 0, 0};
+  auto query_result      = query->findNearestPoly(&pos.x, &extents.x, &filter,
+                                             &nearest_poly, &nearest_pos.x);
+  this->crowd->requestMoveTarget(id, nearest_poly, &nearest_pos.x);
+}
 
 auto Crowds::init(NavMeshManager::nav_mesh_ptr nav_mesh) -> void {
   if (!this->crowd->init(100,           // max agents

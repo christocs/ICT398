@@ -28,21 +28,15 @@ auto AgentComponent::update() -> void {
     return;
   }
   auto &tf = Afk::Engine::get().registry.get<Afk::Transform>(this->owning_entity);
-  auto agent = Afk::Engine::get().crowds.current_crowd().getEditableAgent(this->id);
+  auto agent = Afk::Engine::get().crowds.current_crowd().getAgent(this->id);
   if (!agent->active) {
     throw new std::runtime_error{"Agent not active!"};
   }
-  // Update our position to the current agent goal
+  // Update our position to the current agent pos
   tf.translation.x = agent->npos[0];
   tf.translation.y = agent->npos[1];
   tf.translation.z = agent->npos[2];
   // Update the agent goal
-  auto next_pos =
-      Afk::Engine::get()
-          .crowds.nearest_pos(current_behaviour->update(tf.translation))
-          .value_or(tf.translation); // can't reach: stay in place
-
-  agent->targetPos[0] = next_pos.x;
-  agent->targetPos[1] = next_pos.y;
-  agent->targetPos[2] = next_pos.z;
+  auto next_pos = current_behaviour->update(tf.translation);
+  Afk::Engine::get().crowds.request_move(this->id, next_pos);
 }
