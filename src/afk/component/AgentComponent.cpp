@@ -6,19 +6,8 @@ using Afk::AI::AgentComponent;
 AgentComponent::AgentComponent(GameObject e, const glm::vec3 &pos, dtCrowdAgentParams &p) {
   this->owning_entity = e;
 
-  auto query = Afk::Engine::get().crowds.current_crowd().getNavMeshQuery();
-  const auto extents     = glm::vec3{10.f, 10.f, 10.f};
-  const auto filter      = dtQueryFilter{};
-  dtPolyRef nearest_poly = {};
-  auto nearest_pos       = glm::vec3{0, 0, 0};
-  auto query_result      = query->findNearestPoly(&pos.x, &extents.x, &filter,
-                                             &nearest_poly, &nearest_pos.x);
-  if (nearest_poly == 0) {
-    throw std::runtime_error{"Unable to find polygon for agent at position " +
-                             std::to_string(pos.x) + ", " + std::to_string(pos.y) +
-                             ", " + std::to_string(pos.z) + "."};
-  }
-  this->id = Afk::Engine::get().crowds.current_crowd().addAgent(&nearest_pos.x, &p);
+  auto nearest_pos = Afk::Engine::get().crowds.nearest_pos(pos, 10.f);
+  Afk::Engine::get().crowds.current_crowd().addAgent(&nearest_pos.x, &p);
 }
 AgentComponent::~AgentComponent() {
   Afk::Engine::get().crowds.current_crowd().removeAgent(this->id);
