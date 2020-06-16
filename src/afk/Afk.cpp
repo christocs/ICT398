@@ -85,7 +85,9 @@ auto Engine::initialize() -> void {
       box_entity, box_entity, &this->physics_body_system, box_transform, 0.3f, 0.0f,
       0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Box(0.9f, 0.9f, 0.9f));
 
-  Afk::Asset::game_asset_factory("asset/basketball.lua");
+  auto basketball = std::get<Asset::Asset::Object>(
+                        Afk::Asset::game_asset_factory("asset/basketball.lua").data)
+                        .ent;
 
   this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh", &this->registry);
   //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
@@ -122,7 +124,7 @@ auto Engine::initialize() -> void {
   auto test_agent             = registry.create();
   auto agent_transform        = Afk::Transform{test_agent};
   agent_transform.translation = {5, -6.75, 5};
-  agent_transform.scale       = {0.2, 0.2, 0.2};
+  agent_transform.scale       = {.1f, .1f, .1f};
   registry.assign<Afk::Transform>(test_agent, agent_transform);
   registry.assign<Afk::ModelSource>(test_agent, test_agent, "res/model/nanosuit/nanosuit.fbx",
                                     "shader/default.prog");
@@ -133,7 +135,7 @@ auto Engine::initialize() -> void {
   p.height             = 1;
   registry
       .assign<Afk::AI::AgentComponent>(test_agent, test_agent, agent_transform.translation, p)
-      .chase(cam);
+      .chase(basketball);
 
   this->is_initialized = true;
 }
