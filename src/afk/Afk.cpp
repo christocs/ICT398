@@ -138,7 +138,6 @@ auto Engine::initialize() -> void {
                                       "shader/default.prog");
     auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
         agents[i], agents[i], agent_transform.translation, p);
-    std::cout << agent_component.id << std::endl;
   }
   registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
   registry.get<Afk::AI::AgentComponent>(agents[1]).chase(cam, 10.f);

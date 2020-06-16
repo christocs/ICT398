@@ -29,9 +29,8 @@ namespace Afk {
 
       auto update() -> void;
 
-      Afk::AI::Crowds::AgentID id = -1;
-
     private:
+      Afk::AI::Crowds::AgentID id = -1;
       // float radius;
       typedef std::shared_ptr<Afk::AI::BaseBehaviour> Behaviour;
 
