@@ -133,9 +133,10 @@ auto Engine::initialize() -> void {
   p.maxSpeed           = 1;
   p.maxAcceleration    = 1;
   p.height             = 1;
+  Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
   registry
       .assign<Afk::AI::AgentComponent>(test_agent, test_agent, agent_transform.translation, p)
-      .flee(cam, 10.f);
+      .path(path, 1.f);
 
   this->is_initialized = true;
 }

@@ -30,6 +30,12 @@ auto AgentComponent::move_to(const glm::vec3 &target) -> void {
 auto AgentComponent::flee(const GameObject &target, float desired_dist) -> void {
   this->current_behaviour = Behaviour{new Afk::AI::Flee{target, desired_dist}};
 }
+#include "afk/ai/behaviour/PathFollow.hpp"
+auto AgentComponent::path(const Afk::AI::Path &path, float min_dist) -> void {
+  auto &my_pos = Afk::Engine::get().registry.get<Afk::Transform>(this->owning_entity);
+  this->current_behaviour =
+      Behaviour{new Afk::AI::PathFollow{path, my_pos.translation, min_dist}};
+}
 
 auto AgentComponent::update() -> void {
   if (this->current_behaviour == nullptr) {

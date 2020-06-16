@@ -4,6 +4,7 @@
 
 #include "afk/ai/Crowds.hpp"
 #include "afk/ai/behaviour/BaseBehaviour.hpp"
+#include "afk/ai/behaviour/Path.hpp"
 #include "afk/component/BaseComponent.hpp"
 #include "afk/physics/Transform.hpp"
 
@@ -24,6 +25,7 @@ namespace Afk {
       auto chase(const GameObject &target, float max_dist) -> void;
       auto flee(const GameObject &target, float desired_dist) -> void;
       auto move_to(const glm::vec3 &target) -> void;
+      auto path(const Afk::AI::Path &path, float min_dist) -> void;
 
       auto update() -> void;
 
