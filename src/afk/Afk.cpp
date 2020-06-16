@@ -74,18 +74,16 @@ auto Engine::initialize() -> void {
   auto box_entity           = registry.create();
   auto box_transform        = Transform{box_entity};
   box_transform.translation = glm::vec3{0.0f, -15.0f, 0.0f};
-  box_transform.scale = glm::vec3(5.0f);
-  auto box_model = Model(box_entity, "res/model/box/box.obj");
+  box_transform.scale       = glm::vec3(5.0f);
+  auto box_model            = Model(box_entity, "res/model/box/box.obj");
   this->renderer.load_model(box_model);
-  registry.assign<Afk::ModelSource>(box_entity, box_entity,
-                                    box_model.file_path,
+  registry.assign<Afk::ModelSource>(box_entity, box_entity, box_model.file_path,
                                     "shader/default.prog");
   registry.assign<Afk::Model>(box_entity, box_model);
   registry.assign<Afk::Transform>(box_entity, box_transform);
-  registry.assign<Afk::PhysicsBody>(box_entity, box_entity, &this->physics_body_system,
-                                    box_transform, 0.3f, 0.0f, 0.0f, 0.0f,
-                                    true, Afk::RigidBodyType::STATIC,
-                                    Afk::Box(0.9f, 0.9f, 0.9f));
+  registry.assign<Afk::PhysicsBody>(
+      box_entity, box_entity, &this->physics_body_system, box_transform, 0.3f, 0.0f,
+      0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Box(0.9f, 0.9f, 0.9f));
 
   Afk::Asset::game_asset_factory("asset/basketball.lua");
 
@@ -93,16 +91,16 @@ auto Engine::initialize() -> void {
   //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
 
-/*
-  this->renderer.load_model(this->nav_mesh_manager.get_height_field_model());
-  auto height_field_entity = registry.create();
-  auto height_field_transform = Transform{height_field_entity};
-  height_field_transform.translation = glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
-  registry.assign<Afk::ModelSource>(
-      height_field_entity, height_field_entity,
-      this->nav_mesh_manager.get_height_field_model().file_path, "shader/heightfield.prog");
-  registry.assign<Afk::Transform>(height_field_entity, height_field_transform);
-  /**/
+  /*
+    this->renderer.load_model(this->nav_mesh_manager.get_height_field_model());
+    auto height_field_entity = registry.create();
+    auto height_field_transform = Transform{height_field_entity};
+    height_field_transform.translation = glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
+    registry.assign<Afk::ModelSource>(
+        height_field_entity, height_field_entity,
+        this->nav_mesh_manager.get_height_field_model().file_path, "shader/heightfield.prog");
+    registry.assign<Afk::Transform>(height_field_entity, height_field_transform);
+    /**/
 
   this->renderer.load_model(this->nav_mesh_manager.get_nav_mesh_model());
   auto nav_mesh_entity    = registry.create();
