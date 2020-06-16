@@ -135,7 +135,7 @@ auto Engine::initialize() -> void {
   p.height             = 1;
   registry
       .assign<Afk::AI::AgentComponent>(test_agent, test_agent, agent_transform.translation, p)
-      .flee(cam, 25.f);
+      .flee(cam, 10.f);
 
   this->is_initialized = true;
 }
