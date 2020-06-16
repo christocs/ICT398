@@ -114,10 +114,10 @@ auto Engine::initialize() -> void {
 
   auto cam = registry.create();
   registry.assign<Afk::Transform>(cam, cam);
-  registry.assign<Afk::ScriptsComponent>(cam, cam)
-      .add_script("script/component/camera_keyboard_control.lua", this->lua, &this->event_manager)
-      .add_script("script/component/camera_mouse_control.lua", this->lua, &this->event_manager)
-      .add_script("script/component/debug.lua", this->lua, &this->event_manager);
+  registry.assign<Afk::ScriptsComponent>(cam, cam, this->lua)
+      .add_script("script/component/camera_keyboard_control.lua", &this->event_manager)
+      .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
+      .add_script("script/component/debug.lua", &this->event_manager);
 
   auto test_agent             = registry.create();
   auto agent_transform        = Afk::Transform{test_agent};
@@ -145,6 +145,7 @@ auto Engine::get() -> Engine & {
 }
 
 auto Engine::exit() -> void {
+  lua_close(this->lua);
   this->is_running = false;
 }
 

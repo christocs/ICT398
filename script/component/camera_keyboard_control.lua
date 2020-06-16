@@ -1,6 +1,6 @@
+speed = 10.0
 function update(evt)
     local upd8 = evt:to_update()
-    local speed = 10.0
     local dt = upd8.delta
     local vel = speed * dt
     local cur_cam = camera.current()
