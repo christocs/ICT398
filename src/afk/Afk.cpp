@@ -112,6 +112,13 @@ auto Engine::initialize() -> void {
                                     "shader/navmesh.prog");
   registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_transform);
 
+  auto cam = registry.create();
+  registry.assign<Afk::Transform>(cam, cam);
+  registry.assign<Afk::ScriptsComponent>(cam, cam)
+      .add_script("script/component/camera_keyboard_control.lua", this->lua, &this->event_manager)
+      .add_script("script/component/camera_mouse_control.lua", this->lua, &this->event_manager)
+      .add_script("script/component/debug.lua", this->lua, &this->event_manager);
+
   auto test_agent             = registry.create();
   auto agent_transform        = Afk::Transform{test_agent};
   agent_transform.translation = {5, -6.75, 5};
@@ -124,14 +131,9 @@ auto Engine::initialize() -> void {
   p.maxSpeed           = 1;
   p.maxAcceleration    = 1;
   p.height             = 1;
-  registry.assign<Afk::AI::AgentComponent>(test_agent, test_agent,
-                                           agent_transform.translation, p);
-
-  auto cam = registry.create();
-  registry.assign<Afk::ScriptsComponent>(cam, cam)
-      .add_script("script/component/camera_keyboard_control.lua", this->lua, &this->event_manager)
-      .add_script("script/component/camera_mouse_control.lua", this->lua, &this->event_manager)
-      .add_script("script/component/debug.lua", this->lua, &this->event_manager);
+  registry
+      .assign<Afk::AI::AgentComponent>(test_agent, test_agent, agent_transform.translation, p)
+      .chase(cam);
 
   this->is_initialized = true;
 }
@@ -158,11 +160,9 @@ auto Engine::render() -> void {
 
 auto Engine::update() -> void {
   this->event_manager.pump_events();
-  auto pos = this->camera.get_position();
   this->crowds.update(this->get_delta_time());
   for (auto &agent_ent : this->registry.view<Afk::AI::AgentComponent>()) {
     auto &agent = this->registry.get<Afk::AI::AgentComponent>(agent_ent);
-    agent.target(pos);
     agent.update();
   }
 
