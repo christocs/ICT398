@@ -54,3 +54,18 @@ auto AgentComponent::update() -> void {
   auto next_pos = current_behaviour->update(tf.translation);
   Afk::Engine::get().crowds.request_move(this->id, next_pos);
 }
+
+AgentComponent::AgentComponent(AgentComponent &&rhs) {
+  this->id            = rhs.id;
+  this->owning_entity = rhs.owning_entity;
+  rhs.id              = -1;
+  rhs.owning_entity   = entt::null;
+}
+
+auto AgentComponent::operator=(AgentComponent &&rhs) -> AgentComponent & {
+  this->id            = rhs.id;
+  this->owning_entity = rhs.owning_entity;
+  rhs.id              = -1;
+  rhs.owning_entity   = entt::null;
+  return *this;
+}

@@ -16,10 +16,10 @@ namespace Afk {
        * \todo: facade dtCrowdAgentParams (once i know that pathfinding works)
        */
       AgentComponent(GameObject e, const glm::vec3 &initial_position, dtCrowdAgentParams &p);
-      // AgentComponent(AgentComponent &e)  = delete;
-      // AgentComponent(AgentComponent &&e) = delete;
-      // auto operator=(AgentComponent &e) -> AgentComponent & = delete;
-      // auto operator=(AgentComponent &&e) -> AgentComponent & = delete;
+      AgentComponent(AgentComponent &e) = delete;
+      AgentComponent(AgentComponent &&e); // = delete;
+      auto operator=(AgentComponent &e) -> AgentComponent & = delete;
+      auto operator=(AgentComponent &&e) -> AgentComponent &; // = delete;
       ~AgentComponent();
 
       auto chase(const GameObject &target, float max_dist) -> void;

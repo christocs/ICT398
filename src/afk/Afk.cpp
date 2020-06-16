@@ -135,7 +135,7 @@ auto Engine::initialize() -> void {
     registry.assign<Afk::Transform>(agents[i], agent_transform);
     registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",
                                       "shader/default.prog");
-    auto agent_component = registry.assign<Afk::AI::AgentComponent>(
+    auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
         agents[i], agents[i], agent_transform.translation, p);
     std::cout << agent_component.id << std::endl;
   }
