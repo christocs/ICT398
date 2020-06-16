@@ -2,13 +2,12 @@
 
 #include <DetourCrowd.h>
 #include <memory>
+#include <optional>
 #include <unordered_set>
 
-#include "afk/ai/NavMeshManager.hpp"
+#include <glm/glm.hpp>
 
-namespace glm {
-  struct vec3;
-}
+#include "afk/ai/NavMeshManager.hpp"
 
 namespace Afk {
   namespace AI {
@@ -24,7 +23,8 @@ namespace Afk {
       auto init(NavMeshManager::nav_mesh_ptr nav_mesh) -> void;
       auto current_crowd() -> dtCrowd &;
 
-      auto nearest_pos(glm::vec3 req, float search_dist = 10.f) -> glm::vec3;
+      auto nearest_pos(glm::vec3 req, float search_dist = 10.f)
+          -> std::optional<glm::vec3>;
 
       typedef int AgentID;
 

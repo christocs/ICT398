@@ -14,7 +14,7 @@ auto Crowds::update(float dt_seconds) -> void {
   this->crowd->update(dt_seconds, nullptr);
 }
 
-auto Crowds::nearest_pos(glm::vec3 pos, float search_dist) -> glm::vec3 {
+auto Crowds::nearest_pos(glm::vec3 pos, float search_dist) -> std::optional<glm::vec3> {
   auto query             = this->crowd->getNavMeshQuery();
   const auto extents     = glm::vec3{search_dist, search_dist, search_dist};
   const auto filter      = dtQueryFilter{};
@@ -23,11 +23,9 @@ auto Crowds::nearest_pos(glm::vec3 pos, float search_dist) -> glm::vec3 {
   auto query_result      = query->findNearestPoly(&pos.x, &extents.x, &filter,
                                              &nearest_poly, &nearest_pos.x);
   if (nearest_poly == 0) {
-    throw std::runtime_error{"Unable to find polygon at position " +
-                             std::to_string(pos.x) + ", " + std::to_string(pos.y) +
-                             ", " + std::to_string(pos.z) + "."};
+    return std::nullopt;
   }
-  return nearest_pos;
+  return std::optional{nearest_pos};
 }
 
 auto Crowds::init(NavMeshManager::nav_mesh_ptr nav_mesh) -> void {
