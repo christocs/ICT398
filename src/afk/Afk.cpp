@@ -85,9 +85,10 @@ auto Engine::initialize() -> void {
       box_entity, box_entity, &this->physics_body_system, box_transform, 0.3f, 0.0f,
       0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Box(0.9f, 0.9f, 0.9f));
 
-  auto basketball = std::get<Asset::Asset::Object>(
-                        Afk::Asset::game_asset_factory("asset/basketball.lua").data)
-                        .ent;
+  // auto basketball =
+  // std::get<Asset::Asset::Object>(
+  Afk::Asset::game_asset_factory("asset/basketball.lua"); //.data)
+                                                          // .ent;
 
   this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh", &this->registry);
   //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
@@ -125,7 +126,7 @@ auto Engine::initialize() -> void {
   for (std::size_t i = 0; i < 4; ++i) {
     agents.push_back(registry.create());
     dtCrowdAgentParams p        = {};
-    p.radius                    = .1;
+    p.radius                    = .1f;
     p.maxSpeed                  = 1;
     p.maxAcceleration           = 1;
     p.height                    = 1;
@@ -143,7 +144,7 @@ auto Engine::initialize() -> void {
   registry.get<Afk::AI::AgentComponent>(agents[1]).chase(cam, 10.f);
   registry.get<Afk::AI::AgentComponent>(agents[2]).flee(cam, 10.f);
   const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
-  registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 1.f);
+  registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
 
   this->is_initialized = true;
 }
