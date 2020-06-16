@@ -26,6 +26,10 @@ auto AgentComponent::chase(const GameObject &target, float max_dist) -> void {
 auto AgentComponent::move_to(const glm::vec3 &target) -> void {
   this->current_behaviour = Behaviour{new Afk::AI::MoveTo{target}};
 }
+#include "afk/ai/behaviour/Flee.hpp"
+auto AgentComponent::flee(const GameObject &target, float desired_dist) -> void {
+  this->current_behaviour = Behaviour{new Afk::AI::Flee{target, desired_dist}};
+}
 
 auto AgentComponent::update() -> void {
   if (this->current_behaviour == nullptr) {

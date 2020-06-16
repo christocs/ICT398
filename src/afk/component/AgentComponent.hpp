@@ -22,6 +22,7 @@ namespace Afk {
       ~AgentComponent();
 
       auto chase(const GameObject &target, float max_dist) -> void;
+      auto flee(const GameObject &target, float desired_dist) -> void;
       auto move_to(const glm::vec3 &target) -> void;
 
       auto update() -> void;
