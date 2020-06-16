@@ -39,7 +39,7 @@ auto Crowds::request_move(AgentID id, glm::vec3 pos, float search_dist) -> void 
 }
 
 auto Crowds::init(NavMeshManager::nav_mesh_ptr nav_mesh) -> void {
-  if (!this->crowd->init(100,           // max agents
+  if (!this->crowd->init(25,            // max agents
                          10.f,          // max agent radius
                          nav_mesh.get() // nav mesh
                          )) {

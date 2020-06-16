@@ -121,22 +121,29 @@ auto Engine::initialize() -> void {
       .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
       .add_script("script/component/debug.lua", &this->event_manager);
 
-  auto test_agent             = registry.create();
-  auto agent_transform        = Afk::Transform{test_agent};
-  agent_transform.translation = {5, -6, 5};
-  agent_transform.scale       = {.1f, .1f, .1f};
-  registry.assign<Afk::Transform>(test_agent, agent_transform);
-  registry.assign<Afk::ModelSource>(test_agent, test_agent, "res/model/nanosuit/nanosuit.fbx",
-                                    "shader/default.prog");
-  dtCrowdAgentParams p = {};
-  p.radius             = .1;
-  p.maxSpeed           = 1;
-  p.maxAcceleration    = 1;
-  p.height             = 1;
-  Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
-  registry
-      .assign<Afk::AI::AgentComponent>(test_agent, test_agent, agent_transform.translation, p)
-      .path(path, 1.f);
+  std::vector<entt::entity> agents{};
+  for (std::size_t i = 0; i < 4; ++i) {
+    agents.push_back(registry.create());
+    dtCrowdAgentParams p        = {};
+    p.radius                    = .1;
+    p.maxSpeed                  = 1;
+    p.maxAcceleration           = 1;
+    p.height                    = 1;
+    auto agent_transform        = Afk::Transform{agents[i]};
+    agent_transform.translation = {5 + (i), -6, 5 + (i)};
+    agent_transform.scale       = {.1f, .1f, .1f};
+    registry.assign<Afk::Transform>(agents[i], agent_transform);
+    registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",
+                                      "shader/default.prog");
+    auto agent_component = registry.assign<Afk::AI::AgentComponent>(
+        agents[i], agents[i], agent_transform.translation, p);
+    std::cout << agent_component.id << std::endl;
+  }
+  registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
+  registry.get<Afk::AI::AgentComponent>(agents[1]).chase(cam, 10.f);
+  registry.get<Afk::AI::AgentComponent>(agents[2]).flee(cam, 10.f);
+  const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
+  registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 1.f);
 
   this->is_initialized = true;
 }

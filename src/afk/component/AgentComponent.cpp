@@ -44,7 +44,7 @@ auto AgentComponent::update() -> void {
   auto &tf = Afk::Engine::get().registry.get<Afk::Transform>(this->owning_entity);
   auto agent = Afk::Engine::get().crowds.current_crowd().getAgent(this->id);
   if (!agent->active) {
-    throw new std::runtime_error{"Agent not active!"};
+    throw std::runtime_error{"Agent not active!"};
   }
   // Update our position to the current agent pos
   tf.translation.x = agent->npos[0];
