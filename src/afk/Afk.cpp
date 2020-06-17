@@ -123,7 +123,7 @@ auto Engine::initialize() -> void {
       .add_script("script/component/debug.lua", &this->event_manager);
 
   std::vector<entt::entity> agents{};
-  for (std::size_t i = 0; i < 4; ++i) {
+  for (std::size_t i = 0; i < 5; ++i) {
     agents.push_back(registry.create());
     dtCrowdAgentParams p        = {};
     p.radius                    = .1f;
@@ -131,7 +131,7 @@ auto Engine::initialize() -> void {
     p.maxAcceleration           = 1;
     p.height                    = 1;
     auto agent_transform        = Afk::Transform{agents[i]};
-    agent_transform.translation = {5 + (i), -6, 5 + (i)};
+    agent_transform.translation = {5 - (i), -6, 5 - (i)};
     agent_transform.scale       = {.1f, .1f, .1f};
     registry.assign<Afk::Transform>(agents[i], agent_transform);
     registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",
@@ -139,11 +139,12 @@ auto Engine::initialize() -> void {
     auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
         agents[i], agents[i], agent_transform.translation, p);
   }
-  registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
-  registry.get<Afk::AI::AgentComponent>(agents[1]).chase(cam, 10.f);
-  registry.get<Afk::AI::AgentComponent>(agents[2]).flee(cam, 10.f);
-  const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
-  registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
+  // registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
+  // registry.get<Afk::AI::AgentComponent>(agents[1]).chase(cam, 10.f);
+  // registry.get<Afk::AI::AgentComponent>(agents[2]).flee(cam, 10.f);
+  // const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
+  // registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
+  registry.get<Afk::AI::AgentComponent>(agents[4]).wander(glm::vec3{0, 0, 0}, 10);
 
   this->is_initialized = true;
 }

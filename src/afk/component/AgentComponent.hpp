@@ -26,6 +26,7 @@ namespace Afk {
       auto flee(const GameObject &target, float desired_dist) -> void;
       auto move_to(const glm::vec3 &target) -> void;
       auto path(const Afk::AI::Path &path, float min_dist) -> void;
+      auto wander(const glm::vec3 &target, float radius) -> void;
 
       auto update() -> void;
 

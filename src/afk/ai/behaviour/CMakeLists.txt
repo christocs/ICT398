@@ -3,5 +3,5 @@ target_sources(${PROJECT_NAME} PRIVATE
   Flee.cpp
   MoveTo.cpp
   PathFollow.cpp
-  Wandering.cpp
+  Wander.cpp
 )
