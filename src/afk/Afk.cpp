@@ -52,8 +52,8 @@ auto Engine::initialize() -> void {
   Afk::add_engine_bindings(this->lua);
 
   this->terrain_manager.initialize();
-  const int terrain_width  = 128;
-  const int terrain_length = 128;
+  const int terrain_width  = 64;
+  const int terrain_length = 64;
   this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
   this->renderer.load_model(this->terrain_manager.get_model());
 
@@ -90,6 +90,7 @@ auto Engine::initialize() -> void {
   Afk::Asset::game_asset_factory("asset/basketball.lua"); //.data)
                                                           // .ent;
 
+  // nav mesh needs to be generated BEFORE agents, otherwise agents may be added to the nav mesh
   this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh", &this->registry);
   //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
@@ -138,6 +139,9 @@ auto Engine::initialize() -> void {
                                       "shader/default.prog");
     auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
         agents[i], agents[i], agent_transform.translation, p);
+    auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
+        agents[i], agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
+        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{1.0f, 2.0f});
   }
   registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
   registry.get<Afk::AI::AgentComponent>(agents[1]).chase(cam, 10.f);
