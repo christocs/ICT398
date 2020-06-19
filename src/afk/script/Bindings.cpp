@@ -16,6 +16,7 @@ extern "C" {
 #include "afk/physics/PhysicsBody.hpp"
 #include "afk/physics/Transform.hpp"
 #include "afk/renderer/Camera.hpp"
+#include "afk/script/BindingsDearImgui.hpp"
 #include "afk/script/Script.hpp"
 #include "afk/script/StateMachine.hpp"
 #include "afk/ui/Ui.hpp"
@@ -75,6 +76,10 @@ template<typename VecType>
 static auto vec_normal(VecType *a) -> VecType {
   return glm::normalize(*a);
 }
+template<typename VecType>
+static auto vec_inverse(VecType *a) -> VecType {
+  return -(*a);
+}
 
 // todo move to keyboard mgmt
 static auto key_pressed(int key_code) -> bool {
@@ -109,6 +114,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("smul", &vec_smul<glm::vec3>)
       .addFunction("dot", &vec_dot<glm::vec3>)
       .addFunction("cross", &vec_cross<glm::vec3>)
+      .addFunction("inverse", &vec_inverse<glm::vec3>)
       .endClass()
 
       .beginNamespace("math")
@@ -124,6 +130,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("sub", &vec_sub<glm::vec2>)
       .addFunction("smul", &vec_smul<glm::vec2>)
       .addFunction("dot", &vec_dot<glm::vec2>)
+      .addFunction("inverse", &vec_inverse<glm::vec2>)
       .endClass()
 
       .beginClass<glm::quat>("quaternion")
@@ -160,6 +167,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("apply_force", &Afk::PhysicsBody::apply_force)
       .addFunction("apply_torque", &Afk::PhysicsBody::apply_torque)
       .addFunction("translate", &Afk::PhysicsBody::translate)
+      .addFunction("set_pos", &Afk::PhysicsBody::set_pos)
       .endClass()
 
       .beginClass<Afk::Transform>("transform_component")
@@ -213,6 +221,8 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .endClass()
       .endNamespace();
 
+  Afk::add_imgui_bindings(lua);
+
   auto key_ns = luabridge::getGlobalNamespace(lua).beginNamespace("key");
   for (const auto &key : Afk::Script::keys) {
     // key.code can't be changed from lua's side
@@ -256,6 +266,8 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .beginClass<Afk::Event::Update>("update")
       .addData("delta", &Afk::Event::Update::dt, false)
       .endClass()
+      .beginClass<Afk::Event::Render>("render")
+      .endClass()
       .endNamespace();
 
   auto afk_event_class =
@@ -270,6 +282,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
   afk_event_class.addFunction("to_mouse_scroll", &Afk::Event::get<Afk::Event::MouseScroll>);
   afk_event_class.addFunction("to_text", &Afk::Event::get<Afk::Event::Text>);
   afk_event_class.addFunction("to_update", &Afk::Event::get<Afk::Event::Update>);
+  afk_event_class.addFunction("to_render", &Afk::Event::get<Afk::Event::Render>);
   afk_event_class.endClass();
 
   auto script_class = luabridge::getGlobalNamespace(lua)

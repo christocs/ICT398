@@ -39,6 +39,8 @@ namespace Afk {
       float dt = {};
     };
 
+    struct Render {};
+
     // FIXME: Move to keyboard  handler.
     enum class Action { Forward, Backward, Left, Right };
 
@@ -51,11 +53,12 @@ namespace Afk {
       KeyRepeat,
       TextEnter,
       MouseScroll,
-      Update
+      Update,
+      Render
     };
 
     using Data =
-        std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update>;
+        std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render>;
 
     template<typename T>
     auto get() -> T {

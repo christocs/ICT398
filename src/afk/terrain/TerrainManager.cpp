@@ -86,12 +86,12 @@ auto TerrainManager::generate_flat_plane(int width, int length) -> void {
       auto start = y * w + x;
 
       this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start);
-      this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1);
       this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + w);
+      this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1);
 
       this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1);
-      this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1 + w);
       this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + w);
+      this->mesh.indices[indicesIndex++] = static_cast<Mesh::Index>(start + 1 + w);
     }
   }
 }
@@ -112,6 +112,7 @@ auto TerrainManager::generate_terrain(int width, int length, float roughness,
 auto TerrainManager::get_model() -> Model {
   auto model = Model{};
   model.meshes.push_back(this->mesh);
+  model.meshes[0].transform.translation = glm::vec3{0.0f};
   model.file_path = "gen/terrain/terrain";
   model.file_dir  = "gen/terrain";
 

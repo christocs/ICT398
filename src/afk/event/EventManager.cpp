@@ -28,6 +28,12 @@ auto EventManager::initialize(Renderer::Window window) -> void {
   this->setup_callbacks(window);
   this->is_initialized = true;
 }
+auto EventManager::pump_render() -> void {
+  constexpr auto render_event = Event{Event::Render{}, Event::Type::Render};
+  for (const auto &event_callback : this->callbacks[Event::Type::Render]) {
+    event_callback(render_event);
+  }
+}
 
 auto EventManager::pump_events() -> void {
   glfwPollEvents();

@@ -34,6 +34,10 @@ namespace Afk {
     auto operator=(EventManager &&) -> EventManager & = delete;
 
     auto initialize(Renderer::Window window) -> void;
+    /**
+     * hacky fix for imgui from lua
+     */
+    auto pump_render() -> void;
     auto pump_events() -> void;
     auto register_event(Event::Type type, Callback callback) -> void;
     auto deregister_event(Event::Type type, Callback callback) -> void;

@@ -116,6 +116,19 @@ auto Ui::draw_menu_bar() -> void {
       ImGui::EndMenu();
     }
 
+    if (ImGui::BeginMenu("Difficulty")) {
+      if (ImGui::MenuItem("Easy", nullptr, Afk::Engine::get().difficulty == Afk::Engine::Difficulty::EASY)) {
+        Afk::Engine::get().difficulty = Afk::Engine::Difficulty::EASY;
+      }
+      if (ImGui::MenuItem("Normal", nullptr, Afk::Engine::get().difficulty == Afk::Engine::Difficulty::NORMAL)) {
+        Afk::Engine::get().difficulty = Afk::Engine::Difficulty::NORMAL;
+      }
+      if (ImGui::MenuItem("Hard", nullptr, Afk::Engine::get().difficulty == Afk::Engine::Difficulty::HARD)) {
+        Afk::Engine::get().difficulty = Afk::Engine::Difficulty::HARD;
+      }
+      ImGui::EndMenu();
+    }
+
     if (ImGui::BeginMenu("Help")) {
       if (ImGui::MenuItem("About")) {
         this->show_about = true;
