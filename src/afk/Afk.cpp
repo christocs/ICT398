@@ -13,6 +13,7 @@
 #include "afk/component/AgentComponent.hpp"
 #include "afk/component/GameObject.hpp"
 #include "afk/component/ScriptsComponent.hpp"
+#include "afk/component/TagComponent.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/ModelSource.hpp"
@@ -23,7 +24,6 @@
 #include "afk/renderer/ModelRenderSystem.hpp"
 #include "afk/script/Bindings.hpp"
 #include "afk/script/LuaInclude.hpp"
-#include "afk/component/TagComponent.hpp"
 
 using namespace std::string_literals;
 
@@ -123,7 +123,7 @@ auto Engine::initialize() -> void {
   registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_transform);
 
   auto camera_transform        = Transform{camera_entity};
-  camera_transform.translation = glm::vec3{0.0f, 20.0f, 0.0f};
+  camera_transform.translation = glm::vec3{0.0f, 50.0f, 0.0f};
   registry.assign<Afk::Transform>(camera_entity, camera_transform);
   registry.assign<Afk::PhysicsBody>(camera_entity, camera_entity, &this->physics_body_system,
                                     camera_transform, 0.0f, 0.3f, 0.3f, 100.0f, true,
@@ -131,7 +131,8 @@ auto Engine::initialize() -> void {
   auto camera_tags = TagComponent{terrain_entity};
   camera_tags.tags.insert(TagComponent::Tag::PLAYER);
   registry.assign<Afk::TagComponent>(camera_entity, camera_tags);
-  registry.assign<Afk::ScriptsComponent>(camera_entity, camera_entity, this->lua)
+  registry
+      .assign<Afk::ScriptsComponent>(camera_entity, camera_entity, this->lua)
       .add_script("script/component/camera_keyboard_jetpack_control.lua", &this->event_manager)
       .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
       .add_script("script/component/debug.lua", &this->event_manager);
