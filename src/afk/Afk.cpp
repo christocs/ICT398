@@ -133,6 +133,7 @@ auto Engine::initialize() -> void {
   registry.assign<Afk::TagComponent>(camera_entity, camera_tags);
   registry
       .assign<Afk::ScriptsComponent>(camera_entity, camera_entity, this->lua)
+      .add_script("script/component/health.lua", &this->event_manager)
       .add_script("script/component/camera_keyboard_jetpack_control.lua", &this->event_manager)
       .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
       .add_script("script/component/debug.lua", &this->event_manager);

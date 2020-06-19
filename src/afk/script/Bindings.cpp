@@ -168,6 +168,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("apply_torque", &Afk::PhysicsBody::apply_torque)
       .addFunction("translate", &Afk::PhysicsBody::translate)
       .addFunction("set_pos", &Afk::PhysicsBody::set_pos)
+      .addFunction("set_velocity", &Afk::PhysicsBody::set_velocity)
       .endClass()
 
       .beginClass<Afk::Transform>("transform_component")

@@ -216,6 +216,11 @@ void PhysicsBody::set_pos(glm::vec3 pos) {
                                            this->body->getTransform().getOrientation()});
 }
 
+void PhysicsBody::set_velocity(glm::vec3 velocity) {
+  this->body->setLinearVelocity(rp3d::Vector3{velocity.x, velocity.y, velocity.z});
+  this->body->setAngularVelocity(rp3d::Vector3{velocity.x, velocity.y, velocity.z});
+}
+
 void PhysicsBody::apply_force(glm::vec3 force) {
   this->body->applyForceToCenterOfMass(rp3d::Vector3{force.x, force.y, force.z});
 }

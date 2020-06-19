@@ -53,6 +53,8 @@ namespace Afk {
 
     void set_pos(glm::vec3 pos);
 
+    void set_velocity(glm::vec3 velocity);
+
     // apply force to the centre of mass of the body for the next physics update
     void apply_force(glm::vec3 force);
 
