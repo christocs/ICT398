@@ -21,13 +21,13 @@ namespace Afk {
 
       using nav_mesh_ptr = std::shared_ptr<dtNavMesh>;
 
-      bool initialise(const std::filesystem::path &file_path, entt::registry *registry);
+      bool initialise(const std::filesystem::path &file_path);
 
-      bool bake(entt::registry *registry);
+      bool bake();
 
-      bool load(const std::filesystem::path &file_path);
+      bool load();
 
-      bool save(const std::filesystem::path &file_path);
+      bool save();
 
       auto get_nav_mesh() -> nav_mesh_ptr;
 
@@ -41,6 +41,8 @@ namespace Afk {
       Model height_field_model = {};
 
       Model nav_mesh_model = {};
+
+      std::filesystem::path file_path_ = {};
 
       unsigned char *build_tile_nav_mesh(const int tile_x, const int tile_y,
                                          glm::vec3 bmin, glm::vec3 bmax,
@@ -83,14 +85,6 @@ namespace Afk {
         POLYFLAGS_SWIM = 2, // Ability to swim (water).
         POLYFLAGS_DOOR = 4, // Ability to move through doors.
         POLYFLAGS_JUMP = 8, // Ability to jump.
-      };
-
-      // code from recast demo
-      struct rcChunkyTriMeshNode {
-        float bmin[2];
-        float bmax[2];
-        int i;
-        int n;
       };
 
       inline unsigned int nextPow2(unsigned int v) {

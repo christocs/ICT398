@@ -19,8 +19,8 @@ using Afk::AI::NavMeshManager;
 // looks at all render meshes that have a transform, model and physicsbody that
 // is static
 // todo: remove cout
-bool NavMeshManager::initialise(const std::filesystem::path &file_path,
-                                entt::registry *registry) {
+bool NavMeshManager::initialise(const std::filesystem::path &file_path) {
+  this->file_path_ = file_path;
   if (!this->load(file_path)) {
     if (this->bake(registry)) {
       if (!this->save(file_path)) {
@@ -42,9 +42,9 @@ bool NavMeshManager::initialise(const std::filesystem::path &file_path,
 
 // call AFTER all static entities have been assigned
 // looks at all render meshes that have a transform, model and physicsbody that is static
-bool NavMeshManager::bake(entt::registry *registry) {
+bool NavMeshManager::bake() {
   auto physics_model_view =
-      registry->view<Afk::Transform, Afk::Model, Afk::PhysicsBody, Afk::TagComponent>();
+      Afk::Engine::get().registry.view<Afk::Transform, Afk::Model, Afk::PhysicsBody, Afk::TagComponent>();
 
   size_t nvertices = 0;
   size_t nindices  = 0;
@@ -276,13 +276,13 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
 }
 
 // save files may not necessarily be compatible between different systems
-bool NavMeshManager::save(const std::filesystem::path &file_path) {
+bool NavMeshManager::save() {
   bool output = false;
 
   const auto *mesh = nav_mesh.get();
 
   if (mesh) {
-    std::ofstream out(file_path, std::ios::binary);
+    std::ofstream out(file_path_, std::ios::binary);
     if (out) {
       NavMeshSetHeader header = {};
       header.magic            = NAVMESHSET_MAGIC;

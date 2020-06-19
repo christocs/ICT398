@@ -97,7 +97,7 @@ auto Engine::initialize() -> void {
                                                           // .ent;
 
   // nav mesh needs to be generated BEFORE agents, otherwise agents may be added to the nav mesh
-  this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh", &this->registry);
+  this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh");
   //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
 
