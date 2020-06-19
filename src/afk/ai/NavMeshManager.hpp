@@ -8,7 +8,7 @@
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 
-#include "ChunkyTriMesh.h"
+#include "ChunkyTriMesh.hpp"
 #include "afk/physics/Transform.hpp"
 #include "afk/renderer/Mesh.hpp"
 #include "afk/renderer/Model.hpp"
@@ -44,8 +44,10 @@ namespace Afk {
 
       unsigned char *build_tile_nav_mesh(const int tile_x, const int tile_y,
                                          glm::vec3 bmin, glm::vec3 bmax,
-                                         float cell_size, int tile_size, int &data_size,
-                                         rcChunkyTriMesh* chunky_tri_mesh, const std::vector<float> &vertices, const std::vector<int> &triangles);
+                                         float cell_size, int tile_size,
+                                         int &data_size, ChunkyTriMesh *chunky_tri_mesh,
+                                         const std::vector<float> &vertices,
+                                         const std::vector<int> &triangles);
 
       static glm::vec3 transform_pos(const glm::vec3 &input, const Afk::Transform &transform);
 
@@ -91,8 +93,7 @@ namespace Afk {
         int n;
       };
 
-      inline unsigned int nextPow2(unsigned int v)
-      {
+      inline unsigned int nextPow2(unsigned int v) {
         v--;
         v |= v >> 1;
         v |= v >> 2;
@@ -103,14 +104,20 @@ namespace Afk {
         return v;
       }
 
-      inline unsigned int ilog2(unsigned int v)
-      {
+      inline unsigned int ilog2(unsigned int v) {
         unsigned int r;
         unsigned int shift;
-        r = (v > 0xffff) << 4; v >>= r;
-        shift = (v > 0xff) << 3; v >>= shift; r |= shift;
-        shift = (v > 0xf) << 2; v >>= shift; r |= shift;
-        shift = (v > 0x3) << 1; v >>= shift; r |= shift;
+        r = (v > 0xffff) << 4;
+        v >>= r;
+        shift = (v > 0xff) << 3;
+        v >>= shift;
+        r |= shift;
+        shift = (v > 0xf) << 2;
+        v >>= shift;
+        r |= shift;
+        shift = (v > 0x3) << 1;
+        v >>= shift;
+        r |= shift;
         r |= (v >> 1);
         return r;
       }

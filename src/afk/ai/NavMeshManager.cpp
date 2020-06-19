@@ -1,6 +1,7 @@
 #include "NavMeshManager.hpp"
 
 #include <fstream>
+#include <memory>
 
 #include <afk/debug/Assert.hpp>
 #include <afk/io/ModelSource.hpp>
@@ -101,10 +102,10 @@ bool NavMeshManager::bake(entt::registry *registry) {
   glm::vec3 bmax = {};
   NavMeshManager::get_min_max_bounds(vertices, bmin, bmax);
 
-  auto chunky_mesh = std::shared_ptr<rcChunkyTriMesh>{new rcChunkyTriMesh};
+  auto chunky_mesh = std::make_shared<ChunkyTriMesh>();
 
-  auto check_success = rcCreateChunkyTriMesh(vertices.data(), triangles.data(),
-                                             ntriangles, 256, chunky_mesh.get());
+  auto check_success = chunky_mesh->init(vertices.data(), triangles.data(),
+                                         ntriangles, 256, chunky_mesh.get());
   afk_assert(check_success, "Failed to create chunky triangle mesh");
 
   const float grid_cell_size = 0.15f; // determines resolution when voxelising nav meshes
@@ -502,7 +503,7 @@ auto NavMeshManager::get_nav_mesh() -> NavMeshManager::nav_mesh_ptr {
 }
 unsigned char *NavMeshManager::build_tile_nav_mesh(
     const int tile_x, const int tile_y, glm::vec3 bmin, glm::vec3 bmax,
-    float cell_size, int tile_size, int &data_size, rcChunkyTriMesh *chunky_tri_mesh,
+    float cell_size, int tile_size, int &data_size, ChunkyTriMesh *chunky_tri_mesh,
     const std::vector<float> &vertices, const std::vector<int> &triangles) {
 
   dtStatus temp_status = {};
@@ -568,7 +569,7 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   const auto chunk_ids = std::unique_ptr<int[]>(new int[1024]);
   memset(chunk_ids.get(), 0, 1024 * sizeof(int));
   const int ncid =
-      rcGetChunksOverlappingRect(chunky_tri_mesh, tbmin, tbmax, chunk_ids.get(), 1024);
+      chunky_tri_mesh->GetChunksOverlappingRect(tbmin, tbmax, chunk_ids.get(), 1024);
   if (!ncid) {
     return nullptr;
   }
