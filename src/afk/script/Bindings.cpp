@@ -75,6 +75,10 @@ template<typename VecType>
 static auto vec_normal(VecType *a) -> VecType {
   return glm::normalize(*a);
 }
+template<typename VecType>
+static auto vec_inverse(VecType *a) -> VecType {
+  return -(*a);
+}
 
 // todo move to keyboard mgmt
 static auto key_pressed(int key_code) -> bool {
@@ -109,6 +113,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("smul", &vec_smul<glm::vec3>)
       .addFunction("dot", &vec_dot<glm::vec3>)
       .addFunction("cross", &vec_cross<glm::vec3>)
+      .addFunction("inverse", &vec_inverse<glm::vec3>)
       .endClass()
 
       .beginNamespace("math")
@@ -124,6 +129,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("sub", &vec_sub<glm::vec2>)
       .addFunction("smul", &vec_smul<glm::vec2>)
       .addFunction("dot", &vec_dot<glm::vec2>)
+      .addFunction("inverse", &vec_inverse<glm::vec2>)
       .endClass()
 
       .beginClass<glm::quat>("quaternion")
@@ -160,6 +166,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("apply_force", &Afk::PhysicsBody::apply_force)
       .addFunction("apply_torque", &Afk::PhysicsBody::apply_torque)
       .addFunction("translate", &Afk::PhysicsBody::translate)
+      .addFunction("set_pos", &Afk::PhysicsBody::set_pos)
       .endClass()
 
       .beginClass<Afk::Transform>("transform_component")

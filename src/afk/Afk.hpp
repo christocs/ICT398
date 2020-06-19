@@ -31,6 +31,8 @@ namespace Afk {
     Afk::PhysicsBodySystem physics_body_system;
     lua_State *lua;
 
+    GameObject camera_entity = registry.create();
+
     Engine()               = default;
     Engine(Engine &&)      = delete;
     Engine(const Engine &) = delete;

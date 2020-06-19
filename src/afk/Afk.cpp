@@ -116,10 +116,14 @@ auto Engine::initialize() -> void {
                                     "shader/navmesh.prog");
   registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_transform);
 
-  auto cam = registry.create();
-  registry.assign<Afk::Transform>(cam, cam);
-  registry.assign<Afk::ScriptsComponent>(cam, cam, this->lua)
-      .add_script("script/component/camera_keyboard_control.lua", &this->event_manager)
+  auto camera_transform = Transform{camera_entity};
+  camera_transform.translation = glm::vec3{0.0f, 20.0f, 0.0f};
+  registry.assign<Afk::Transform>(camera_entity, camera_transform);
+  registry.assign<Afk::PhysicsBody>(camera_entity, camera_entity, &this->physics_body_system,
+                                    camera_transform, 0.0f, 0.3f, 0.3f, 100.0f, true,
+                                    Afk::RigidBodyType::DYNAMIC, Afk::Sphere(0.75f));
+  registry.assign<Afk::ScriptsComponent>(camera_entity, camera_entity, this->lua)
+      .add_script("script/component/camera_keyboard_jetpack_control.lua", &this->event_manager)
       .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
       .add_script("script/component/debug.lua", &this->event_manager);
 
@@ -141,11 +145,11 @@ auto Engine::initialize() -> void {
         agents[i], agents[i], agent_transform.translation, p);
     auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
         agents[i], agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{1.0f, 2.0f});
+        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{0.3f, 1.0f});
   }
   registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
-  registry.get<Afk::AI::AgentComponent>(agents[1]).chase(cam, 10.f);
-  registry.get<Afk::AI::AgentComponent>(agents[2]).flee(cam, 10.f);
+  registry.get<Afk::AI::AgentComponent>(agents[1]).chase(camera_entity, 10.f);
+  registry.get<Afk::AI::AgentComponent>(agents[2]).flee(camera_entity, 10.f);
   const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
   registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
 
@@ -194,6 +198,8 @@ auto Engine::update() -> void {
   // this->update_camera();
 
   this->physics_body_system.update(&this->registry, this->get_delta_time());
+
+  this->camera.set_position(glm::vec3{registry.get<Afk::Transform>(camera_entity).translation.x, registry.get<Afk::Transform>(camera_entity).translation.y + 1.0f, registry.get<Afk::Transform>(camera_entity).translation.z});
 
   ++this->frame_count;
   this->last_update = Afk::Engine::get_time();
