@@ -3,14 +3,15 @@
 #include <fstream>
 #include <memory>
 
-#include <afk/debug/Assert.hpp>
-#include <afk/io/ModelSource.hpp>
+#include "afk/debug/Assert.hpp"
+#include "afk/io/ModelSource.hpp"
 #include <glm/gtc/type_ptr.inl>
 
 #include "DetourNavMesh.h"
 #include "DetourNavMeshBuilder.h"
 #include "DetourNavMeshQuery.h"
 #include "afk/io/Log.hpp"
+#include "afk/component/TagComponent.hpp"
 
 using Afk::AI::NavMeshManager;
 
@@ -43,17 +44,22 @@ bool NavMeshManager::initialise(const std::filesystem::path &file_path,
 // looks at all render meshes that have a transform, model and physicsbody that is static
 bool NavMeshManager::bake(entt::registry *registry) {
   auto physics_model_view =
-      registry->view<Afk::Transform, Afk::Model, Afk::PhysicsBody>();
+      registry->view<Afk::Transform, Afk::Model, Afk::PhysicsBody, Afk::TagComponent>();
 
   size_t nvertices = 0;
   size_t nindices  = 0;
   for (const auto &entity : physics_model_view) {
     const auto &model_component = physics_model_view.get<Afk::Model>(entity);
     const auto &model_physics_body = physics_model_view.get<Afk::PhysicsBody>(entity);
+    const auto &model_tag_component = physics_model_view.get<Afk::TagComponent>(entity);
+    // make sure physics body is static
     if (model_physics_body.get_type() == Afk::RigidBodyType::STATIC) {
-      for (const auto &mesh : model_component.meshes) {
-        nvertices += mesh.vertices.size();
-        nindices += mesh.indices.size();
+      // make sure the entity is tagged as terrain
+      if (model_tag_component.tags.count(Afk::TagComponent::Tag::TERRAIN) == 1) {
+        for (const auto &mesh : model_component.meshes) {
+          nvertices += mesh.vertices.size();
+          nindices += mesh.indices.size();
+        }
       }
     }
   }

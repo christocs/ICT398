@@ -23,6 +23,7 @@
 #include "afk/renderer/ModelRenderSystem.hpp"
 #include "afk/script/Bindings.hpp"
 #include "afk/script/LuaInclude.hpp"
+#include "afk/component/TagComponent.hpp"
 
 using namespace std::string_literals;
 
@@ -64,12 +65,14 @@ auto Engine::initialize() -> void {
                                     terrain_manager.get_model().file_path,
                                     "shader/terrain.prog");
   registry.assign<Afk::Model>(terrain_entity, terrain_entity, terrain_manager.get_model());
-
   registry.assign<Afk::Transform>(terrain_entity, terrain_transform);
   registry.assign<Afk::PhysicsBody>(terrain_entity, terrain_entity, &this->physics_body_system,
                                     terrain_transform, 0.3f, 0.0f, 0.0f, 0.0f,
                                     true, Afk::RigidBodyType::STATIC,
                                     this->terrain_manager.height_map);
+  auto terrain_tags = TagComponent{terrain_entity};
+  terrain_tags.tags.insert(TagComponent::Tag::TERRAIN);
+  registry.assign<Afk::TagComponent>(terrain_entity, terrain_tags);
 
   auto box_entity           = registry.create();
   auto box_transform        = Transform{box_entity};
@@ -84,6 +87,9 @@ auto Engine::initialize() -> void {
   registry.assign<Afk::PhysicsBody>(
       box_entity, box_entity, &this->physics_body_system, box_transform, 0.3f, 0.0f,
       0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Box(0.9f, 0.9f, 0.9f));
+  auto box_tags = TagComponent{terrain_entity};
+  box_tags.tags.insert(TagComponent::Tag::TERRAIN);
+  registry.assign<Afk::TagComponent>(box_entity, box_tags);
 
   // auto basketball =
   // std::get<Asset::Asset::Object>(
@@ -122,6 +128,9 @@ auto Engine::initialize() -> void {
   registry.assign<Afk::PhysicsBody>(camera_entity, camera_entity, &this->physics_body_system,
                                     camera_transform, 0.0f, 0.3f, 0.3f, 100.0f, true,
                                     Afk::RigidBodyType::DYNAMIC, Afk::Sphere(0.75f));
+  auto camera_tags = TagComponent{terrain_entity};
+  camera_tags.tags.insert(TagComponent::Tag::PLAYER);
+  registry.assign<Afk::TagComponent>(camera_entity, camera_tags);
   registry.assign<Afk::ScriptsComponent>(camera_entity, camera_entity, this->lua)
       .add_script("script/component/camera_keyboard_jetpack_control.lua", &this->event_manager)
       .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
