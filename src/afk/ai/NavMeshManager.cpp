@@ -3,15 +3,15 @@
 #include <fstream>
 #include <memory>
 
-#include "afk/debug/Assert.hpp"
-#include "afk/io/ModelSource.hpp"
 #include <glm/gtc/type_ptr.inl>
 
 #include "DetourNavMesh.h"
 #include "DetourNavMeshBuilder.h"
 #include "DetourNavMeshQuery.h"
-#include "afk/io/Log.hpp"
 #include "afk/component/TagComponent.hpp"
+#include "afk/debug/Assert.hpp"
+#include "afk/io/Log.hpp"
+#include "afk/io/ModelSource.hpp"
 
 using Afk::AI::NavMeshManager;
 
@@ -23,6 +23,7 @@ bool NavMeshManager::initialise(const std::filesystem::path &file_path) {
   this->file_path_ = file_path;
   if (!this->load(file_path)) {
     if (this->bake()) {
+      Afk::Io::log << "Nav mesh baked" << '\n';
       if (!this->save(file_path)) {
         Afk::Io::log << "Failed to save nav mesh" << '\n';
         return false;
@@ -34,7 +35,7 @@ bool NavMeshManager::initialise(const std::filesystem::path &file_path) {
       return false;
     }
   } else {
-    Afk::Io::log << "Nav mesh successfully loaded" << '\n';
+    Afk::Io::log << "Nav mesh loaded" << '\n';
   }
   create_nav_mesh_model(*nav_mesh);
   return true;
@@ -111,7 +112,7 @@ bool NavMeshManager::bake() {
   auto chunky_mesh = std::make_shared<ChunkyTriMesh>();
 
   auto check_success = chunky_mesh.get()->init(vertices.data(), triangles.data(),
-                                         ntriangles, 256, chunky_mesh.get());
+                                               static_cast<int>(ntriangles), 256, chunky_mesh.get());
   afk_assert(check_success, "Failed to create chunky triangle mesh");
 
   const float grid_cell_size = 0.15f; // determines resolution when voxelising nav meshes
@@ -127,15 +128,12 @@ bool NavMeshManager::bake() {
   dtNavMeshParams params = {};
   params.tileWidth       = tile_cell_size;
   params.tileHeight      = tile_cell_size;
-  // Max tiles and max polys affect how the tile IDs are caculated.
+  // Max tiles and max polys affect how the tile IDs are calculated.
   // There are 22 bits available for identifying a tile and a polygon.
-  int tileBits = rcMin((int)ilog2(nextPow2(tile_width * tile_height)), 14);
-  if (tileBits > 14) {
-    tileBits = 14;
-  }
-  int polyBits    = 22 - tileBits;
-  params.maxTiles = 1 << tileBits;
-  params.maxPolys = 1 << polyBits;
+  const int tile_bits = 14;
+  const int poly_bits = 22 - tile_bits;
+  params.maxTiles    = 1 << tile_bits;
+  params.maxPolys    = 1 << poly_bits;
 
   nav_mesh         = nav_mesh_ptr{dtAllocNavMesh(), &dtFreeNavMesh};
   auto temp_status = nav_mesh->init(&params);
@@ -159,9 +157,9 @@ bool NavMeshManager::bake() {
 
       if (data) {
         // Remove any previous data (navmesh owns and deletes the data).
-        nav_mesh->removeTile(nav_mesh->getTileRefAt(x, y, 0), 0, 0);
+        nav_mesh->removeTile(nav_mesh->getTileRefAt(x, y, 0), nullptr, nullptr);
         // Let the navmesh own the data.
-        temp_status = nav_mesh->addTile(data, data_size, DT_TILE_FREE_DATA, 0, 0);
+        temp_status = nav_mesh->addTile(data, data_size, DT_TILE_FREE_DATA, 0, nullptr);
         //        std::cout << "after add tile: " << temp_status << " " << data << std::endl;
         if (dtStatusFailed(temp_status)) {
           dtFree(data);
@@ -475,14 +473,14 @@ void NavMeshManager::process_nav_mesh_model_poly(const dtNavMesh &navMesh,
     return;
   }
 
-  const size_t ip        = (poly - tile->polys);
+  const auto ip        = static_cast<size_t>(poly - tile->polys);
   const dtPolyDetail *pd = &tile->detailMeshes[ip];
 
   Vertex vertex = {};
   for (unsigned int i = 0; i < pd->triCount; i++) {
     const unsigned char *t = &tile->detailTris[(pd->triBase + i) * 4];
 
-    const auto vertexOffset = static_cast<unsigned int>(mesh.vertices.size());
+    const auto vertex_offset = static_cast<unsigned int>(mesh.vertices.size());
     // duplicate vertices may be created
     for (unsigned int j = 0; j < 3; j++) {
       float *pos = nullptr;
@@ -497,9 +495,9 @@ void NavMeshManager::process_nav_mesh_model_poly(const dtNavMesh &navMesh,
       vertex.position.z = pos[2];
       mesh.vertices.push_back(vertex);
 
-      mesh.indices.push_back(vertexOffset);
-      mesh.indices.push_back(vertexOffset + 1);
-      mesh.indices.push_back(vertexOffset + 2);
+      mesh.indices.push_back(vertex_offset);
+      mesh.indices.push_back(vertex_offset + 1);
+      mesh.indices.push_back(vertex_offset + 2);
     }
   }
 }
@@ -508,13 +506,12 @@ auto NavMeshManager::get_nav_mesh() -> NavMeshManager::nav_mesh_ptr {
   return this->nav_mesh;
 }
 unsigned char *NavMeshManager::build_tile_nav_mesh(
-    const int tile_x, const int tile_y, glm::vec3 bmin, glm::vec3 bmax,
-    float cell_size, int tile_size, int &data_size, const std::shared_ptr<ChunkyTriMesh>& chunky_tri_mesh,
+    const int tile_x, const int tile_y, glm::vec3 bmin, glm::vec3 bmax, float cell_size,
+    int tile_size, int &data_size, const std::shared_ptr<ChunkyTriMesh> &chunky_tri_mesh,
     const std::vector<float> &vertices, const std::vector<int> &triangles) {
 
   dtStatus temp_status = {};
 
-  const auto ntriangles = triangles.size() / 3;
   const auto nvertices  = vertices.size() / 3;
 
   // most are default values from demo
@@ -538,7 +535,7 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   config.detailSampleDist            = detail_sample_distance * config.cs;
   const auto detail_sample_max_error = 1.0f;
   config.detailSampleMaxError        = config.ch * detail_sample_max_error;
-  config.borderSize                  = config.walkableRadius + 3.0f; // Reserve enough padding, need to have some vertices from neighbouring tiles to connect them
+  config.borderSize                  = config.walkableRadius + 3; // Reserve enough padding, need to have some vertices from neighbouring tiles to connect them
   config.tileSize                    = tile_size;
   config.width                       = config.tileSize + config.borderSize * 2;
   config.height                      = config.tileSize + config.borderSize * 2;
@@ -563,8 +560,8 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   // If you have multiple meshes you need to process, allocate
   // and array which can hold the max number of triangles you need to process.
   const auto areas = std::unique_ptr<unsigned char[]>(
-      new unsigned char[chunky_tri_mesh.get()->maxTrisPerChunk]);
-  memset(areas.get(), 0, chunky_tri_mesh.get()->maxTrisPerChunk * sizeof(unsigned char));
+      new unsigned char[static_cast<size_t>(chunky_tri_mesh.get()->maxTrisPerChunk)]);
+  memset(areas.get(), 0, static_cast<size_t>(chunky_tri_mesh.get()->maxTrisPerChunk) * sizeof(unsigned char));
 
   float tbmin[2], tbmax[2];
   tbmin[0] = config.bmin[0];
@@ -574,32 +571,27 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   // TODO: dynamically determine the max number of chunks, allocate on the heap to reduce memory usage (can fail to allocate memory when it is fragmented)
   const auto chunk_ids = std::unique_ptr<int[]>(new int[1024]);
   memset(chunk_ids.get(), 0, 1024 * sizeof(int));
-  const int ncid =
-      chunky_tri_mesh.get()->get_chunks_overlapping_rect(tbmin, tbmax, chunk_ids.get(), 1024);
+  const size_t ncid = chunky_tri_mesh.get()->get_chunks_overlapping_rect(
+      tbmin, tbmax, chunk_ids.get(), 1024);
   if (!ncid) {
     return nullptr;
   }
 
-  int tile_triangle_count = 0;
-
-  for (int i = 0; i < ncid; ++i) {
+  for (size_t i = 0; i < ncid; ++i) {
     const auto &node = chunky_tri_mesh.get()->nodes.get()[chunk_ids[i]];
     const int *ctris = &chunky_tri_mesh.get()->tris[node.i * 3];
-    const int nctris = node.n;
-
-    tile_triangle_count += nctris;
+    const auto nctris = static_cast<size_t>(node.n);
 
     memset(areas.get(), 0, nctris * sizeof(unsigned char)); // is this necessary?
     rcMarkWalkableTriangles(&context, config.walkableSlopeAngle, vertices.data(),
-                            nvertices, ctris, nctris, areas.get());
+                            static_cast<int>(nvertices), ctris, nctris, areas.get());
 
     auto success_check =
-        rcRasterizeTriangles(&context, vertices.data(), nvertices, ctris, areas.get(),
-                             nctris, *height_field.get(), config.walkableClimb);
+        rcRasterizeTriangles(&context, vertices.data(), static_cast<int>(nvertices), ctris, areas.get(),
+                             nctris, *(height_field.get()), config.walkableClimb);
     afk_assert(success_check,
                "failed to rasterize triangles for nav mesh tile");
   }
-  //  std::cout << "height field cs " << height_field->cs << std::endl;
 
   rcFilterLowHangingWalkableObstacles(&context, config.walkableClimb, *height_field);
   rcFilterLedgeSpans(&context, config.walkableHeight, config.walkableClimb, *height_field);
@@ -653,7 +645,7 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
       temp_status,
       "Could not build polymesh (possibly could not triangulate contours)");
 
-  //  afk_assert(poly_mesh->nverts, "polymesh has no vertices");
+    afk_assert(poly_mesh->nverts, "polymesh has no vertices");
 
   auto detail_mesh = rcAllocPolyMeshDetail();
   afk_assert(detail_mesh, "Failed to allocate poly mesh detail");
@@ -709,37 +701,8 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   // todo: fix this, tf is it doing
   unsigned char *nav_data = nullptr;
   temp_status = dtCreateNavMeshData(&params, &nav_data, &nav_data_size);
-  //  afk_assert(temp_status, "Failed to allocate nav mesh data");
+    afk_assert(temp_status, "Failed to allocate nav mesh data");
 
   data_size = nav_data_size;
   return nav_data;
-}
-
-inline unsigned int NavMeshManager::nextPow2(unsigned int v) {
-  v--;
-  v |= v >> 1;
-  v |= v >> 2;
-  v |= v >> 4;
-  v |= v >> 8;
-  v |= v >> 16;
-  v++;
-  return v;
-}
-
-inline unsigned int NavMeshManager::ilog2(unsigned int v) {
-  unsigned int r;
-  unsigned int shift;
-  r = (v > 0xffff) << 4;
-  v >>= r;
-  shift = (v > 0xff) << 3;
-  v >>= shift;
-  r |= shift;
-  shift = (v > 0xf) << 2;
-  v >>= shift;
-  r |= shift;
-  shift = (v > 0x3) << 1;
-  v >>= shift;
-  r |= shift;
-  r |= (v >> 1);
-  return r;
 }
