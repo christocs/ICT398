@@ -47,7 +47,7 @@ namespace Afk {
       unsigned char *build_tile_nav_mesh(const int tile_x, const int tile_y,
                                          glm::vec3 bmin, glm::vec3 bmax,
                                          float cell_size, int tile_size,
-                                         int &data_size, ChunkyTriMesh *chunky_tri_mesh,
+                                         int &data_size, const std::shared_ptr<ChunkyTriMesh>& chunky_tri_mesh,
                                          const std::vector<float> &vertices,
                                          const std::vector<int> &triangles);
 
