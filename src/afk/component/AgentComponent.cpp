@@ -80,3 +80,7 @@ auto AgentComponent::operator=(AgentComponent &&rhs) -> AgentComponent & {
   rhs.owning_entity   = entt::null;
   return *this;
 }
+
+auto AgentComponent::get_id() const -> Afk::AI::Crowds::AgentID {
+  return id;
+}
