@@ -583,7 +583,7 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   int tile_triangle_count = 0;
 
   for (int i = 0; i < ncid; ++i) {
-    const auto &node = chunky_tri_mesh.get()->nodes[chunk_ids[i]];
+    const auto &node = chunky_tri_mesh.get()->nodes.get()[chunk_ids[i]];
     const int *ctris = &chunky_tri_mesh.get()->tris[node.i * 3];
     const int nctris = node.n;
 
