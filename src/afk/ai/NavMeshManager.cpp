@@ -110,7 +110,7 @@ bool NavMeshManager::bake() {
 
   auto chunky_mesh = std::make_shared<ChunkyTriMesh>();
 
-  auto check_success = chunky_mesh->init(vertices.data(), triangles.data(),
+  auto check_success = chunky_mesh.get()->init(vertices.data(), triangles.data(),
                                          ntriangles, 256, chunky_mesh.get());
   afk_assert(check_success, "Failed to create chunky triangle mesh");
 
@@ -155,7 +155,7 @@ bool NavMeshManager::bake() {
       int data_size = 0;
       auto data     = this->build_tile_nav_mesh(x, y, tile_bmin, tile_bmax,
                                             grid_cell_size, tile_size, data_size,
-                                            chunky_mesh.get(), vertices, triangles);
+                                            chunky_mesh, vertices, triangles);
 
       if (data) {
         // Remove any previous data (navmesh owns and deletes the data).
@@ -509,7 +509,7 @@ auto NavMeshManager::get_nav_mesh() -> NavMeshManager::nav_mesh_ptr {
 }
 unsigned char *NavMeshManager::build_tile_nav_mesh(
     const int tile_x, const int tile_y, glm::vec3 bmin, glm::vec3 bmax,
-    float cell_size, int tile_size, int &data_size, ChunkyTriMesh *chunky_tri_mesh,
+    float cell_size, int tile_size, int &data_size, const std::shared_ptr<ChunkyTriMesh>& chunky_tri_mesh,
     const std::vector<float> &vertices, const std::vector<int> &triangles) {
 
   dtStatus temp_status = {};
@@ -563,8 +563,8 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   // If you have multiple meshes you need to process, allocate
   // and array which can hold the max number of triangles you need to process.
   const auto areas = std::unique_ptr<unsigned char[]>(
-      new unsigned char[chunky_tri_mesh->maxTrisPerChunk]);
-  memset(areas.get(), 0, chunky_tri_mesh->maxTrisPerChunk * sizeof(unsigned char));
+      new unsigned char[chunky_tri_mesh.get()->maxTrisPerChunk]);
+  memset(areas.get(), 0, chunky_tri_mesh.get()->maxTrisPerChunk * sizeof(unsigned char));
 
   float tbmin[2], tbmax[2];
   tbmin[0] = config.bmin[0];
@@ -575,7 +575,7 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   const auto chunk_ids = std::unique_ptr<int[]>(new int[1024]);
   memset(chunk_ids.get(), 0, 1024 * sizeof(int));
   const int ncid =
-      chunky_tri_mesh->get_chunks_overlapping_rect(tbmin, tbmax, chunk_ids.get(), 1024);
+      chunky_tri_mesh.get()->get_chunks_overlapping_rect(tbmin, tbmax, chunk_ids.get(), 1024);
   if (!ncid) {
     return nullptr;
   }
@@ -583,8 +583,8 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   int tile_triangle_count = 0;
 
   for (int i = 0; i < ncid; ++i) {
-    const auto &node = chunky_tri_mesh->nodes[chunk_ids[i]];
-    const int *ctris = &chunky_tri_mesh->tris[node.i * 3];
+    const auto &node = chunky_tri_mesh.get()->nodes.get()[chunk_ids[i]];
+    const int *ctris = &chunky_tri_mesh.get()->tris[node.i * 3];
     const int nctris = node.n;
 
     tile_triangle_count += nctris;

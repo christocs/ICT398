@@ -10,6 +10,7 @@
 #include "afk/renderer/Camera.hpp"
 #include "afk/renderer/Renderer.hpp"
 #include "afk/terrain/TerrainManager.hpp"
+#include "afk/ai/DifficultyManager.hpp"
 #include "afk/ui/Ui.hpp"
 #include "entt/entt.hpp"
 
@@ -29,7 +30,7 @@ namespace Afk {
 
     entt::registry registry;
     Afk::PhysicsBodySystem physics_body_system;
-    lua_State *lua;
+    lua_State *lua = nullptr;
 
     GameObject camera_entity = registry.create();
 
@@ -50,13 +51,7 @@ namespace Afk {
     auto get_delta_time() -> float;
     auto get_is_running() const -> bool;
 
-    enum Difficulty {
-      EASY,
-      NORMAL,
-      HARD
-    };
-
-    Difficulty difficulty = Difficulty::NORMAL;
+    AI::DifficultyManager difficulty_manager = {};
 
   private:
     bool is_initialized = false;

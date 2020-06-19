@@ -10,11 +10,11 @@ bool ChunkyTriMesh::init(const float *verts, const int *tris, int ntris,
                          int trisPerChunk, ChunkyTriMesh *cm) {
   int nchunks = (ntris + trisPerChunk - 1) / trisPerChunk;
 
-  this->nodes = std::shared_ptr<ChunkyTriMeshNode[]>(new ChunkyTriMeshNode[nchunks * 4]);
+  this->nodes = std::shared_ptr<ChunkyTriMeshNode>(new ChunkyTriMeshNode[nchunks * 4], std::default_delete<ChunkyTriMeshNode[]>());
   if (!this->nodes)
     return false;
 
-  this->tris = std::shared_ptr<int[]>(new int[ntris * 3]);
+  this->tris = std::make_unique<int[]>(ntris * 3);
   if (!this->tris)
     return false;
 
@@ -56,7 +56,7 @@ bool ChunkyTriMesh::init(const float *verts, const int *tris, int ntris,
   // Calc max tris per node.
   this->maxTrisPerChunk = 0;
   for (int i = 0; i < this->nnodes; ++i) {
-    ChunkyTriMesh::ChunkyTriMeshNode &node = this->nodes[i];
+    ChunkyTriMesh::ChunkyTriMeshNode &node = this->nodes.get()[i];
     const bool isLeaf                      = node.i >= 0;
     if (!isLeaf) {
       continue;
@@ -75,7 +75,7 @@ int ChunkyTriMesh::get_chunks_overlapping_rect(float *bmin, float *bmax, int *id
   int i = 0;
   int n = 0;
   while (i < this->nnodes) {
-    const ChunkyTriMeshNode *node = &this->nodes[i];
+    const ChunkyTriMeshNode *node = &this->nodes.get()[i];
     const bool overlap = check_overlap_rect(bmin, bmax, node->bmin, node->bmax);
     const bool isLeafNode = node->i >= 0;
 

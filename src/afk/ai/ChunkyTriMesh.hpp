@@ -27,9 +27,9 @@ namespace Afk {
       /// Returns the chunk indices which overlap the input rectable.
       int get_chunks_overlapping_rect(float *bmin, float *bmax, int *ids, int maxIds) const;
 
-      std::shared_ptr<ChunkyTriMeshNode[]> nodes = nullptr;
+      std::shared_ptr<ChunkyTriMeshNode> nodes = nullptr;
       int nnodes                                 = 0;
-      std::shared_ptr<int[]> tris                = nullptr;
+      std::unique_ptr<int[]> tris                = nullptr;
       int ntris                                  = 0;
       int maxTrisPerChunk                        = 0;
 
