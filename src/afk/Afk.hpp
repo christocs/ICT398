@@ -50,6 +50,14 @@ namespace Afk {
     auto get_delta_time() -> float;
     auto get_is_running() const -> bool;
 
+    enum Difficulty {
+      EASY,
+      NORMAL,
+      HARD
+    };
+
+    Difficulty difficulty = Difficulty::NORMAL;
+
   private:
     bool is_initialized = false;
     bool is_running     = true;
