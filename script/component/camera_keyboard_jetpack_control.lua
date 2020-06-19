@@ -1,6 +1,6 @@
 speed = 600000.0
-jetpack_speed = speed * 0.7
-jetpack_max_duration = 3.0
+jetpack_speed = speed * 2.0
+jetpack_max_duration = 0.2
 jetpack_current_duration = 0.0
 
 function update(evt)
@@ -24,7 +24,14 @@ function update(evt)
         physics_component:apply_force(cur_cam:right():smul(vel))
     end
     if keyboard.is_pressed(key.Space) then
-        physics_component:apply_force(cur_cam:up():smul(jetpack_vel))
+        if jetpack_current_duration < jetpack_max_duration then
+            jetpack_current_duration = jetpack_current_duration + dt
+            physics_component:apply_force(cur_cam:up():smul(jetpack_vel))
+        end
+    elseif (jetpack_current_duration - dt) >= 0 then
+        jetpack_current_duration = jetpack_current_duration - dt
+    else
+        jetpack_current_duration = 0
     end
 
     cur_cam.pos = this:entity():get_transform().translation
