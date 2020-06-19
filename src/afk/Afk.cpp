@@ -199,8 +199,6 @@ auto Engine::update() -> void {
 
   this->physics_body_system.update(&this->registry, this->get_delta_time());
 
-  this->camera.set_position(glm::vec3{registry.get<Afk::Transform>(camera_entity).translation.x, registry.get<Afk::Transform>(camera_entity).translation.y, registry.get<Afk::Transform>(camera_entity).translation.z});
-
   ++this->frame_count;
   this->last_update = Afk::Engine::get_time();
 }
