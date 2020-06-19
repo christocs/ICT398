@@ -52,8 +52,8 @@ auto Engine::initialize() -> void {
   Afk::add_engine_bindings(this->lua);
 
   this->terrain_manager.initialize();
-  const int terrain_width  = 128;
-  const int terrain_length = 128;
+  const int terrain_width  = 64;
+  const int terrain_length = 64;
   this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
   this->renderer.load_model(this->terrain_manager.get_model());
 
@@ -90,6 +90,7 @@ auto Engine::initialize() -> void {
   Afk::Asset::game_asset_factory("asset/basketball.lua"); //.data)
                                                           // .ent;
 
+  // nav mesh needs to be generated BEFORE agents, otherwise agents may be added to the nav mesh
   this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh", &this->registry);
   //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
@@ -115,10 +116,15 @@ auto Engine::initialize() -> void {
                                     "shader/navmesh.prog");
   registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_transform);
 
-  auto cam = registry.create();
-  registry.assign<Afk::Transform>(cam, cam);
-  registry.assign<Afk::ScriptsComponent>(cam, cam, this->lua)
-      .add_script("script/component/camera_keyboard_control.lua", &this->event_manager)
+  auto camera_transform        = Transform{camera_entity};
+  camera_transform.translation = glm::vec3{0.0f, 20.0f, 0.0f};
+  registry.assign<Afk::Transform>(camera_entity, camera_transform);
+  registry.assign<Afk::PhysicsBody>(camera_entity, camera_entity, &this->physics_body_system,
+                                    camera_transform, 0.0f, 0.3f, 0.3f, 100.0f, true,
+                                    Afk::RigidBodyType::DYNAMIC, Afk::Sphere(0.75f));
+  registry
+      .assign<Afk::ScriptsComponent>(camera_entity, camera_entity, this->lua)
+      .add_script("script/component/camera_keyboard_jetpack_control.lua", &this->event_manager)
       .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
       .add_script("script/component/debug.lua", &this->event_manager);
 
@@ -138,13 +144,15 @@ auto Engine::initialize() -> void {
                                       "shader/default.prog");
     auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
         agents[i], agents[i], agent_transform.translation, p);
+    auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
+        agents[i], agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
+        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{0.3f, 1.0f});
   }
-  // registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
-  // registry.get<Afk::AI::AgentComponent>(agents[1]).chase(cam, 10.f);
-  // registry.get<Afk::AI::AgentComponent>(agents[2]).flee(cam, 10.f);
-  // const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
-  // registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
-  registry.get<Afk::AI::AgentComponent>(agents[4]).wander(glm::vec3{0, 0, 0}, 10);
+  registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
+  registry.get<Afk::AI::AgentComponent>(agents[1]).chase(camera_entity, 10.f);
+  registry.get<Afk::AI::AgentComponent>(agents[2]).flee(camera_entity, 10.f);
+  const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
+  registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
 
   this->is_initialized = true;
 }

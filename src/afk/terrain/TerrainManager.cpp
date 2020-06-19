@@ -112,6 +112,7 @@ auto TerrainManager::generate_terrain(int width, int length, float roughness,
 auto TerrainManager::get_model() -> Model {
   auto model = Model{};
   model.meshes.push_back(this->mesh);
+  model.meshes[0].transform.translation = glm::vec3{0.0f};
   model.file_path = "gen/terrain/terrain";
   model.file_dir  = "gen/terrain";
 

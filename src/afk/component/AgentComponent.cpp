@@ -1,5 +1,7 @@
 #include "AgentComponent.hpp"
 
+#include <iostream>
+
 #include "afk/Afk.hpp"
 
 using Afk::AI::AgentComponent;
@@ -50,10 +52,15 @@ auto AgentComponent::update() -> void {
   if (!agent->active) {
     throw std::runtime_error{"Agent not active!"};
   }
-  // Update our position to the current agent pos
-  tf.translation.x = agent->npos[0];
-  tf.translation.y = agent->npos[1];
-  tf.translation.z = agent->npos[2];
+  // Update our position to the current agent pos, if the physics body exists set that else set the transform
+  if  (Afk::Engine::get().registry.has<Afk::PhysicsBody>(this->owning_entity)) {
+    auto &physics_body = Afk::Engine::get().registry.get<Afk::PhysicsBody>(this->owning_entity);
+    physics_body.set_pos(glm::vec3{agent->npos[0], agent->npos[1], agent->npos[2]});
+  } else {
+    tf.translation.x = agent->npos[0];
+    tf.translation.y = agent->npos[1];
+    tf.translation.z = agent->npos[2];
+  }
   // Update the agent goal
   auto next_pos = current_behaviour->update(tf.translation);
   Afk::Engine::get().crowds.request_move(this->id, next_pos);

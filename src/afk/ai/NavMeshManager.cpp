@@ -1,6 +1,7 @@
 #include "NavMeshManager.hpp"
 
 #include <fstream>
+#include <memory>
 
 #include <afk/debug/Assert.hpp>
 #include <afk/io/ModelSource.hpp>
@@ -34,6 +35,7 @@ bool NavMeshManager::initialise(const std::filesystem::path &file_path,
   } else {
     Afk::Io::log << "Nav mesh successfully loaded" << '\n';
   }
+  create_nav_mesh_model(*nav_mesh);
   return true;
 }
 
@@ -100,171 +102,69 @@ bool NavMeshManager::bake(entt::registry *registry) {
   glm::vec3 bmax = {};
   NavMeshManager::get_min_max_bounds(vertices, bmin, bmax);
 
-  // use default values from demo
-  rcConfig config           = {};
-  config.cs                 = 0.3f;  // cell size
-  config.ch                 = 0.2f;  // cell height
-  config.walkableSlopeAngle = 45.0f; // 45
-  const auto agent_height   = 2.0f;  // 2.0
-  config.walkableHeight     = static_cast<int>(ceilf(agent_height / config.ch));
-  const auto agent_max_climb = 0.9f;
-  config.walkableClimb = static_cast<int>(floorf(agent_max_climb / config.ch));
-  const auto agent_radius = 0.6f;
-  config.walkableRadius   = static_cast<int>(ceilf(agent_radius / config.cs));
-  const auto max_edge_length    = 12.0f;
-  config.maxEdgeLen             = static_cast<int>(max_edge_length / config.cs);
-  config.maxSimplificationError = 1.0f;
-  config.minRegionArea          = static_cast<int>(8 * 8);
-  config.mergeRegionArea        = static_cast<int>(20 * 20);
-  config.maxVertsPerPoly        = 6;
-  const auto detail_sample_distance  = 6;
-  config.detailSampleDist            = detail_sample_distance * config.cs;
-  const auto detail_sample_max_error = 1.0f;
-  config.detailSampleMaxError        = config.ch * detail_sample_max_error;
+  auto chunky_mesh = std::make_shared<ChunkyTriMesh>();
 
-  config.bmin[0] = bmin.x;
-  config.bmin[1] = bmin.y;
-  config.bmin[2] = bmin.z;
-  config.bmax[0] = bmax.x;
-  config.bmax[1] = bmax.y;
-  config.bmax[2] = bmax.z;
+  auto check_success = chunky_mesh->init(vertices.data(), triangles.data(),
+                                         ntriangles, 256, chunky_mesh.get());
+  afk_assert(check_success, "Failed to create chunky triangle mesh");
 
-  rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
+  const float grid_cell_size = 0.15f; // determines resolution when voxelising nav meshes
+  const int grid_width = static_cast<int>(((bmax.x - bmin.x) / grid_cell_size) + 0.5f);
+  const int grid_height = static_cast<int>(((bmax.z - bmin.z) / grid_cell_size) + 0.5f);
 
-  auto height_field = std::unique_ptr<rcHeightfield, decltype(&rcFreeHeightField)>{
-      rcAllocHeightfield(), &rcFreeHeightField};
+  //  const int tile_size        = 8;
+  const int tile_size        = 64;
+  const int tile_width       = (grid_width + tile_size - 1) / tile_size;
+  const int tile_height      = (grid_height + tile_size - 1) / tile_size;
+  const float tile_cell_size = tile_size * grid_cell_size;
 
-  rcContext context = {};
-  auto temp_status =
-      rcCreateHeightfield(&context, *height_field, config.width, config.height,
-                          config.bmin, config.bmax, config.cs, config.ch);
-  afk_assert(temp_status, "Could not create height field");
+  dtNavMeshParams params = {};
+  params.tileWidth       = tile_cell_size;
+  params.tileHeight      = tile_cell_size;
+  // Max tiles and max polys affect how the tile IDs are caculated.
+  // There are 22 bits available for identifying a tile and a polygon.
+  int tileBits = rcMin((int)ilog2(nextPow2(tile_width * tile_height)), 14);
+  if (tileBits > 14) {
+    tileBits = 14;
+  }
+  int polyBits    = 22 - tileBits;
+  params.maxTiles = 1 << tileBits;
+  params.maxPolys = 1 << polyBits;
 
-  // Find triangles which are walkable based on their slope and rasterize them. If your input data is multiple meshes, you can transform them here, calculate the are type for each of the meshes and rasterize them.
-  const auto areas = std::unique_ptr<unsigned char[]>(new unsigned char[ntriangles]);
-  memset(areas.get(), 0, ntriangles * sizeof(unsigned char));
+  nav_mesh         = nav_mesh_ptr{dtAllocNavMesh(), &dtFreeNavMesh};
+  auto temp_status = nav_mesh->init(&params);
+  afk_assert(!dtStatusFailed(temp_status), "Failed to init nav mesh");
 
-  rcMarkWalkableTriangles(&context, config.walkableSlopeAngle, vertices.data(),
-                          static_cast<int>(nvertices), triangles.data(),
-                          static_cast<int>(ntriangles), areas.get());
+  glm::vec3 tile_bmin = {0.0f, bmin.y, 0.0f};
+  glm::vec3 tile_bmax = {0.0f, bmax.y, 0.0f};
+  for (int y = 0; y < tile_height; y++) {
+    for (int x = 0; x < tile_width; x++) {
+      tile_bmin.x = bmin.x + x * tile_cell_size;
+      tile_bmin.z = bmin.z + y * tile_cell_size;
+      tile_bmax.x = bmin.x + (x + 1) * tile_cell_size;
+      tile_bmax.z = bmin.z + (y + 1) * tile_cell_size;
+      //      std::cout << "bounds: "  << tile_bmin.x << ", " << tile_bmin.z << " - " << tile_bmax.x <<  ", " << tile_bmax.z << std::endl;
+      //      continue;
 
-  temp_status = rcRasterizeTriangles(&context, vertices.data(),
-                                     static_cast<int>(nvertices), triangles.data(),
-                                     areas.get(), static_cast<int>(ntriangles),
-                                     *height_field, config.walkableClimb);
-  afk_assert(temp_status, "Could not rasterize triangles");
+      int data_size = 0;
+      auto data     = this->build_tile_nav_mesh(x, y, tile_bmin, tile_bmax,
+                                            grid_cell_size, tile_size, data_size,
+                                            chunky_mesh.get(), vertices, triangles);
 
-  rcFilterLowHangingWalkableObstacles(&context, config.walkableClimb, *height_field);
-  rcFilterLedgeSpans(&context, config.walkableHeight, config.walkableClimb, *height_field);
-  rcFilterWalkableLowHeightSpans(&context, config.walkableHeight, *height_field);
-
-  this->create_height_field_model(*height_field);
-
-  int span_count = 0;
-  for (int y = 0; y < height_field->height; ++y) {
-    for (int x = 0; x < height_field->width; ++x) {
-      for (rcSpan *s = height_field->spans[x + y * height_field->width]; s; s = s->next) {
-        if (s->area != RC_NULL_AREA)
-          span_count++;
+      if (data) {
+        // Remove any previous data (navmesh owns and deletes the data).
+        nav_mesh->removeTile(nav_mesh->getTileRefAt(x, y, 0), 0, 0);
+        // Let the navmesh own the data.
+        temp_status = nav_mesh->addTile(data, data_size, DT_TILE_FREE_DATA, 0, 0);
+        //        std::cout << "after add tile: " << temp_status << " " << data << std::endl;
+        if (dtStatusFailed(temp_status)) {
+          dtFree(data);
+          //          afk_assert(!dtStatusFailed(temp_status),
+          //                     "failed to add tile to nav mesh");
+        }
       }
     }
   }
-  afk_assert(span_count, "no spans found");
-
-  // compact version
-  const auto compact_height_field =
-      std::unique_ptr<rcCompactHeightfield, decltype(&rcFreeCompactHeightfield)>{
-          rcAllocCompactHeightfield(), &rcFreeCompactHeightfield};
-
-  temp_status = rcBuildCompactHeightfield(&context, config.walkableHeight,
-                                          config.walkableClimb, *height_field,
-                                          *compact_height_field);
-  afk_assert(temp_status, "Could not build compact height field");
-
-  // Erode the walkable area by agent radius.
-  temp_status = rcErodeWalkableArea(&context, config.walkableRadius, *compact_height_field);
-  afk_assert(temp_status, "Could not erode walkable area");
-
-  // monotone
-  temp_status = rcBuildRegionsMonotone(&context, *compact_height_field, 0,
-                                       config.minRegionArea, config.mergeRegionArea);
-  afk_assert(temp_status, "Could not build monotone regions");
-
-  // trace and simplify region contours.
-  auto contours = std::unique_ptr<rcContourSet, decltype(&rcFreeContourSet)>{
-      rcAllocContourSet(), &rcFreeContourSet};
-
-  temp_status = rcBuildContours(&context, *compact_height_field, config.maxSimplificationError,
-                                config.maxEdgeLen, *contours);
-  afk_assert(temp_status, "Could not build contours");
-  afk_assert(contours->nconts, "No contours generated");
-
-  auto poly_mesh = rcAllocPolyMesh();
-  afk_assert(poly_mesh, "Could not allocate poly mesh");
-  temp_status = rcBuildPolyMesh(&context, *contours, config.maxVertsPerPoly, *poly_mesh);
-  afk_assert(
-      temp_status,
-      "Could not build polymesh (possibly could not triangulate contours)");
-
-  afk_assert(poly_mesh->nverts, "polymesh has no vertices");
-
-  auto detail_mesh = rcAllocPolyMeshDetail();
-  afk_assert(detail_mesh, "Failed to allocate poly mesh detail");
-  temp_status = rcBuildPolyMeshDetail(&context, *poly_mesh, *compact_height_field,
-                                      config.detailSampleDist,
-                                      config.detailSampleMaxError, *detail_mesh);
-  afk_assert(temp_status, "Could not build polymesh detail");
-
-  // build detour nav mesh
-  afk_assert(config.maxVertsPerPoly <= DT_VERTS_PER_POLYGON,
-             "Too many vertices per poly");
-
-  // update poly flags from areas
-  for (int i = 0; i < poly_mesh->npolys; ++i) {
-    if (poly_mesh->areas[i] == RC_WALKABLE_AREA) {
-      poly_mesh->flags[i] = POLYFLAGS_WALK;
-    }
-  }
-  dtNavMeshCreateParams params = {};
-  params.verts                 = poly_mesh->verts;
-  params.vertCount             = poly_mesh->nverts;
-  params.polys                 = poly_mesh->polys;
-  params.polyAreas             = poly_mesh->areas;
-  params.polyFlags             = poly_mesh->flags;
-  params.polyCount             = poly_mesh->npolys;
-  params.nvp                   = poly_mesh->nvp;
-  params.detailMeshes          = detail_mesh->meshes;
-  params.detailVerts           = detail_mesh->verts;
-  params.detailVertsCount      = detail_mesh->nverts;
-  params.detailTris            = detail_mesh->tris;
-  params.detailTriCount        = detail_mesh->ntris;
-  // optional
-  //    params.offMeshConVerts = m_geom->getOffMeshConnectionVerts();
-  //    params.offMeshConRad = m_geom->getOffMeshConnectionRads();
-  //    params.offMeshConDir = m_geom->getOffMeshConnectionDirs();
-  //    params.offMeshConAreas = m_geom->getOffMeshConnectionAreas();
-  //    params.offMeshConFlags = m_geom->getOffMeshConnectionFlags();
-  //    params.offMeshConUserID = m_geom->getOffMeshConnectionId();
-  //    params.offMeshConCount = m_geom->getOffMeshConnectionCount();
-  params.walkableHeight = agent_height;
-  params.walkableRadius = agent_radius;
-  params.walkableClimb  = agent_max_climb;
-  rcVcopy(params.bmin, poly_mesh->bmin);
-  rcVcopy(params.bmax, poly_mesh->bmax);
-  params.cs          = config.cs;
-  params.ch          = config.ch;
-  params.buildBvTree = true;
-
-  int nav_data_size = 0;
-  // todo: fix this, tf is it doing
-  unsigned char *nav_data = nullptr;
-  temp_status = dtCreateNavMeshData(&params, &nav_data, &nav_data_size);
-  afk_assert(temp_status, "Failed to allocate nav mesh data");
-
-  nav_mesh = nav_mesh_ptr{dtAllocNavMesh(), &dtFreeNavMesh};
-
-  dtStatus detour_status = nav_mesh->init(nav_data, nav_data_size, DT_TILE_FREE_DATA);
-  afk_assert(!dtStatusFailed(detour_status), "Could not init detour navmesh");
 
   this->create_nav_mesh_model(*nav_mesh);
 
@@ -360,7 +260,6 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
                             tile_header.tileRef, nullptr);
           output = true;
         }
-        create_nav_mesh_model(*nav_mesh);
       }
     }
 
@@ -601,4 +500,211 @@ void NavMeshManager::process_nav_mesh_model_poly(const dtNavMesh &navMesh,
 
 auto NavMeshManager::get_nav_mesh() -> NavMeshManager::nav_mesh_ptr {
   return this->nav_mesh;
+}
+unsigned char *NavMeshManager::build_tile_nav_mesh(
+    const int tile_x, const int tile_y, glm::vec3 bmin, glm::vec3 bmax,
+    float cell_size, int tile_size, int &data_size, ChunkyTriMesh *chunky_tri_mesh,
+    const std::vector<float> &vertices, const std::vector<int> &triangles) {
+
+  dtStatus temp_status = {};
+
+  const auto ntriangles = triangles.size() / 3;
+  const auto nvertices  = vertices.size() / 3;
+
+  // most are default values from demo
+  rcConfig config           = {};
+  config.cs                 = cell_size; // cell size, default 0.3
+  config.ch                 = 0.1f;      // cell height resolution, default 0.2
+  config.walkableSlopeAngle = 55.0f;     // default 45
+  const auto agent_height   = 2.0f;      // default 2.0
+  config.walkableHeight     = static_cast<int>(ceilf(agent_height / config.ch));
+  const auto agent_max_climb = 0.9f;
+  config.walkableClimb = static_cast<int>(floorf(agent_max_climb / config.ch));
+  const auto agent_radius = 0.6f;
+  config.walkableRadius   = static_cast<int>(ceilf(agent_radius / config.cs));
+  const auto max_edge_length    = 12.0f;
+  config.maxEdgeLen             = static_cast<int>(max_edge_length / config.cs);
+  config.maxSimplificationError = 1.0f;
+  config.minRegionArea          = static_cast<int>(8 * 8);
+  config.mergeRegionArea        = static_cast<int>(20 * 20);
+  config.maxVertsPerPoly        = 6;
+  const auto detail_sample_distance  = 6;
+  config.detailSampleDist            = detail_sample_distance * config.cs;
+  const auto detail_sample_max_error = 1.0f;
+  config.detailSampleMaxError        = config.ch * detail_sample_max_error;
+  config.borderSize                  = config.walkableRadius + 3.0f; // Reserve enough padding, need to have some vertices from neighbouring tiles to connect them
+  config.tileSize                    = tile_size;
+  config.width                       = config.tileSize + config.borderSize * 2;
+  config.height                      = config.tileSize + config.borderSize * 2;
+
+  config.bmin[0] = bmin.x - config.borderSize * config.cs;
+  config.bmin[1] = bmin.y;
+  config.bmin[2] = bmin.z - config.borderSize * config.cs;
+  config.bmax[0] = bmax.x + config.borderSize * config.cs;
+  config.bmax[1] = bmax.y;
+  config.bmax[2] = bmax.z + config.borderSize * config.cs;
+
+  auto height_field = std::unique_ptr<rcHeightfield, decltype(&rcFreeHeightField)>{
+      rcAllocHeightfield(), &rcFreeHeightField};
+
+  rcContext context = {};
+  temp_status =
+      rcCreateHeightfield(&context, *height_field, config.width, config.height,
+                          config.bmin, config.bmax, config.cs, config.ch);
+  afk_assert(temp_status, "Could not create height field");
+
+  // Allocate array that can hold triangle flags.
+  // If you have multiple meshes you need to process, allocate
+  // and array which can hold the max number of triangles you need to process.
+  const auto areas = std::unique_ptr<unsigned char[]>(
+      new unsigned char[chunky_tri_mesh->maxTrisPerChunk]);
+  memset(areas.get(), 0, chunky_tri_mesh->maxTrisPerChunk * sizeof(unsigned char));
+
+  float tbmin[2], tbmax[2];
+  tbmin[0] = config.bmin[0];
+  tbmin[1] = config.bmin[2];
+  tbmax[0] = config.bmax[0];
+  tbmax[1] = config.bmax[2];
+  // TODO: dynamically determine the max number of chunks, allocate on the heap to reduce memory usage (can fail to allocate memory when it is fragmented)
+  const auto chunk_ids = std::unique_ptr<int[]>(new int[1024]);
+  memset(chunk_ids.get(), 0, 1024 * sizeof(int));
+  const int ncid =
+      chunky_tri_mesh->get_chunks_overlapping_rect(tbmin, tbmax, chunk_ids.get(), 1024);
+  if (!ncid) {
+    return nullptr;
+  }
+
+  int tile_triangle_count = 0;
+
+  for (int i = 0; i < ncid; ++i) {
+    const auto &node = chunky_tri_mesh->nodes[chunk_ids[i]];
+    const int *ctris = &chunky_tri_mesh->tris[node.i * 3];
+    const int nctris = node.n;
+
+    tile_triangle_count += nctris;
+
+    memset(areas.get(), 0, nctris * sizeof(unsigned char)); // is this necessary?
+    rcMarkWalkableTriangles(&context, config.walkableSlopeAngle, vertices.data(),
+                            nvertices, ctris, nctris, areas.get());
+
+    auto success_check =
+        rcRasterizeTriangles(&context, vertices.data(), nvertices, ctris, areas.get(),
+                             nctris, *height_field.get(), config.walkableClimb);
+    afk_assert(success_check,
+               "failed to rasterize triangles for nav mesh tile");
+  }
+  //  std::cout << "height field cs " << height_field->cs << std::endl;
+
+  rcFilterLowHangingWalkableObstacles(&context, config.walkableClimb, *height_field);
+  rcFilterLedgeSpans(&context, config.walkableHeight, config.walkableClimb, *height_field);
+  rcFilterWalkableLowHeightSpans(&context, config.walkableHeight, *height_field);
+
+  //  this->create_height_field_model(*height_field);
+
+  int span_count = 0;
+  for (int y = 0; y < height_field->height; ++y) {
+    for (int x = 0; x < height_field->width; ++x) {
+      for (rcSpan *s = height_field->spans[x + y * height_field->width]; s; s = s->next) {
+        if (s->area != RC_NULL_AREA)
+          span_count++;
+      }
+    }
+  }
+  //  afk_assert(span_count, "no spans found");
+
+  // compact version
+  const auto compact_height_field =
+      std::unique_ptr<rcCompactHeightfield, decltype(&rcFreeCompactHeightfield)>{
+          rcAllocCompactHeightfield(), &rcFreeCompactHeightfield};
+
+  temp_status = rcBuildCompactHeightfield(&context, config.walkableHeight,
+                                          config.walkableClimb, *height_field,
+                                          *compact_height_field);
+  afk_assert(temp_status, "Could not build compact height field");
+
+  // Erode the walkable area by agent radius.
+  temp_status = rcErodeWalkableArea(&context, config.walkableRadius, *compact_height_field);
+  afk_assert(temp_status, "Could not erode walkable area");
+
+  // monotone
+  temp_status = rcBuildRegionsMonotone(&context, *compact_height_field, config.borderSize,
+                                       config.minRegionArea, config.mergeRegionArea);
+  afk_assert(temp_status, "Could not build monotone regions");
+
+  // trace and simplify region contours.
+  auto contours = std::unique_ptr<rcContourSet, decltype(&rcFreeContourSet)>{
+      rcAllocContourSet(), &rcFreeContourSet};
+
+  temp_status = rcBuildContours(&context, *compact_height_field, config.maxSimplificationError,
+                                config.maxEdgeLen, *contours);
+  afk_assert(temp_status, "Could not build contours");
+  //  afk_assert(contours->nconts, "No contours generated");
+
+  auto poly_mesh = rcAllocPolyMesh();
+  afk_assert(poly_mesh, "Could not allocate poly mesh");
+  temp_status = rcBuildPolyMesh(&context, *contours, config.maxVertsPerPoly, *poly_mesh);
+  afk_assert(
+      temp_status,
+      "Could not build polymesh (possibly could not triangulate contours)");
+
+  //  afk_assert(poly_mesh->nverts, "polymesh has no vertices");
+
+  auto detail_mesh = rcAllocPolyMeshDetail();
+  afk_assert(detail_mesh, "Failed to allocate poly mesh detail");
+  temp_status = rcBuildPolyMeshDetail(&context, *poly_mesh, *compact_height_field,
+                                      config.detailSampleDist,
+                                      config.detailSampleMaxError, *detail_mesh);
+  afk_assert(temp_status, "Could not build polymesh detail");
+
+  // build detour nav mesh
+  afk_assert(config.maxVertsPerPoly <= DT_VERTS_PER_POLYGON,
+             "Too many vertices per poly");
+
+  // update poly flags from areas
+  for (int i = 0; i < poly_mesh->npolys; ++i) {
+    if (poly_mesh->areas[i] == RC_WALKABLE_AREA) {
+      poly_mesh->flags[i] = POLYFLAGS_WALK;
+    }
+  }
+  dtNavMeshCreateParams params = {};
+  params.verts                 = poly_mesh->verts;
+  params.vertCount             = poly_mesh->nverts;
+  params.polys                 = poly_mesh->polys;
+  params.polyAreas             = poly_mesh->areas;
+  params.polyFlags             = poly_mesh->flags;
+  params.polyCount             = poly_mesh->npolys;
+  params.nvp                   = poly_mesh->nvp;
+  params.detailMeshes          = detail_mesh->meshes;
+  params.detailVerts           = detail_mesh->verts;
+  params.detailVertsCount      = detail_mesh->nverts;
+  params.detailTris            = detail_mesh->tris;
+  params.detailTriCount        = detail_mesh->ntris;
+  // optional
+  //    params.offMeshConVerts = m_geom->getOffMeshConnectionVerts();
+  //    params.offMeshConRad = m_geom->getOffMeshConnectionRads();
+  //    params.offMeshConDir = m_geom->getOffMeshConnectionDirs();
+  //    params.offMeshConAreas = m_geom->getOffMeshConnectionAreas();
+  //    params.offMeshConFlags = m_geom->getOffMeshConnectionFlags();
+  //    params.offMeshConUserID = m_geom->getOffMeshConnectionId();
+  //    params.offMeshConCount = m_geom->getOffMeshConnectionCount();
+  params.walkableHeight = agent_height;
+  params.walkableRadius = agent_radius;
+  params.walkableClimb  = agent_max_climb;
+  params.tileX          = tile_x;
+  params.tileY          = tile_y;
+  params.tileLayer      = 0;
+  rcVcopy(params.bmin, poly_mesh->bmin);
+  rcVcopy(params.bmax, poly_mesh->bmax);
+  params.cs          = config.cs;
+  params.ch          = config.ch;
+  params.buildBvTree = true;
+
+  int nav_data_size = 0;
+  // todo: fix this, tf is it doing
+  unsigned char *nav_data = nullptr;
+  temp_status = dtCreateNavMeshData(&params, &nav_data, &nav_data_size);
+  //  afk_assert(temp_status, "Failed to allocate nav mesh data");
+
+  data_size = nav_data_size;
+  return nav_data;
 }
