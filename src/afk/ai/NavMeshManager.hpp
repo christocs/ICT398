@@ -86,10 +86,6 @@ namespace Afk {
         POLYFLAGS_DOOR = 4, // Ability to move through doors.
         POLYFLAGS_JUMP = 8, // Ability to jump.
       };
-
-      inline unsigned int nextPow2(unsigned int v);
-
-      inline unsigned int ilog2(unsigned int v);
     };
 
   }

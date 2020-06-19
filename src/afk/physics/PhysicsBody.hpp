@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <reactphysics3d.h>
+#include <reactphysics3d/reactphysics3d.h>
 
 #include <entt/entt.hpp>
 
@@ -19,9 +19,7 @@ namespace Afk {
   class PhysicsBodySystem;
 
   using RigidBody = rp3d::RigidBody;
-
-  using ProxyShape = rp3d::ProxyShape;
-
+  using Collider = rp3d::Collider;
   using CollisionShape = rp3d::CollisionShape;
 
   class PhysicsBody : public BaseComponent {
@@ -65,9 +63,9 @@ namespace Afk {
     Afk::RigidBodyType get_type() const;
 
   private:
-    RigidBody *body;
-    ProxyShape *proxy_shape;
-    std::unique_ptr<CollisionShape> collision_shape;
+    RigidBody *body = nullptr;
+    Collider *collider  = nullptr;
+    CollisionShape *collision_shape = nullptr;
 
     Afk::RigidBodyType rigid_body_type;
 
