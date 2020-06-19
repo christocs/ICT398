@@ -10,6 +10,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include "afk/asset/AssetFactory.hpp"
+#include "afk/component/AgentComponent.hpp"
 #include "afk/component/GameObject.hpp"
 #include "afk/component/ScriptsComponent.hpp"
 #include "afk/debug/Assert.hpp"
@@ -22,6 +23,7 @@
 #include "afk/renderer/ModelRenderSystem.hpp"
 #include "afk/script/Bindings.hpp"
 #include "afk/script/LuaInclude.hpp"
+#include "afk/component/TagComponent.hpp"
 
 using namespace std::string_literals;
 
@@ -41,14 +43,18 @@ auto Engine::initialize() -> void {
   this->event_manager.initialize(this->renderer.window);
   //  this->renderer.set_wireframe(true);
 
+  // load the navmesh before adding components to things
+  // init crowds with the navmesh
+  // then add components
+
   this->ui.initialize(this->renderer.window);
   this->lua = luaL_newstate();
   luaL_openlibs(this->lua);
   Afk::add_engine_bindings(this->lua);
 
   this->terrain_manager.initialize();
-  const int terrain_width  = 1024;
-  const int terrain_length = 1024;
+  const int terrain_width  = 64;
+  const int terrain_length = 64;
   this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
   this->renderer.load_model(this->terrain_manager.get_model());
 
@@ -58,19 +64,103 @@ auto Engine::initialize() -> void {
   registry.assign<Afk::ModelSource>(terrain_entity, terrain_entity,
                                     terrain_manager.get_model().file_path,
                                     "shader/terrain.prog");
-  registry.assign<Afk::Transform>(terrain_entity, terrain_entity);
+  registry.assign<Afk::Model>(terrain_entity, terrain_entity, terrain_manager.get_model());
+  registry.assign<Afk::Transform>(terrain_entity, terrain_transform);
   registry.assign<Afk::PhysicsBody>(terrain_entity, terrain_entity, &this->physics_body_system,
                                     terrain_transform, 0.3f, 0.0f, 0.0f, 0.0f,
                                     true, Afk::RigidBodyType::STATIC,
                                     this->terrain_manager.height_map);
+  auto terrain_tags = TagComponent{terrain_entity};
+  terrain_tags.tags.insert(TagComponent::Tag::TERRAIN);
+  registry.assign<Afk::TagComponent>(terrain_entity, terrain_tags);
 
-  Afk::Asset::game_asset_factory("asset/basketball.lua");
+  auto box_entity           = registry.create();
+  auto box_transform        = Transform{box_entity};
+  box_transform.translation = glm::vec3{0.0f, -15.0f, 0.0f};
+  box_transform.scale       = glm::vec3(5.0f);
+  auto box_model            = Model(box_entity, "res/model/box/box.obj");
+  this->renderer.load_model(box_model);
+  registry.assign<Afk::ModelSource>(box_entity, box_entity, box_model.file_path,
+                                    "shader/default.prog");
+  registry.assign<Afk::Model>(box_entity, box_model);
+  registry.assign<Afk::Transform>(box_entity, box_transform);
+  registry.assign<Afk::PhysicsBody>(
+      box_entity, box_entity, &this->physics_body_system, box_transform, 0.3f, 0.0f,
+      0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Box(0.9f, 0.9f, 0.9f));
+  auto box_tags = TagComponent{terrain_entity};
+  box_tags.tags.insert(TagComponent::Tag::TERRAIN);
+  registry.assign<Afk::TagComponent>(box_entity, box_tags);
 
-  auto cam = registry.create();
-  registry.assign<Afk::ScriptsComponent>(cam, cam)
-      .add_script("script/component/camera_keyboard_control.lua", this->lua, &this->event_manager)
-      .add_script("script/component/camera_mouse_control.lua", this->lua, &this->event_manager)
-      .add_script("script/component/debug.lua", this->lua, &this->event_manager);
+  // auto basketball =
+  // std::get<Asset::Asset::Object>(
+  Afk::Asset::game_asset_factory("asset/basketball.lua"); //.data)
+                                                          // .ent;
+
+  // nav mesh needs to be generated BEFORE agents, otherwise agents may be added to the nav mesh
+  this->nav_mesh_manager.initialise("res/gen/navmesh/human.nmesh", &this->registry);
+  //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
+  this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
+
+  /*
+    this->renderer.load_model(this->nav_mesh_manager.get_height_field_model());
+    auto height_field_entity = registry.create();
+    auto height_field_transform = Transform{height_field_entity};
+    height_field_transform.translation = glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
+    registry.assign<Afk::ModelSource>(
+        height_field_entity, height_field_entity,
+        this->nav_mesh_manager.get_height_field_model().file_path, "shader/heightfield.prog");
+    registry.assign<Afk::Transform>(height_field_entity, height_field_transform);
+    /**/
+
+  this->renderer.load_model(this->nav_mesh_manager.get_nav_mesh_model());
+  auto nav_mesh_entity    = registry.create();
+  auto nav_mesh_transform = Transform{nav_mesh_entity};
+  nav_mesh_transform.translation =
+      glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
+  registry.assign<Afk::ModelSource>(nav_mesh_entity, nav_mesh_entity,
+                                    this->nav_mesh_manager.get_nav_mesh_model().file_path,
+                                    "shader/navmesh.prog");
+  registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_transform);
+
+  auto camera_transform        = Transform{camera_entity};
+  camera_transform.translation = glm::vec3{0.0f, 20.0f, 0.0f};
+  registry.assign<Afk::Transform>(camera_entity, camera_transform);
+  registry.assign<Afk::PhysicsBody>(camera_entity, camera_entity, &this->physics_body_system,
+                                    camera_transform, 0.0f, 0.3f, 0.3f, 100.0f, true,
+                                    Afk::RigidBodyType::DYNAMIC, Afk::Sphere(0.75f));
+  auto camera_tags = TagComponent{terrain_entity};
+  camera_tags.tags.insert(TagComponent::Tag::PLAYER);
+  registry.assign<Afk::TagComponent>(camera_entity, camera_tags);
+  registry.assign<Afk::ScriptsComponent>(camera_entity, camera_entity, this->lua)
+      .add_script("script/component/camera_keyboard_jetpack_control.lua", &this->event_manager)
+      .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
+      .add_script("script/component/debug.lua", &this->event_manager);
+
+  std::vector<entt::entity> agents{};
+  for (std::size_t i = 0; i < 5; ++i) {
+    agents.push_back(registry.create());
+    dtCrowdAgentParams p        = {};
+    p.radius                    = .1f;
+    p.maxSpeed                  = 1;
+    p.maxAcceleration           = 1;
+    p.height                    = 1;
+    auto agent_transform        = Afk::Transform{agents[i]};
+    agent_transform.translation = {5 - (i), -6, 5 - (i)};
+    agent_transform.scale       = {.1f, .1f, .1f};
+    registry.assign<Afk::Transform>(agents[i], agent_transform);
+    registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",
+                                      "shader/default.prog");
+    auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
+        agents[i], agents[i], agent_transform.translation, p);
+    auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
+        agents[i], agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
+        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{0.3f, 1.0f});
+  }
+  registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
+  registry.get<Afk::AI::AgentComponent>(agents[1]).chase(camera_entity, 10.f);
+  registry.get<Afk::AI::AgentComponent>(agents[2]).flee(camera_entity, 10.f);
+  const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
+  registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
 
   this->is_initialized = true;
 }
@@ -82,6 +172,7 @@ auto Engine::get() -> Engine & {
 }
 
 auto Engine::exit() -> void {
+  lua_close(this->lua);
   this->is_running = false;
 }
 
@@ -98,6 +189,11 @@ auto Engine::render() -> void {
 
 auto Engine::update() -> void {
   this->event_manager.pump_events();
+  this->crowds.update(this->get_delta_time());
+  for (auto &agent_ent : this->registry.view<Afk::AI::AgentComponent>()) {
+    auto &agent = this->registry.get<Afk::AI::AgentComponent>(agent_ent);
+    agent.update();
+  }
 
   if (glfwWindowShouldClose(this->renderer.window)) {
     this->is_running = false;

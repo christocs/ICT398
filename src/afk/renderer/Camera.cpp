@@ -47,8 +47,9 @@ auto Camera::get_view_matrix() const -> mat4 {
 auto Camera::get_projection_matrix(int width, int height) const -> mat4 {
   const auto w = static_cast<float>(width);
   const auto h = static_cast<float>(height);
+  const auto aspect = h > 0 ? w / h : 0;
 
-  return glm::perspective(glm::radians(this->fov), w / h, this->near, this->far);
+  return glm::perspective(glm::radians(this->fov), aspect, this->near, this->far);
 }
 
 auto Camera::get_front() const -> vec3 {

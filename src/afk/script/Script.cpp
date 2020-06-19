@@ -8,7 +8,7 @@ using Afk::Event;
 using Afk::Script;
 using std::vector;
 
-const auto Script::events = vector<Script::Event>{
+const vector<Script::Event> Script::events = {
     {"key_down", static_cast<int>(::Afk::Event::Type::KeyDown)},
     {"key_up", static_cast<int>(::Afk::Event::Type::KeyUp)},
     {"mouse_down", static_cast<int>(::Afk::Event::Type::MouseDown)},
@@ -20,14 +20,14 @@ const auto Script::events = vector<Script::Event>{
     {"render", static_cast<int>(::Afk::Event::Type::Render)},
 };
 
-const auto Script::mouse_buttons = vector<Script::Mouse>{
+const vector<Script::Mouse> Script::mouse_buttons = {
     {"left", GLFW_MOUSE_BUTTON_1},    {"right", GLFW_MOUSE_BUTTON_2},
     {"middle", GLFW_MOUSE_BUTTON_3},  {"mouse_4", GLFW_MOUSE_BUTTON_4},
     {"mouse_5", GLFW_MOUSE_BUTTON_5}, {"mouse_6", GLFW_MOUSE_BUTTON_6},
     {"mouse_7", GLFW_MOUSE_BUTTON_7}, {"mouse_8", GLFW_MOUSE_BUTTON_8},
 };
 
-const auto Script::keys = vector<Script::Key>{
+const vector<Script::Key> Script::keys = {
     {"A", GLFW_KEY_A},
     {"B", GLFW_KEY_B},
     {"C", GLFW_KEY_C},

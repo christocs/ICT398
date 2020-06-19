@@ -40,6 +40,13 @@ struct GameObjectWrapped {
   }
 };
 
+static auto get_owning_entity(Afk::LuaScript *self) -> GameObjectWrapped {
+  return GameObjectWrapped{self->my_owner->owning_entity};
+}
+static auto script_data(GameObjectWrapped *entity, const std::string &path) -> LuaRef {
+  return entity->get_component<Afk::ScriptsComponent>()->get_script_table(path);
+}
+
 template<typename T>
 static auto get_parent(T *bc) -> ENTT_ID_TYPE {
   return static_cast<ENTT_ID_TYPE>(bc->owning_entity);
@@ -68,6 +75,10 @@ static auto vec_cross(VecType *a, VecType rhs) -> VecType {
 template<typename VecType>
 static auto vec_normal(VecType *a) -> VecType {
   return glm::normalize(*a);
+}
+template<typename VecType>
+static auto vec_inverse(VecType *a) -> VecType {
+  return -(*a);
 }
 
 // todo move to keyboard mgmt
@@ -103,6 +114,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("smul", &vec_smul<glm::vec3>)
       .addFunction("dot", &vec_dot<glm::vec3>)
       .addFunction("cross", &vec_cross<glm::vec3>)
+      .addFunction("inverse", &vec_inverse<glm::vec3>)
       .endClass()
 
       .beginNamespace("math")
@@ -118,6 +130,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("sub", &vec_sub<glm::vec2>)
       .addFunction("smul", &vec_smul<glm::vec2>)
       .addFunction("dot", &vec_dot<glm::vec2>)
+      .addFunction("inverse", &vec_inverse<glm::vec2>)
       .endClass()
 
       .beginClass<glm::quat>("quaternion")
@@ -146,6 +159,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("get_physics", &GameObjectWrapped::get_component<PhysicsBody>)
       .addFunction("get_model", &GameObjectWrapped::get_component<ModelSource>)
       .addFunction("get_script", &GameObjectWrapped::get_component<ScriptsComponent>)
+      .addFunction("script_data", &script_data)
       .endClass()
 
       .beginClass<Afk::PhysicsBody>("physics_component")
@@ -153,6 +167,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("apply_force", &Afk::PhysicsBody::apply_force)
       .addFunction("apply_torque", &Afk::PhysicsBody::apply_torque)
       .addFunction("translate", &Afk::PhysicsBody::translate)
+      .addFunction("set_pos", &Afk::PhysicsBody::set_pos)
       .endClass()
 
       .beginClass<Afk::Transform>("transform_component")
@@ -166,6 +181,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("parent", &get_parent<Afk::ScriptsComponent>)
       .addFunction("add", &Afk::ScriptsComponent::add_script)
       .addFunction("remove", &Afk::ScriptsComponent::remove_script)
+      .addFunction("get_data", &Afk::ScriptsComponent::get_script_table)
       .endClass()
 
       .beginClass<Afk::ModelSource>("model_component")
@@ -272,5 +288,6 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
   auto script_class = luabridge::getGlobalNamespace(lua)
                           .beginClass<LuaScript>("__AFK__SCRIPT")
                           .addFunction("register_event", &Afk::LuaScript::register_fn)
+                          .addFunction("entity", &get_owning_entity)
                           .endClass();
 }
