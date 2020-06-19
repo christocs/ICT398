@@ -569,7 +569,7 @@ unsigned char *NavMeshManager::build_tile_nav_mesh(
   const auto chunk_ids = std::unique_ptr<int[]>(new int[1024]);
   memset(chunk_ids.get(), 0, 1024 * sizeof(int));
   const int ncid =
-      chunky_tri_mesh->GetChunksOverlappingRect(tbmin, tbmax, chunk_ids.get(), 1024);
+      chunky_tri_mesh->get_chunks_overlapping_rect(tbmin, tbmax, chunk_ids.get(), 1024);
   if (!ncid) {
     return nullptr;
   }

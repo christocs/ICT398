@@ -25,7 +25,7 @@ namespace Afk {
                 int trisPerChunk, ChunkyTriMesh *cm);
 
       /// Returns the chunk indices which overlap the input rectable.
-      int GetChunksOverlappingRect(float *bmin, float *bmax, int *ids, int maxIds) const;
+      int get_chunks_overlapping_rect(float *bmin, float *bmax, int *ids, int maxIds) const;
 
       std::shared_ptr<ChunkyTriMeshNode[]> nodes = nullptr;
       int nnodes                                 = 0;
@@ -45,21 +45,21 @@ namespace Afk {
       int i;
     };
 
-    static int compareItemX(const void *va, const void *vb);
+    static int compare_item_x(const void *va, const void *vb);
 
-    static int compareItemY(const void *va, const void *vb);
+    static int compare_item_y(const void *va, const void *vb);
 
-    static void calcExtends(const BoundsItem *items, const int imin,
+    static void calc_extends(const BoundsItem *items, const int imin,
                             const int imax, float *bmin, float *bmax);
 
-    int longestAxis(float x, float y);
+    int longest_axis(float x, float y);
 
     static void subdivide(BoundsItem *items, int nitems, int imin, int imax,
                           int trisPerChunk, int &curNode,
                           ChunkyTriMesh::ChunkyTriMeshNode *nodes, const int maxNodes,
                           int &curTri, int *outTris, const int *inTris);
 
-    inline bool checkOverlapRect(const float amin[2], const float amax[2],
-                                 const float bmin[2], const float bmax[2]);
+    inline bool check_overlap_rect(const float *amin, const float *amax,
+                                   const float *bmin, const float *bmax);
   }
 }
