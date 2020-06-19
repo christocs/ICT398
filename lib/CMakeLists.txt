@@ -23,6 +23,11 @@ option(ozz_build_samples "Build samples" OFF)
 option(ozz_build_howtos "Build howtos" OFF)
 option(ozz_build_tests "Build unit tests" OFF)
 option(ozz_build_postfix "Use per config postfix name" OFF)
+#  recastnavigation
+option(RECASTNAVIGATION_DEMO "Build demo" OFF)
+option(RECASTNAVIGATION_TESTS "Build tests" OFF)
+option(RECASTNAVIGATION_EXAMPLES "Build examples" OFF)
+option(RECASTNAVIGATION_STATIC "Build static libraries" ON)
 
 # Fixes an entt warning on UNIX systems.
 if (UNIX)
