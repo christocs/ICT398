@@ -25,9 +25,9 @@ namespace Afk {
 
       bool bake();
 
-      bool load();
+      bool load(const std::filesystem::path &file_path);
 
-      bool save();
+      bool save(const std::filesystem::path &file_path);
 
       auto get_nav_mesh() -> nav_mesh_ptr;
 

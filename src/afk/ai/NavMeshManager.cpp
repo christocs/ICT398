@@ -22,7 +22,7 @@ using Afk::AI::NavMeshManager;
 bool NavMeshManager::initialise(const std::filesystem::path &file_path) {
   this->file_path_ = file_path;
   if (!this->load(file_path)) {
-    if (this->bake(registry)) {
+    if (this->bake()) {
       if (!this->save(file_path)) {
         Afk::Io::log << "Failed to save nav mesh" << '\n';
         return false;
@@ -276,13 +276,13 @@ bool NavMeshManager::load(const std::filesystem::path &file_path) {
 }
 
 // save files may not necessarily be compatible between different systems
-bool NavMeshManager::save() {
+bool NavMeshManager::save(const std::filesystem::path &file_path) {
   bool output = false;
 
   const auto *mesh = nav_mesh.get();
 
   if (mesh) {
-    std::ofstream out(file_path_, std::ios::binary);
+    std::ofstream out(file_path, std::ios::binary);
     if (out) {
       NavMeshSetHeader header = {};
       header.magic            = NAVMESHSET_MAGIC;
