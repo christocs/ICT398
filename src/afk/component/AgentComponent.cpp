@@ -38,6 +38,10 @@ auto AgentComponent::path(const Afk::AI::Path &path, float min_dist) -> void {
   this->current_behaviour =
       Behaviour{new Afk::AI::PathFollow{path, my_pos.translation, min_dist}};
 }
+#include "afk/ai/behaviour/Wander.hpp"
+auto AgentComponent::wander(const glm::vec3 &target, float radius) -> void {
+  this->current_behaviour = Behaviour{new Afk::AI::Wander{target, radius}};
+}
 
 auto AgentComponent::update() -> void {
   if (this->current_behaviour == nullptr) {

@@ -5,6 +5,9 @@
 
 namespace Afk {
   namespace AI {
+    /**
+     * Flee behaviour - move desired_distance away from entity
+     */
     class Flee : public BaseBehaviour {
     public:
       auto update(const glm::vec3 &current_position) -> glm::vec3 override;

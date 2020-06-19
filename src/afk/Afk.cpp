@@ -122,7 +122,7 @@ auto Engine::initialize() -> void {
                                     "shader/navmesh.prog");
   registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_transform);
 
-  auto camera_transform = Transform{camera_entity};
+  auto camera_transform        = Transform{camera_entity};
   camera_transform.translation = glm::vec3{0.0f, 20.0f, 0.0f};
   registry.assign<Afk::Transform>(camera_entity, camera_transform);
   registry.assign<Afk::PhysicsBody>(camera_entity, camera_entity, &this->physics_body_system,
@@ -137,7 +137,7 @@ auto Engine::initialize() -> void {
       .add_script("script/component/debug.lua", &this->event_manager);
 
   std::vector<entt::entity> agents{};
-  for (std::size_t i = 0; i < 4; ++i) {
+  for (std::size_t i = 0; i < 5; ++i) {
     agents.push_back(registry.create());
     dtCrowdAgentParams p        = {};
     p.radius                    = .1f;
@@ -145,7 +145,7 @@ auto Engine::initialize() -> void {
     p.maxAcceleration           = 1;
     p.height                    = 1;
     auto agent_transform        = Afk::Transform{agents[i]};
-    agent_transform.translation = {5 + (i), -6, 5 + (i)};
+    agent_transform.translation = {5 - (i), -6, 5 - (i)};
     agent_transform.scale       = {.1f, .1f, .1f};
     registry.assign<Afk::Transform>(agents[i], agent_transform);
     registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",

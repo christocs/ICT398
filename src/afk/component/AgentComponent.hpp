@@ -13,19 +13,41 @@ namespace Afk {
     class AgentComponent : public BaseComponent {
     public:
       /**
-       * \todo: facade dtCrowdAgentParams (once i know that pathfinding works)
+       * \todo: façade dtCrowdAgentParams
        */
       AgentComponent(GameObject e, const glm::vec3 &initial_position, dtCrowdAgentParams &p);
       AgentComponent(AgentComponent &e) = delete;
+      /**
+       * move constructor requried for the ECS
+       */
       AgentComponent(AgentComponent &&e); // = delete;
       auto operator=(AgentComponent &e) -> AgentComponent & = delete;
+      /**
+       * move assignment required for the ECS
+       */
       auto operator=(AgentComponent &&e) -> AgentComponent &; // = delete;
       ~AgentComponent();
 
+      /**
+       * \sa Afk::AI::Chase
+       */
       auto chase(const GameObject &target, float max_dist) -> void;
+      /**
+       * \sa Afk::AI::Flee
+       */
       auto flee(const GameObject &target, float desired_dist) -> void;
+      /**
+       * \sa Afk::AI::MoveTo
+       */
       auto move_to(const glm::vec3 &target) -> void;
+      /**
+       * \sa Afk::AI::PathFollow
+       */
       auto path(const Afk::AI::Path &path, float min_dist) -> void;
+      /**
+       * \sa Afk::AI::Wander
+       */
+      auto wander(const glm::vec3 &target, float radius) -> void;
 
       auto update() -> void;
 
