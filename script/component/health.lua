@@ -15,8 +15,8 @@ function health_display()
     end
     if imgui.button("Reset Level", vector2(100, 50)) then
         health = start_health
---        physics_component.apply_force(vector3(0, 50, 0))
---        physics_component.set_velocity(vector3(0, 0, 0))
+        physics_component:set_pos(vector3(0, 50, 0))
+        physics_component:set_velocity(vector3(0, 0, 0))
     end
 
 
