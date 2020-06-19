@@ -12,6 +12,7 @@
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
 #include "afk/renderer/Renderer.hpp"
+#include "afk/ai/DifficultyManager.hpp"
 #include "afk/ui/Unicode.hpp"
 #include "cmake/Git.hpp"
 #include "cmake/Version.hpp"
@@ -117,14 +118,20 @@ auto Ui::draw_menu_bar() -> void {
     }
 
     if (ImGui::BeginMenu("Difficulty")) {
-      if (ImGui::MenuItem("Easy", nullptr, Afk::Engine::get().difficulty == Afk::Engine::Difficulty::EASY)) {
-        Afk::Engine::get().difficulty = Afk::Engine::Difficulty::EASY;
+      if (ImGui::MenuItem("Easy", nullptr, Afk::Engine::get().difficulty_manager.get_difficulty() == AI::DifficultyManager::Difficulty::EASY)) {
+        if (Afk::Engine::get().difficulty_manager.get_difficulty() != AI::DifficultyManager::Difficulty::EASY) {
+          Afk::Engine::get().difficulty_manager.set_difficulty(AI::DifficultyManager::Difficulty::EASY);
+        }
       }
-      if (ImGui::MenuItem("Normal", nullptr, Afk::Engine::get().difficulty == Afk::Engine::Difficulty::NORMAL)) {
-        Afk::Engine::get().difficulty = Afk::Engine::Difficulty::NORMAL;
+      if (ImGui::MenuItem("Normal", nullptr, Afk::Engine::get().difficulty_manager.get_difficulty() == AI::DifficultyManager::Difficulty::NORMAL)) {
+        if (Afk::Engine::get().difficulty_manager.get_difficulty() != AI::DifficultyManager::Difficulty::NORMAL) {
+          Afk::Engine::get().difficulty_manager.set_difficulty(AI::DifficultyManager::Difficulty::NORMAL);
+        }
       }
-      if (ImGui::MenuItem("Hard", nullptr, Afk::Engine::get().difficulty == Afk::Engine::Difficulty::HARD)) {
-        Afk::Engine::get().difficulty = Afk::Engine::Difficulty::HARD;
+      if (ImGui::MenuItem("Hard", nullptr, Afk::Engine::get().difficulty_manager.get_difficulty() == AI::DifficultyManager::Difficulty::HARD)) {
+        if (Afk::Engine::get().difficulty_manager.get_difficulty() != AI::DifficultyManager::Difficulty::HARD) {
+          Afk::Engine::get().difficulty_manager.set_difficulty(AI::DifficultyManager::Difficulty::HARD);
+        }
       }
       ImGui::EndMenu();
     }

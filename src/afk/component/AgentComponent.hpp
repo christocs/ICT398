@@ -51,6 +51,8 @@ namespace Afk {
 
       auto update() -> void;
 
+      auto get_id() const -> Afk::AI::Crowds::AgentID;
+
     private:
       Afk::AI::Crowds::AgentID id = -1;
       // float radius;
