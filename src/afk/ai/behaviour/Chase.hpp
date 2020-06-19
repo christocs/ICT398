@@ -5,6 +5,9 @@
 
 namespace Afk {
   namespace AI {
+    /**
+     * Chase behaviour - chase an entity
+     */
     class Chase : public BaseBehaviour {
     public:
       auto update(const glm::vec3 &current_position) -> glm::vec3 override;

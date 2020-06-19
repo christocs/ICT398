@@ -10,7 +10,7 @@ Wander::Wander(const glm::vec3 &wander_target, float wander_range)
 
 auto Wander::update(const glm::vec3 &current_position) -> glm::vec3 {
   static std::mt19937 rng{static_cast<decltype(rng)::result_type>(std::time(nullptr))};
-
+  // doesn't properly work, todo: fix
   constexpr auto wander_scale = 2.f;
   const auto wander_x = (rng() / static_cast<float>(decltype(rng)::max())) * wander_scale;
   const auto wander_z = (rng() / static_cast<float>(decltype(rng)::max())) * wander_scale;

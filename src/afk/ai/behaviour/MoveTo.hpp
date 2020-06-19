@@ -4,6 +4,9 @@
 
 namespace Afk {
   namespace AI {
+    /**
+     * Behaviour to move to specific coordinates
+     */
     class MoveTo : public BaseBehaviour {
     public:
       auto update(const glm::vec3 &current_position) -> glm::vec3 override;
