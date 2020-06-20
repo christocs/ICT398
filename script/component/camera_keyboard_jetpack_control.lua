@@ -1,7 +1,7 @@
 local health_script = this:entity():script_data("script/component/health.lua")
 
-local speed = 600000.0
-local jetpack_speed = speed * 2.0
+local speed = 120000.0
+local jetpack_speed = speed * 5.0
 jetpack_max_duration = 0.2
 jetpack_current_duration = 0.0
 

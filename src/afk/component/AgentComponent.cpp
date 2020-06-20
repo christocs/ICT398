@@ -9,7 +9,7 @@ using Afk::AI::AgentComponent;
 AgentComponent::AgentComponent(GameObject e, const glm::vec3 &pos, dtCrowdAgentParams &p) {
   this->owning_entity = e;
 
-  auto nearest_pos = Afk::Engine::get().crowds.nearest_pos(pos, 10.f);
+  auto nearest_pos = Afk::Engine::get().crowds.nearest_pos(pos, 100.0f);
   if (nearest_pos.has_value()) {
     this->id = Afk::Engine::get().crowds.current_crowd().addAgent(&nearest_pos->x, &p);
   } else {

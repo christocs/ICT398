@@ -54,8 +54,8 @@ auto Engine::initialize() -> void {
   Afk::add_engine_bindings(this->lua);
 
   this->terrain_manager.initialize();
-  const int terrain_width  = 64;
-  const int terrain_length = 64;
+  const int terrain_width  = 128;
+  const int terrain_length = 128;
   this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
   this->renderer.load_model(this->terrain_manager.get_model());
 
@@ -102,27 +102,6 @@ auto Engine::initialize() -> void {
   //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
 
-  /*
-    this->renderer.load_model(this->nav_mesh_manager.get_height_field_model());
-    auto height_field_entity = registry.create();
-    auto height_field_transform = Transform{height_field_entity};
-    height_field_transform.translation = glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
-    registry.assign<Afk::ModelSource>(
-        height_field_entity, height_field_entity,
-        this->nav_mesh_manager.get_height_field_model().file_path, "shader/heightfield.prog");
-    registry.assign<Afk::Transform>(height_field_entity, height_field_transform);
-    /**/
-
-  this->renderer.load_model(this->nav_mesh_manager.get_nav_mesh_model());
-  auto nav_mesh_entity    = registry.create();
-  auto nav_mesh_transform = Transform{nav_mesh_entity};
-  nav_mesh_transform.translation =
-      glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
-  registry.assign<Afk::ModelSource>(nav_mesh_entity, nav_mesh_entity,
-                                    this->nav_mesh_manager.get_nav_mesh_model().file_path,
-                                    "shader/navmesh.prog");
-  registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_transform);
-
   auto camera_transform        = Transform{camera_entity};
   camera_transform.translation = glm::vec3{0.0f, 50.0f, 0.0f};
   registry.assign<Afk::Transform>(camera_entity, camera_transform);
@@ -141,7 +120,7 @@ auto Engine::initialize() -> void {
       .add_script("script/component/debug.lua", &this->event_manager);
 
   std::vector<entt::entity> agents{};
-  for (std::size_t i = 0; i < 4; ++i) {
+  for (std::size_t i = 0; i < 20; ++i) {
     agents.push_back(registry.create());
     dtCrowdAgentParams p        = {};
     p.radius                    = .1f;
@@ -149,8 +128,8 @@ auto Engine::initialize() -> void {
     p.maxAcceleration           = 1;
     p.height                    = 1;
     auto agent_transform        = Afk::Transform{agents[i]};
-    agent_transform.translation = {5 - (i), -6, 5 - (i)};
-    agent_transform.scale       = {1.0f, 1.0f, 1.0f};
+    agent_transform.translation = {5 - (i / 10.f), -10, 5 - (i / 10.f)};
+    agent_transform.scale       = {.1f, .1f, .1f};
     registry.assign<Afk::Transform>(agents[i], agent_transform);
     registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/man/man.glb",
                                       "shader/animation.prog");
@@ -167,21 +146,57 @@ auto Engine::initialize() -> void {
   registry.get<Afk::AI::AgentComponent>(agents[2]).flee(camera_entity, 10.f);
   const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
   registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
-  registry.get<Afk::AI::AgentComponent>(agents[4]).wander(glm::vec3{0.f, 0.f, 0.f},
-                                                          20.f, 5.f);
+  for (std::size_t ag = 4; ag < 20; ++ag) {
+    registry.get<Afk::AI::AgentComponent>(agents[ag]).wander(glm::vec3{0.f, 0.f, 0.f}, 20.f, 5.f);
+  }
 
-  auto deathbox_entity           = registry.create();
-  auto deathbox_transform        = Transform{deathbox_entity};
-  deathbox_transform.translation = glm::vec3{0.0f, -30.0f, 0.0f};
+  std::vector<GameObject> deathboxes = {};
+  for (auto i = 0; i < 5; i++) {
+    deathboxes.push_back(registry.create());
+    auto deathbox_tags = TagComponent{deathboxes[i]};
+    deathbox_tags.tags.insert(TagComponent::Tag::DEATHZONE);
+    registry.assign<Afk::TagComponent>(deathboxes[i], deathbox_tags);
+  }
+
+  auto &deathbox_transform = registry.assign<Afk::Transform>(deathboxes[0], Transform{});
+  deathbox_transform.translation  = glm::vec3{0.0f, -30.0f, 0.0f};
   deathbox_transform.scale       = glm::vec3(10000.0f, 0.1f, 10000.0f);
-  registry.assign<Afk::Transform>(deathbox_entity, deathbox_transform);
-  registry.assign<Afk::PhysicsBody>(deathbox_entity, deathbox_entity, &this->physics_body_system,
+  registry.assign<Afk::PhysicsBody>(deathboxes[0], deathboxes[0], &this->physics_body_system,
                                     deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
                                     false, Afk::RigidBodyType::STATIC,
-                                    Afk::Box(1.0f, 1.0f, 01.0f));
-  auto deathbox_tags = TagComponent{deathbox_entity};
-  deathbox_tags.tags.insert(TagComponent::Tag::DEATHZONE);
-  registry.assign<Afk::TagComponent>(deathbox_entity, deathbox_tags);
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
+
+  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[1], Transform{});
+  deathbox_transform.translation  = glm::vec3{-((terrain_width+1)/2.0), 0.0f, 0.0f};
+  deathbox_transform.scale       = glm::vec3(0.1f, 10000.0f, 10000.0f);
+  registry.assign<Afk::PhysicsBody>(deathboxes[1], deathboxes[1], &this->physics_body_system,
+                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
+                                    false, Afk::RigidBodyType::STATIC,
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
+
+  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[2], Transform{});
+  deathbox_transform.translation  = glm::vec3{(terrain_width-1)/2.0, 0.0f, 0.0f};
+  deathbox_transform.scale       = glm::vec3(0.1f, 10000.0f, 10000.0f);
+  registry.assign<Afk::PhysicsBody>(deathboxes[2], deathboxes[2], &this->physics_body_system,
+                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
+                                    false, Afk::RigidBodyType::STATIC,
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
+
+  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[3], Transform{});
+  deathbox_transform.translation  = glm::vec3{0.0f, 0.0f, -((terrain_width+1)/2.0)};
+  deathbox_transform.scale       = glm::vec3(10000.0f, 10000.0f, 0.1f);
+  registry.assign<Afk::PhysicsBody>(deathboxes[3], deathboxes[3], &this->physics_body_system,
+                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
+                                    false, Afk::RigidBodyType::STATIC,
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
+
+  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[4], Transform{});
+  deathbox_transform.translation  = glm::vec3{0.0f, 0.0f, (terrain_width-1)/2.0};
+  deathbox_transform.scale       = glm::vec3(10000.0f, 10000.0f, 0.1f);
+  registry.assign<Afk::PhysicsBody>(deathboxes[4], deathboxes[4], &this->physics_body_system,
+                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
+                                    false, Afk::RigidBodyType::STATIC,
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
 
   this->difficulty_manager.init(AI::DifficultyManager::Difficulty::NORMAL);
 

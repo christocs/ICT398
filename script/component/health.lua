@@ -5,6 +5,8 @@ health = start_health
 max_health = 200
 min_health = 0
 
+score = 0
+
 function health_display()
     local physics_component = this:entity():get_physics()
     local jetpack_percentage = round((jetpack_script.jetpack_current_duration / jetpack_script.jetpack_max_duration) * 100, 1)
@@ -17,8 +19,10 @@ function health_display()
         imgui.text("Status: Dead")
     end
     imgui.text("Jetpack: " .. tostring(jetpack_percentage) .. "%")
+    imgui.text("Score: " .. tostring(score))
     if imgui.button("Reset Level", vector2(80, 30)) then
         health = start_health
+        score = 0
         physics_component:set_pos(vector3(0, 50, 0))
         physics_component:set_velocity(vector3(0, 0, 0))
     end
