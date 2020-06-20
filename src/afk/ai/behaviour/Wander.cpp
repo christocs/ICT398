@@ -26,16 +26,5 @@ auto Wander::update(const glm::vec3 &current_position) -> glm::vec3 {
   double x          = r * cos(a);
   double z          = r * sin(a);
   this->last_wander = glm::vec3{x, current_position.y, z};
-  // constexpr auto wander_scale   = 5.f;
-  // const auto wander_x = (rng() / static_cast<float>(decltype(rng)::max())) * wander_scale;
-  // const auto wander_z = (rng() / static_cast<float>(decltype(rng)::max())) * wander_scale;
-  // auto next_target = glm::vec3{last_wander.x + wander_x, current_position.y,
-  //                              last_wander.z + wander_z};
-
-  // const auto center_dist = next_target - this->center;
-  // if (glm::length(center_dist) > this->range) {
-  //   const auto within_bounds = glm::normalize(center_dist) * this->range;
-  //   next_target              = this->center + within_bounds;
-  // }
   return this->last_wander;
 }
