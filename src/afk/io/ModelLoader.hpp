@@ -12,7 +12,9 @@ namespace Afk {
   class ModelLoader {
   public:
     Model model = {};
-
+    /**
+     * Load a model
+     */
     auto load(const std::filesystem::path &file_path) -> Model;
 
   private:

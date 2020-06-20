@@ -10,13 +10,20 @@
 
 namespace Afk {
   namespace Io {
+    /**
+     * Logging
+     */
     struct Log {
       std::filesystem::path log_path = {};
       std::ofstream log_file         = {};
 
       Log();
     };
-
+    /**
+     * Log things
+     * \param value thing to log
+     * \param log logger
+     */
     template<typename T>
     auto operator<<(Log &log, T const &value) -> Log & {
       using std::ostringstream;

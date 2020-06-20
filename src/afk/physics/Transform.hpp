@@ -6,6 +6,9 @@
 #include "afk/component/BaseComponent.hpp"
 
 namespace Afk {
+  /**
+   * Entity transform component
+   */
   struct Transform : public BaseComponent {
     glm::vec3 translation = glm::vec3{1.0f};
     glm::vec3 scale       = glm::vec3{1.0f};
