@@ -47,7 +47,7 @@ namespace Afk {
       /**
        * \sa Afk::AI::Wander
        */
-      auto wander(const glm::vec3 &target, float radius) -> void;
+      auto wander(const glm::vec3 &target, float radius, float time) -> void;
 
       auto update() -> void;
 

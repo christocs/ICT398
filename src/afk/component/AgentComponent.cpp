@@ -39,8 +39,8 @@ auto AgentComponent::path(const Afk::AI::Path &path, float min_dist) -> void {
       Behaviour{new Afk::AI::PathFollow{path, my_pos.translation, min_dist}};
 }
 #include "afk/ai/behaviour/Wander.hpp"
-auto AgentComponent::wander(const glm::vec3 &target, float radius) -> void {
-  this->current_behaviour = Behaviour{new Afk::AI::Wander{target, radius}};
+auto AgentComponent::wander(const glm::vec3 &target, float radius, float time) -> void {
+  this->current_behaviour = Behaviour{new Afk::AI::Wander{target, radius, time}};
 }
 
 auto AgentComponent::update() -> void {
@@ -53,8 +53,9 @@ auto AgentComponent::update() -> void {
     throw std::runtime_error{"Agent not active!"};
   }
   // Update our position to the current agent pos, if the physics body exists set that else set the transform
-  if  (Afk::Engine::get().registry.has<Afk::PhysicsBody>(this->owning_entity)) {
-    auto &physics_body = Afk::Engine::get().registry.get<Afk::PhysicsBody>(this->owning_entity);
+  if (Afk::Engine::get().registry.has<Afk::PhysicsBody>(this->owning_entity)) {
+    auto &physics_body =
+        Afk::Engine::get().registry.get<Afk::PhysicsBody>(this->owning_entity);
     physics_body.set_pos(glm::vec3{agent->npos[0], agent->npos[1], agent->npos[2]});
   } else {
     tf.translation.x = agent->npos[0];
