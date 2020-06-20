@@ -10,7 +10,9 @@
 
 namespace Afk {
   class PhysicsBody;
-
+  /**
+   * Physics body management
+   */
   class PhysicsBodySystem {
   public:
     PhysicsBodySystem() = delete;

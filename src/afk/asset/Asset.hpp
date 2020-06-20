@@ -5,8 +5,17 @@
 #include <entt/entt.hpp>
 
 namespace Afk::Asset {
+  /**
+   * Asset type
+   */
   enum class AssetType { Terrain, Object };
+  /**
+   * Asset
+   */
   struct Asset {
+    /**
+     * Asset data
+     */
     struct Object {
       entt::entity ent;
     };

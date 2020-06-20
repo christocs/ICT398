@@ -10,6 +10,9 @@
 
 // FIXME: Add log, texture/mesh viewer
 namespace Afk {
+  /**
+   * Defines the basic UI
+   */
   class Ui {
   public:
     static constexpr auto FONT_SIZE = 19.0f;
