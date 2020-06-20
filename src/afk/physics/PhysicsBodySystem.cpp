@@ -1,6 +1,6 @@
 #include "afk/physics/PhysicsBodySystem.hpp"
 
-#include "afk/afk.hpp"
+#include "afk/Afk.hpp"
 #include "afk/component/TagComponent.hpp"
 
 using Afk::PhysicsBodySystem;
