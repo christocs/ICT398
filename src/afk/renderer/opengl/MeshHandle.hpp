@@ -38,11 +38,22 @@ namespace Afk {
                {ctti::type_id<int32_t>(), GL_INT},
                {ctti::type_id<uint32_t>(), GL_UNSIGNED_INT}});
 
-      static constexpr auto INDEX = GL_INDICES.at(ctti::type_id<Mesh::Index>());
+      static constexpr auto INDEX = GL_INDICES.at(ctti::type_id<Index>());
+
+      enum class Buffer {
+        Vertex = 0,
+        Normal,
+        Uv,
+        Tangent,
+        Bitangent,
+        BoneIndices,
+        BoneWeights
+      };
 
       GLuint vao              = {};
       GLuint vbo              = {};
       GLuint ibo              = {};
+      GLuint bones            = {};
       Textures textures       = {};
       std::size_t num_indices = {};
 

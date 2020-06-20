@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <tuple>
 
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -23,6 +24,9 @@ namespace Afk {
     auto get_vertices(const aiMesh *mesh) -> Mesh::Vertices;
     auto get_indices(const aiMesh *mesh) -> Mesh::Indices;
     auto get_textures(const aiMaterial *material) -> Mesh::Textures;
+    auto get_bones(const aiMesh *mesh, Mesh::Vertices &vertices)
+        -> std::pair<Mesh::Bones, Mesh::BoneMap>;
+    auto get_animations(const aiScene *scene) -> Model::Animations;
     auto get_material_textures(const aiMaterial *material, Texture::Type type)
         -> Mesh::Textures;
     auto get_texture_path(const std::filesystem::path &file_path) const

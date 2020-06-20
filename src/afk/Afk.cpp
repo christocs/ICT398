@@ -11,6 +11,7 @@
 
 #include "afk/asset/AssetFactory.hpp"
 #include "afk/component/AgentComponent.hpp"
+#include "afk/component/AnimComponent.hpp"
 #include "afk/component/GameObject.hpp"
 #include "afk/component/ScriptsComponent.hpp"
 #include "afk/component/TagComponent.hpp"
@@ -148,19 +149,18 @@ auto Engine::initialize() -> void {
     p.maxAcceleration           = 1;
     p.height                    = 1;
     auto agent_transform        = Afk::Transform{agents[i]};
-    agent_transform.translation = {5 - (i), -10, 5 - (i)};
-    agent_transform.scale       = {.1f, .1f, .1f};
+    agent_transform.translation = {5 - (i), -6, 5 - (i)};
+    agent_transform.scale       = {1.0f, 1.0f, 1.0f};
     registry.assign<Afk::Transform>(agents[i], agent_transform);
-    registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",
-                                      "shader/default.prog");
-    auto agent_tags = TagComponent{agents[i]};
-    agent_tags.tags.insert(TagComponent::Tag::ENEMY);
-    registry.assign<Afk::TagComponent>(agents[i], agent_tags);
-    auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
-        agents[i], agents[i], agent_transform.translation, p);
-    auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
+    registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/man/man.glb",
+                                      "shader/animation.prog");
+    registry.assign<Afk::AI::AgentComponent>(agents[i], agents[i],
+                                             agent_transform.translation, p);
+    registry.assign<Afk::PhysicsBody>(
         agents[i], agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{5.0f, 10.0f});
+        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{0.3f, 1.0f});
+    registry.assign<Afk::AnimComponent>(
+        agents[i], agents[i], Afk::AnimComponent::Status::Playing, "Walk", 0.0f);
   }
   registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
   registry.get<Afk::AI::AgentComponent>(agents[1]).chase(camera_entity, 10.f);
