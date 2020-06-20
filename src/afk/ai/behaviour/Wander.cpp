@@ -23,8 +23,9 @@ auto Wander::update(const glm::vec3 &current_position) -> glm::vec3 {
   this->last_wander_change_time = current_time;
   double a = rng() / static_cast<double>(decltype(rng)::max());
   double r = this->range * std::sqrt(rng() / static_cast<double>(decltype(rng)::max()));
-  double x          = r * cos(a);
-  double z          = r * sin(a);
-  this->last_wander = glm::vec3{x, current_position.y, z};
+  double x = r * cos(a);
+  double z = r * sin(a);
+  this->last_wander =
+      glm::vec3{x + this->center.x, current_position.y, z + this->center.z};
   return this->last_wander;
 }
