@@ -6,6 +6,9 @@
 
 namespace Afk {
   namespace OpenGl {
+    /**
+     * Texture handle - represents a loaded texture
+     */
     struct TextureHandle {
       using Type = Texture::Type;
 

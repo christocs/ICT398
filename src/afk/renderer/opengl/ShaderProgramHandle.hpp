@@ -4,6 +4,9 @@
 
 namespace Afk {
   namespace OpenGl {
+    /**
+     * Shader program handle - represents a loaded shader
+     */
     struct ShaderProgramHandle {
       GLuint id = {};
     };

@@ -6,6 +6,9 @@
 
 namespace Afk {
   namespace OpenGl {
+    /**
+     * Shader handle - represents a loaded shader
+     */
     struct ShaderHandle {
       using Type = Shader::Type;
 

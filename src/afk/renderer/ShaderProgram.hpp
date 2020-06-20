@@ -6,6 +6,9 @@
 #include "afk/renderer/Shader.hpp"
 
 namespace Afk {
+  /**
+   * Shader program is a combination of several shaders into one program
+   */
   struct ShaderProgram {
     using ShaderPaths = std::vector<std::filesystem::path>;
 
