@@ -5,6 +5,9 @@
 #include <variant>
 
 namespace Afk {
+  /**
+   * Various event types.
+   */
   struct Event {
     struct MouseMove {
       double x = {};
@@ -60,6 +63,10 @@ namespace Afk {
     using Data =
         std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render>;
 
+    /**
+     * Unwrap variant sugar
+     * \todo put this in bindings instead
+     */
     template<typename T>
     auto get() -> T {
       return std::get<T>(this->data);

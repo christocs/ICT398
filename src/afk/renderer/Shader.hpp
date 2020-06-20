@@ -4,6 +4,9 @@
 #include <string>
 
 namespace Afk {
+  /**
+   * Shader (vertex & fragment)
+   */
   struct Shader {
     enum class Type { Vertex, Fragment };
 

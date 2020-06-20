@@ -16,21 +16,35 @@ using luabridge::LuaRef;
 
 namespace Afk {
   class ScriptsComponent;
-  // Script needs to remember what calls it has registered to the event manager
-  // so it can get rid of them later
+  /**
+   * Lua callback registered to the event manager
+   */
   struct RegisteredLuaCall {
     Afk::Event::Type event_type;
     Afk::EventManager::Callback callback;
   };
-
+  /**
+   * Lua script
+   */
   class LuaScript {
   public:
     LuaScript(EventManager *events, lua_State *lua, ScriptsComponent *owner);
-    // required for luabridge to work
+    /**
+     * This class is used in luabridge which requires a copy ctor
+     * \todo Maybe see if there's some other way to architecture this. I think I could give luabridge a pointer instead
+     */
     LuaScript(const LuaScript &other);
+    /**
+     * This class is used in luabridge which requires a move ctor
+     */
     LuaScript(LuaScript &&other);
-    // required for luabridge to work
+    /**
+     * This class is used in luabridge which requires a copy assignment
+     */
     auto operator=(const LuaScript &other) -> LuaScript &;
+    /**
+     * This class is used in luabridge which requires a move assignment
+     */
     auto operator=(LuaScript &&other) -> LuaScript &;
     ~LuaScript();
     auto load(const std::filesystem::path &filename) -> void;

@@ -8,6 +8,9 @@
 #include "afk/renderer/Texture.hpp"
 
 namespace Afk {
+  /**
+   * Model component
+   */
   struct Model : public BaseComponent {
     using Meshes = std::vector<Mesh>;
 
@@ -20,6 +23,6 @@ namespace Afk {
     Model(GameObject e);
     Model(const std::filesystem::path &_file_path);
     Model(GameObject e, const std::filesystem::path &_file_path);
-    Model(GameObject e, const Model& source);
+    Model(GameObject e, const Model &source);
   };
 }

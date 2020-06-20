@@ -3,6 +3,9 @@
 #include <imgui/imgui.h>
 
 namespace Afk {
+  /**
+   * UI based logging
+   */
   class Log {
   public:
     Log();

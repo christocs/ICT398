@@ -17,9 +17,21 @@ namespace Afk {
    */
   class ScriptsComponent : public BaseComponent {
   public:
+    /**
+     * constructor
+     */
     ScriptsComponent(GameObject e, lua_State *lua);
+    /**
+     * Check if any attached scripts require live reload, and reload them if needed
+     */
     auto check_live_reload() -> void;
+    /**
+     * Add a script
+     */
     auto add_script(const path &script_path, EventManager *evt) -> ScriptsComponent &;
+    /**
+     * Remove a script
+     */
     auto remove_script(const path &script_path) -> void;
     /**
      * for lua

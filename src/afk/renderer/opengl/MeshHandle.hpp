@@ -23,7 +23,9 @@ namespace Afk {
         return seed ^ value.hash();
       }
     };
-
+    /**
+     * Mesh handle - represents a loaded mesh
+     */
     struct MeshHandle {
       using Textures = std::vector<TextureHandle>;
 
