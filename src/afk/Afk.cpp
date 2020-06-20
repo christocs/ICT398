@@ -160,7 +160,7 @@ auto Engine::initialize() -> void {
         agents[i], agents[i], agent_transform.translation, p);
     auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
         agents[i], agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{10.0f, 20.0f});
+        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{5.0f, 10.0f});
   }
   registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
   registry.get<Afk::AI::AgentComponent>(agents[1]).chase(camera_entity, 10.f);
@@ -173,9 +173,10 @@ auto Engine::initialize() -> void {
   deathbox_transform.translation = glm::vec3{0.0f, -30.0f, 0.0f};
   deathbox_transform.scale       = glm::vec3(10000.0f, 0.1f, 10000.0f);
   registry.assign<Afk::Transform>(deathbox_entity, deathbox_transform);
-  registry.assign<Afk::PhysicsBody>(
-      deathbox_entity, deathbox_entity, &this->physics_body_system, deathbox_transform, 0.0f, 0.0f,
-      0.0f, 0.0f, false, Afk::RigidBodyType::STATIC, Afk::Box(1.0f, 1.0f, 01.0f));
+  registry.assign<Afk::PhysicsBody>(deathbox_entity, deathbox_entity, &this->physics_body_system,
+                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
+                                    false, Afk::RigidBodyType::STATIC,
+                                    Afk::Box(1.0f, 1.0f, 01.0f));
   auto deathbox_tags = TagComponent{deathbox_entity};
   deathbox_tags.tags.insert(TagComponent::Tag::DEATHZONE);
   registry.assign<Afk::TagComponent>(deathbox_entity, deathbox_tags);
