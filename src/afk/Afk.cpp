@@ -146,7 +146,7 @@ auto Engine::initialize() -> void {
     p.maxAcceleration           = 1;
     p.height                    = 1;
     auto agent_transform        = Afk::Transform{agents[i]};
-    agent_transform.translation = {5 - (i), -6, 5 - (i)};
+    agent_transform.translation = {5 - (i), -10, 5 - (i)};
     agent_transform.scale       = {.1f, .1f, .1f};
     registry.assign<Afk::Transform>(agents[i], agent_transform);
     registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",
@@ -162,6 +162,8 @@ auto Engine::initialize() -> void {
   registry.get<Afk::AI::AgentComponent>(agents[2]).flee(camera_entity, 10.f);
   const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
   registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
+  registry.get<Afk::AI::AgentComponent>(agents[4]).wander(glm::vec3{0.f, 0.f, 0.f},
+                                                          20.f, 5.f);
 
   this->difficulty_manager.init(AI::DifficultyManager::Difficulty::NORMAL);
 
