@@ -22,6 +22,7 @@
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/renderer/Bone.hpp"
 #include "afk/renderer/Mesh.hpp"
 #include "afk/renderer/Model.hpp"
 #include "afk/renderer/Shader.hpp"
@@ -46,6 +47,7 @@ using glm::mat4;
 using glm::vec3;
 using glm::vec4;
 
+using Afk::Bone;
 using Afk::Engine;
 using Afk::Shader;
 using Afk::ShaderProgram;
@@ -55,6 +57,7 @@ using Afk::OpenGl::Renderer;
 using Afk::OpenGl::ShaderHandle;
 using Afk::OpenGl::ShaderProgramHandle;
 using Afk::OpenGl::TextureHandle;
+using Buffer = Afk::OpenGl::MeshHandle::Buffer;
 namespace Io = Afk::Io;
 
 constexpr auto material_strings =
@@ -290,10 +293,10 @@ auto Renderer::use_shader(const ShaderProgramHandle &shader) const -> void {
 auto Renderer::load_mesh(const Mesh &mesh) -> MeshHandle {
   afk_assert(mesh.vertices.size() > 0, "Mesh missing vertices");
   afk_assert(mesh.indices.size() > 0, "Mesh missing indices");
-  afk_assert(mesh.indices.size() < std::numeric_limits<Mesh::Index>::max(),
+  afk_assert(mesh.indices.size() < std::numeric_limits<Afk::Index>::max(),
              "Mesh contains too many indices; "s +
                  std::to_string(mesh.indices.size()) + " requested, max "s +
-                 std::to_string(std::numeric_limits<Mesh::Index>::max()));
+                 std::to_string(std::numeric_limits<Afk::Index>::max()));
 
   auto mesh_handle        = MeshHandle{};
   mesh_handle.num_indices = mesh.indices.size();
@@ -316,32 +319,46 @@ auto Renderer::load_mesh(const Mesh &mesh) -> MeshHandle {
 
   // Load index data into the index buffer.
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_handle.ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(Mesh::Index),
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(Afk::Index),
                mesh.indices.data(), GL_STATIC_DRAW);
 
   // Set the vertex attribute pointers.
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Vertex));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Vertex), 3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex), nullptr);
 
   // Vertex normals
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Normal));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Normal), 3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, normal)));
 
   // UVs
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, uvs)));
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Uv));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Uv), 2, GL_FLOAT, GL_FALSE,
+                        sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, uvs)));
 
   // Vertex tangent
-  glEnableVertexAttribArray(3);
-  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Tangent));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Tangent), 3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tangent)));
 
   // Vertex bitangent
-  glEnableVertexAttribArray(4);
-  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Bitangent));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Bitangent), 3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, bitangent)));
+
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::BoneIndices));
+  glVertexAttribIPointer(static_cast<GLuint>(Buffer::BoneIndices), 4, GL_INT,
+                         sizeof(Vertex),
+                         reinterpret_cast<void *>(offsetof(Vertex, bone_indices)));
+
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::BoneWeights));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::BoneWeights), 4, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
+                        reinterpret_cast<void *>(offsetof(Vertex, bone_weights)));
 
   glBindVertexArray(0);
 
@@ -375,6 +392,8 @@ auto Renderer::load_model(const Model &model) -> ModelHandle {
   }
 
   this->models[model.file_path] = std::move(modelHandle);
+
+  Io::log << "Loaded model '" << model.file_path.string() + "'.\n";
 
   return this->models[model.file_path];
 }

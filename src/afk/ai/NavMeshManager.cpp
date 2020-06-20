@@ -3,15 +3,15 @@
 #include <fstream>
 #include <memory>
 
-#include "afk/debug/Assert.hpp"
-#include "afk/io/ModelSource.hpp"
 #include <glm/gtc/type_ptr.inl>
 
 #include "DetourNavMesh.h"
 #include "DetourNavMeshBuilder.h"
 #include "DetourNavMeshQuery.h"
-#include "afk/io/Log.hpp"
 #include "afk/component/TagComponent.hpp"
+#include "afk/debug/Assert.hpp"
+#include "afk/io/Log.hpp"
+#include "afk/io/ModelSource.hpp"
 
 using Afk::AI::NavMeshManager;
 

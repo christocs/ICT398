@@ -15,5 +15,7 @@ namespace Afk {
     Transform(GameObject e);
     Transform(glm::mat4 transform);
     Transform(GameObject e, glm::mat4 transform);
+
+    auto get_matrix() -> glm::mat4;
   };
 }

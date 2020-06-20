@@ -133,7 +133,7 @@ auto Engine::initialize() -> void {
   registry.assign<Afk::TagComponent>(camera_entity, camera_tags);
   registry
       .assign<Afk::ScriptsComponent>(camera_entity, camera_entity, this->lua)
-      .add_script("script/component/camera_keyboard_jetpack_control.lua", &this->event_manager)
+      .add_script("script/component/camera_keyboard_control.lua", &this->event_manager)
       .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
       .add_script("script/component/debug.lua", &this->event_manager);
 
@@ -147,9 +147,9 @@ auto Engine::initialize() -> void {
     p.height                    = 1;
     auto agent_transform        = Afk::Transform{agents[i]};
     agent_transform.translation = {5 - (i), -6, 5 - (i)};
-    agent_transform.scale       = {.1f, .1f, .1f};
+    agent_transform.scale       = {1.0f, 1.0f, 1.0f};
     registry.assign<Afk::Transform>(agents[i], agent_transform);
-    registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",
+    registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/man/man.glb",
                                       "shader/default.prog");
     auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
         agents[i], agents[i], agent_transform.translation, p);

@@ -10,7 +10,8 @@ bool ChunkyTriMesh::init(const float *verts, const int *tris, int ntris,
                          int trisPerChunk, ChunkyTriMesh *cm) {
   int nchunks = (ntris + trisPerChunk - 1) / trisPerChunk;
 
-  this->nodes = std::shared_ptr<ChunkyTriMeshNode>(new ChunkyTriMeshNode[nchunks * 4], std::default_delete<ChunkyTriMeshNode[]>());
+  this->nodes = std::shared_ptr<ChunkyTriMeshNode>(
+      new ChunkyTriMeshNode[nchunks * 4], std::default_delete<ChunkyTriMeshNode[]>());
   if (!this->nodes)
     return false;
 
@@ -69,8 +70,8 @@ bool ChunkyTriMesh::init(const float *verts, const int *tris, int ntris,
   return true;
 }
 
-int ChunkyTriMesh::get_chunks_overlapping_rect(float *bmin, float *bmax, int *ids,
-                                               const int maxIds) const {
+int ChunkyTriMesh::get_chunks_overlapping_rect(float *bmin, float *bmax,
+                                               int *ids, const int maxIds) const {
   // Traverse tree
   int i = 0;
   int n = 0;
@@ -118,7 +119,7 @@ static int Afk::AI::compare_item_y(const void *va, const void *vb) {
 }
 
 static void Afk::AI::calc_extends(const BoundsItem *items, const int imin,
-                                 const int imax, float *bmin, float *bmax) {
+                                  const int imax, float *bmin, float *bmax) {
   bmin[0] = items[imin].bmin[0];
   bmin[1] = items[imin].bmin[1];
 

@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 #include "afk/Afk.hpp"
@@ -27,6 +28,7 @@ namespace Afk {
       ss << value;
       afk.ui.log.append("%s", ss.str().c_str());
       log.log_file << value;
+      std::cout << value;
 
       return log;
     }
