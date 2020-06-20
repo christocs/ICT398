@@ -44,6 +44,23 @@ namespace Afk {
 
     struct Render {};
 
+    // using struct of bool to get around luabind having no enum support
+    struct CollisionType {
+      bool enemy     = {};
+      bool prey      = {};
+      bool deathzone = {};
+    };
+    struct CollisionAction {
+      bool contact_start = {};
+      bool contact_stay = {};
+      bool contact_end = {};
+    };
+
+    struct Collision {
+      CollisionType type;
+      CollisionAction action;
+    };
+
     // FIXME: Move to keyboard  handler.
     enum class Action { Forward, Backward, Left, Right };
 
@@ -57,11 +74,12 @@ namespace Afk {
       TextEnter,
       MouseScroll,
       Update,
-      Render
+      Render,
+      Collision
     };
 
     using Data =
-        std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render>;
+        std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render, Collision>;
 
     /**
      * Unwrap variant sugar

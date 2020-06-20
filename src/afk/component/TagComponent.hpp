@@ -9,11 +9,13 @@ namespace Afk {
      * Tag type
      * \todo change to enum class
      */
-    enum Tag { TERRAIN, PLAYER, ENEMY };
+    enum Tag { TERRAIN, PLAYER, ENEMY, PREY, DEATHZONE };
+    
+    using Tags = std::set<Afk::TagComponent::Tag>;
     /**
      * Set of tags on this object
      * \todo change to unordered_set
      */
-    std::set<Afk::TagComponent::Tag> tags = {};
+    Tags tags = {};
   };
 }

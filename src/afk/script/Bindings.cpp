@@ -168,6 +168,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .addFunction("apply_torque", &Afk::PhysicsBody::apply_torque)
       .addFunction("translate", &Afk::PhysicsBody::translate)
       .addFunction("set_pos", &Afk::PhysicsBody::set_pos)
+      .addFunction("set_velocity", &Afk::PhysicsBody::set_velocity)
       .endClass()
 
       .beginClass<Afk::Transform>("transform_component")
@@ -268,6 +269,20 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
       .endClass()
       .beginClass<Afk::Event::Render>("render")
       .endClass()
+      .beginClass<Afk::Event::CollisionAction>("collision_action")
+      .addData("contact_start", &Afk::Event::CollisionAction::contact_start, false)
+      .addData("contact_stay", &Afk::Event::CollisionAction::contact_stay, false)
+      .addData("contact_end", &Afk::Event::CollisionAction::contact_end, false)
+      .endClass()
+      .beginClass<Afk::Event::CollisionType>("collision_type")
+      .addData("enemy", &Afk::Event::CollisionType::enemy, false)
+      .addData("prey", &Afk::Event::CollisionType::prey, false)
+      .addData("deathzone", &Afk::Event::CollisionType::deathzone, false)
+      .endClass()
+      .beginClass<Afk::Event::Collision>("collision")
+      .addData("action", &Afk::Event::Collision::action, false)
+      .addData("type", &Afk::Event::Collision::type, false)
+      .endClass()
       .endNamespace();
 
   auto afk_event_class =
@@ -283,6 +298,7 @@ auto Afk::add_engine_bindings(lua_State *lua) -> void {
   afk_event_class.addFunction("to_text", &Afk::Event::get<Afk::Event::Text>);
   afk_event_class.addFunction("to_update", &Afk::Event::get<Afk::Event::Update>);
   afk_event_class.addFunction("to_render", &Afk::Event::get<Afk::Event::Render>);
+  afk_event_class.addFunction("to_collision", &Afk::Event::get<Afk::Event::Collision>);
   afk_event_class.endClass();
 
   auto script_class = luabridge::getGlobalNamespace(lua)

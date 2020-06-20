@@ -48,6 +48,10 @@ namespace Afk {
      */
     auto pump_events() -> void;
     /**
+     * queue event
+     */
+    auto queue_event(Event event) -> void;
+    /**
      * register an event
      */
     auto register_event(Event::Type type, Callback callback) -> void;
@@ -85,6 +89,7 @@ namespace Afk {
         {Event::Type::MouseDown, {}},   {Event::Type::MouseUp, {}},
         {Event::Type::MouseMove, {}},   {Event::Type::KeyDown, {}},
         {Event::Type::KeyUp, {}},       {Event::Type::TextEnter, {}},
-        {Event::Type::MouseScroll, {}}, {Event::Type::Update, {}}};
+        {Event::Type::MouseScroll, {}}, {Event::Type::Update, {}},
+        {Event::Type::Collision, {}}};
   };
 }
