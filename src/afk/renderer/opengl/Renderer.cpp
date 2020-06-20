@@ -250,14 +250,6 @@ auto Renderer::draw_model(const ModelHandle &model,
 
   const auto &afk = Afk::Engine::get();
 
-  if (game_object.has_value()) {
-    if (afk.registry.has<Afk::AnimComponent>(game_object.value())) {
-      Io::log << "Da\n";
-    } else {
-      Io::log << "Nyet\n";
-    }
-  }
-
   for (const auto &mesh : model.meshes) {
     auto material_bound = vector<bool>(static_cast<size_t>(Texture::Type::Count));
 
