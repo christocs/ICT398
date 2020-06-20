@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -19,9 +20,11 @@
 #include <GLFW/glfw3.h>
 
 #include "afk/Afk.hpp"
+#include "afk/component/AnimComponent.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/renderer/Bone.hpp"
 #include "afk/renderer/Mesh.hpp"
 #include "afk/renderer/Model.hpp"
 #include "afk/renderer/Shader.hpp"
@@ -33,6 +36,7 @@
 #include "afk/renderer/opengl/TextureHandle.hpp"
 
 using namespace std::string_literals;
+using std::optional;
 using std::pair;
 using std::shared_ptr;
 using std::size_t;
@@ -46,6 +50,7 @@ using glm::mat4;
 using glm::vec3;
 using glm::vec4;
 
+using Afk::Bone;
 using Afk::Engine;
 using Afk::Shader;
 using Afk::ShaderProgram;
@@ -55,6 +60,7 @@ using Afk::OpenGl::Renderer;
 using Afk::OpenGl::ShaderHandle;
 using Afk::OpenGl::ShaderProgramHandle;
 using Afk::OpenGl::TextureHandle;
+using Buffer = Afk::OpenGl::MeshHandle::Buffer;
 namespace Io = Afk::Io;
 
 constexpr auto material_strings =
@@ -216,7 +222,7 @@ auto Renderer::draw() -> void {
     const auto &program = this->get_shader_program(command.shader_program_path);
 
     this->draw_queue.pop();
-    this->draw_model(model, program, command.transform);
+    this->draw_model(model, program, command.transform, command.game_object);
   }
 }
 
@@ -235,11 +241,22 @@ auto Renderer::setup_view(const ShaderProgramHandle &shader_program) const -> vo
   this->set_uniform(shader_program, "u_matrices.view", view);
 }
 
-auto Renderer::draw_model(const ModelHandle &model, const ShaderProgramHandle &shader_program,
-                          Transform transform) const -> void {
+auto Renderer::draw_model(const ModelHandle &model,
+                          const ShaderProgramHandle &shader_program, Transform transform,
+                          optional<GameObject> game_object) const -> void {
   glPolygonMode(GL_FRONT_AND_BACK, this->wireframe_enabled ? GL_LINE : GL_FILL);
   this->use_shader(shader_program);
   this->setup_view(shader_program);
+
+  const auto &afk = Afk::Engine::get();
+
+  if (game_object.has_value()) {
+    if (afk.registry.has<Afk::AnimComponent>(game_object.value())) {
+      Io::log << "Da\n";
+    } else {
+      Io::log << "Nyet\n";
+    }
+  }
 
   for (const auto &mesh : model.meshes) {
     auto material_bound = vector<bool>(static_cast<size_t>(Texture::Type::Count));
@@ -290,10 +307,10 @@ auto Renderer::use_shader(const ShaderProgramHandle &shader) const -> void {
 auto Renderer::load_mesh(const Mesh &mesh) -> MeshHandle {
   afk_assert(mesh.vertices.size() > 0, "Mesh missing vertices");
   afk_assert(mesh.indices.size() > 0, "Mesh missing indices");
-  afk_assert(mesh.indices.size() < std::numeric_limits<Mesh::Index>::max(),
+  afk_assert(mesh.indices.size() < std::numeric_limits<Afk::Index>::max(),
              "Mesh contains too many indices; "s +
                  std::to_string(mesh.indices.size()) + " requested, max "s +
-                 std::to_string(std::numeric_limits<Mesh::Index>::max()));
+                 std::to_string(std::numeric_limits<Afk::Index>::max()));
 
   auto mesh_handle        = MeshHandle{};
   mesh_handle.num_indices = mesh.indices.size();
@@ -316,32 +333,46 @@ auto Renderer::load_mesh(const Mesh &mesh) -> MeshHandle {
 
   // Load index data into the index buffer.
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_handle.ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(Mesh::Index),
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(Afk::Index),
                mesh.indices.data(), GL_STATIC_DRAW);
 
   // Set the vertex attribute pointers.
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Vertex));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Vertex), 3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex), nullptr);
 
   // Vertex normals
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Normal));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Normal), 3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, normal)));
 
   // UVs
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, uvs)));
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Uv));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Uv), 2, GL_FLOAT, GL_FALSE,
+                        sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, uvs)));
 
   // Vertex tangent
-  glEnableVertexAttribArray(3);
-  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Tangent));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Tangent), 3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tangent)));
 
   // Vertex bitangent
-  glEnableVertexAttribArray(4);
-  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Bitangent));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Bitangent), 3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, bitangent)));
+
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::BoneIndices));
+  glVertexAttribIPointer(static_cast<GLuint>(Buffer::BoneIndices), 4, GL_INT,
+                         sizeof(Vertex),
+                         reinterpret_cast<void *>(offsetof(Vertex, bone_indices)));
+
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::BoneWeights));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::BoneWeights), 4, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
+                        reinterpret_cast<void *>(offsetof(Vertex, bone_weights)));
 
   glBindVertexArray(0);
 
@@ -375,6 +406,11 @@ auto Renderer::load_model(const Model &model) -> ModelHandle {
   }
 
   this->models[model.file_path] = std::move(modelHandle);
+  afk_assert(this->animations.find(model.file_path) == this->animations.end(),
+             "Found existing animations");
+  this->animations[model.file_path] = model.animations;
+
+  Io::log << "Loaded model '" << model.file_path.string() + "'.\n";
 
   return this->models[model.file_path];
 }
@@ -533,6 +569,13 @@ auto Renderer::set_uniform(const ShaderProgramHandle &program,
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniformMatrix4fv(glGetUniformLocation(program.id, name.c_str()), 1,
                      GL_FALSE, glm::value_ptr(value));
+}
+
+auto Renderer::set_uniform(const ShaderProgramHandle &program, const string &name,
+                           const vector<mat4> &value) const -> void {
+  afk_assert_debug(program.id > 0, "Invalid shader program ID");
+  glUniformMatrix4fv(glGetUniformLocation(program.id, name.c_str()),
+                     value.size(), GL_FALSE, glm::value_ptr(value[0]));
 }
 
 auto Renderer::set_wireframe(bool status) -> void {
