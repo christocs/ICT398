@@ -15,24 +15,41 @@
 
 namespace Afk {
   namespace AI {
+    /**
+     * Nav mesh manager
+     */
     class NavMeshManager {
     public:
       NavMeshManager() = default;
 
       using nav_mesh_ptr = std::shared_ptr<dtNavMesh>;
-
+      /**
+       * Init the nav mesh from a file path
+       */
       bool initialise(const std::filesystem::path &file_path);
-
+      /**
+       * Bake nav mesh
+       */
       bool bake();
-
+      /**
+       * Load mesh
+       */
       bool load(const std::filesystem::path &file_path);
-
+      /**
+       * Save mesh
+       */
       bool save(const std::filesystem::path &file_path);
-
+      /**
+       * Get the current nav mesh
+       */
       auto get_nav_mesh() -> nav_mesh_ptr;
-
+      /**
+       * Get the model for this nav mesh
+       */
       const Model &get_nav_mesh_model();
-
+      /**
+       * Get the model for the height field
+       */
       const Model &get_height_field_model();
 
     private:
@@ -46,8 +63,8 @@ namespace Afk {
 
       unsigned char *build_tile_nav_mesh(const int tile_x, const int tile_y,
                                          glm::vec3 bmin, glm::vec3 bmax,
-                                         float cell_size, int tile_size,
-                                         int &data_size, const std::shared_ptr<ChunkyTriMesh>& chunky_tri_mesh,
+                                         float cell_size, int tile_size, int &data_size,
+                                         const std::shared_ptr<ChunkyTriMesh> &chunky_tri_mesh,
                                          const std::vector<float> &vertices,
                                          const std::vector<int> &triangles);
 
@@ -86,10 +103,6 @@ namespace Afk {
         POLYFLAGS_DOOR = 4, // Ability to move through doors.
         POLYFLAGS_JUMP = 8, // Ability to jump.
       };
-
-      inline unsigned int nextPow2(unsigned int v);
-
-      inline unsigned int ilog2(unsigned int v);
     };
 
   }

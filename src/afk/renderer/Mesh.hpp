@@ -14,6 +14,9 @@
 #include "afk/renderer/Texture.hpp"
 
 namespace Afk {
+  /**
+   * Vertex data
+   */
   struct Vertex {
     constexpr static size_t MAX_VERTEX_BONES = 4;
     constexpr static size_t MAX_BONES        = 100;
@@ -28,7 +31,9 @@ namespace Afk {
 
     auto push_back_bone(Index bone_index, float bone_weight) -> void;
   };
-
+  /**
+   * Mesh
+   */
   struct Mesh {
     using Vertices = std::vector<Vertex>;
     using Indices  = std::vector<Index>;
@@ -36,11 +41,29 @@ namespace Afk {
     using Bones    = std::vector<Bone>;
     using BoneMap  = std::unordered_map<std::string, Index>;
 
-    Vertices vertices   = {};
-    Indices indices     = {};
-    Textures textures   = {};
+    /**
+     * Meshes vertices
+     */
+    Vertices vertices = {};
+    /**
+     * Mesh indices
+     */
+    Indices indices = {};
+    /**
+     * Textures used
+     */
+    Textures textures = {};
+    /**
+     * Transform of mesh
+     */
     Transform transform = {};
+    /**
+     * The mesh bones.
+     */
     Bones bones         = {};
+    /**
+     * Mapping between bone and index.
+     */
     BoneMap bone_map    = {};
   };
 }

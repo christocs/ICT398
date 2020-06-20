@@ -14,6 +14,9 @@ struct GLFWwindow;
 namespace Afk {
   class EventManager {
   public:
+    /**
+     * wraps an std::function to make them comparable
+     */
     class Callback {
     public:
       Callback(std::function<void(Afk::Event)>);
@@ -32,15 +35,33 @@ namespace Afk {
     EventManager(const EventManager &) = delete;
     auto operator=(const EventManager &) -> EventManager & = delete;
     auto operator=(EventManager &&) -> EventManager & = delete;
-
+    /**
+     * Init event manager
+     */
     auto initialize(Renderer::Window window) -> void;
     /**
-     * hacky fix for imgui from lua
+     * pump render events
      */
     auto pump_render() -> void;
+    /**
+     * pump global events (update, keypress, etc)
+     */
     auto pump_events() -> void;
+    /**
+     * queue event
+     */
+    auto queue_event(Event event) -> void;
+    /**
+     * register an event
+     */
     auto register_event(Event::Type type, Callback callback) -> void;
+    /**
+     * deregister an event
+     */
     auto deregister_event(Event::Type type, Callback callback) -> void;
+    /**
+     * setup global callbacks from the renderer system
+     */
     auto setup_callbacks(Renderer::Window window) -> void;
 
     // FIXME: Move to keyboard manager.
@@ -68,6 +89,7 @@ namespace Afk {
         {Event::Type::MouseDown, {}},   {Event::Type::MouseUp, {}},
         {Event::Type::MouseMove, {}},   {Event::Type::KeyDown, {}},
         {Event::Type::KeyUp, {}},       {Event::Type::TextEnter, {}},
-        {Event::Type::MouseScroll, {}}, {Event::Type::Update, {}}};
+        {Event::Type::MouseScroll, {}}, {Event::Type::Update, {}},
+        {Event::Type::Collision, {}}};
   };
 }

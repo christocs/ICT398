@@ -50,6 +50,10 @@ auto EventManager::pump_events() -> void {
   }
 }
 
+auto EventManager::queue_event(Event event) -> void {
+  this->events.push(event);
+}
+
 auto EventManager::register_event(Event::Type type, Callback callback) -> void {
   this->callbacks[type].push_back(callback);
 }

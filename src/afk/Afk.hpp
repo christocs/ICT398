@@ -4,13 +4,13 @@
 #include <glm/glm.hpp>
 
 #include "afk/ai/Crowds.hpp"
+#include "afk/ai/DifficultyManager.hpp"
 #include "afk/ai/NavMeshManager.hpp"
 #include "afk/event/EventManager.hpp"
 #include "afk/physics/PhysicsBodySystem.hpp"
 #include "afk/renderer/Camera.hpp"
 #include "afk/renderer/Renderer.hpp"
 #include "afk/terrain/TerrainManager.hpp"
-#include "afk/ai/DifficultyManager.hpp"
 #include "afk/ui/Ui.hpp"
 #include "entt/entt.hpp"
 
@@ -29,12 +29,13 @@ namespace Afk {
     AI::Crowds crowds                   = {};
 
     entt::registry registry;
-    Afk::PhysicsBodySystem physics_body_system;
+    Afk::PhysicsBodySystem physics_body_system{glm::vec3(0.0f, -9.81f, 0.0f)};
     lua_State *lua = nullptr;
 
     GameObject camera_entity = registry.create();
 
     Engine()               = default;
+    ~Engine()              = default;
     Engine(Engine &&)      = delete;
     Engine(const Engine &) = delete;
     auto operator=(const Engine &) -> Engine & = delete;

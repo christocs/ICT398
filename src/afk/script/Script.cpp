@@ -18,6 +18,7 @@ const vector<Script::Event> Script::events = {
     {"text_enter", static_cast<int>(::Afk::Event::Type::TextEnter)},
     {"update", static_cast<int>(::Afk::Event::Type::Update)},
     {"render", static_cast<int>(::Afk::Event::Type::Render)},
+    {"collision", static_cast<int>(::Afk::Event::Type::Collision)}
 };
 
 const vector<Script::Mouse> Script::mouse_buttons = {

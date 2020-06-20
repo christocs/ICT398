@@ -16,8 +16,17 @@ namespace Afk {
   class StateMachine {
   public:
     StateMachine() = default;
+    /**
+     * Immediately fire a command
+     */
     auto fire(const std::string &command) -> void;
+    /**
+     * Queue up a command
+     */
     auto queue(const std::string &command) -> void;
+    /**
+     * Pump queued commands
+     */
     auto pump() -> void;
 
   private:
@@ -56,15 +65,40 @@ namespace Afk {
   class StateMachineBuilder {
   public:
     StateMachineBuilder() = default;
+    /**
+     * Set current state to be defined
+     */
     auto in(const std::string &state) -> StateMachineBuilder &;
+    /**
+     * On entering the current state, do callback
+     */
     auto on_enter(luabridge::LuaRef callback) -> StateMachineBuilder &;
+    /**
+     * On exiting the current state, do callback
+     */
     auto on_exit(luabridge::LuaRef callback) -> StateMachineBuilder &;
+    /**
+     * On this specific command do something
+     * \sa go
+     * \sa call
+     */
     auto on(const std::string &command) -> StateMachineBuilder &;
+    /**
+     * When the command is recieved, move to state
+     * \param state state to move to
+     */
     auto go(const std::string &state) -> StateMachineBuilder &;
+    /**
+     * When the command is recieved in this state, call the callback
+     */
     auto call(luabridge::LuaRef callback) -> StateMachineBuilder &;
-
+    /**
+     * Set the initial state
+     */
     auto initial_state(const std::string &state) -> StateMachineBuilder &;
-
+    /**
+     * Build the FSM
+     */
     auto build() -> StateMachine;
 
   private:

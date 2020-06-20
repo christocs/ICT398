@@ -9,6 +9,9 @@
 #include "afk/renderer/Texture.hpp"
 
 namespace Afk {
+  /**
+   * Model component
+   */
   struct Model : public BaseComponent {
     using Meshes     = std::vector<Mesh>;
     using Animations = std::vector<Animation>;

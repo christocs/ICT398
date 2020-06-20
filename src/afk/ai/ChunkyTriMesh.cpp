@@ -70,8 +70,8 @@ bool ChunkyTriMesh::init(const float *verts, const int *tris, int ntris,
   return true;
 }
 
-int ChunkyTriMesh::get_chunks_overlapping_rect(float *bmin, float *bmax,
-                                               int *ids, const int maxIds) const {
+size_t ChunkyTriMesh::get_chunks_overlapping_rect(float *bmin, float *bmax, int *ids,
+                                               const int maxIds) const {
   // Traverse tree
   int i = 0;
   int n = 0;
