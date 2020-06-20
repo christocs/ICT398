@@ -2,8 +2,8 @@ local health_script = this:entity():script_data("script/component/health.lua")
 
 local speed = 600000.0
 local jetpack_speed = speed * 2.0
-local jetpack_max_duration = 0.2
-local jetpack_current_duration = 0.0
+jetpack_max_duration = 0.2
+jetpack_current_duration = 0.0
 
 function update(evt)
     local upd8 = evt:to_update()
@@ -27,8 +27,11 @@ function update(evt)
             physics_component:apply_force(cur_cam:right():smul(vel))
         end
         if keyboard.is_pressed(key.Space) then
-            if jetpack_current_duration < jetpack_max_duration then
+            if (jetpack_current_duration + dt) < jetpack_max_duration then
                 jetpack_current_duration = jetpack_current_duration + dt
+                physics_component:apply_force(cur_cam:up():smul(jetpack_vel))
+            elseif (jetpack_current_duration) < jetpack_max_duration then
+                jetpack_current_duration = jetpack_max_duration
                 physics_component:apply_force(cur_cam:up():smul(jetpack_vel))
             end
         elseif (jetpack_current_duration - dt) >= 0 then
