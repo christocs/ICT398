@@ -101,27 +101,6 @@ auto Engine::initialize() -> void {
   //  this->nav_mesh_manager.initialise("res/gen/navmesh/solo_navmesh.bin", this->terrain_manager.get_model().meshes[0], terrain_transform);
   this->crowds.init(this->nav_mesh_manager.get_nav_mesh());
 
-  /*
-    this->renderer.load_model(this->nav_mesh_manager.get_height_field_model());
-    auto height_field_entity = registry.create();
-    auto height_field_transform = Transform{height_field_entity};
-    height_field_transform.translation = glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
-    registry.assign<Afk::ModelSource>(
-        height_field_entity, height_field_entity,
-        this->nav_mesh_manager.get_height_field_model().file_path, "shader/heightfield.prog");
-    registry.assign<Afk::Transform>(height_field_entity, height_field_transform);
-    /**/
-
-  this->renderer.load_model(this->nav_mesh_manager.get_nav_mesh_model());
-  auto nav_mesh_entity    = registry.create();
-  auto nav_mesh_transform = Transform{nav_mesh_entity};
-  nav_mesh_transform.translation =
-      glm::vec3(0.0f); // zero out translation, translation should already be matched with the terrain
-  registry.assign<Afk::ModelSource>(nav_mesh_entity, nav_mesh_entity,
-                                    this->nav_mesh_manager.get_nav_mesh_model().file_path,
-                                    "shader/navmesh.prog");
-  registry.assign<Afk::Transform>(nav_mesh_entity, nav_mesh_transform);
-
   auto camera_transform        = Transform{camera_entity};
   camera_transform.translation = glm::vec3{0.0f, 50.0f, 0.0f};
   registry.assign<Afk::Transform>(camera_entity, camera_transform);
