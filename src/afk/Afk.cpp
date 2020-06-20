@@ -53,8 +53,8 @@ auto Engine::initialize() -> void {
   Afk::add_engine_bindings(this->lua);
 
   this->terrain_manager.initialize();
-  const int terrain_width  = 64;
-  const int terrain_length = 64;
+  const int terrain_width  = 128;
+  const int terrain_length = 128;
   this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
   this->renderer.load_model(this->terrain_manager.get_model());
 
@@ -171,18 +171,53 @@ auto Engine::initialize() -> void {
     registry.get<Afk::AI::AgentComponent>(agents[ag]).wander(glm::vec3{0.f, 0.f, 0.f}, 20.f, 5.f);
   }
 
-  auto deathbox_entity           = registry.create();
-  auto deathbox_transform        = Transform{deathbox_entity};
-  deathbox_transform.translation = glm::vec3{0.0f, -30.0f, 0.0f};
+  std::vector<GameObject> deathboxes = {};
+  for (auto i = 0; i < 5; i++) {
+    deathboxes.push_back(registry.create());
+    auto deathbox_tags = TagComponent{deathboxes[i]};
+    deathbox_tags.tags.insert(TagComponent::Tag::DEATHZONE);
+    registry.assign<Afk::TagComponent>(deathboxes[i], deathbox_tags);
+  }
+
+  auto &deathbox_transform = registry.assign<Afk::Transform>(deathboxes[0], Transform{});
+  deathbox_transform.translation  = glm::vec3{0.0f, -30.0f, 0.0f};
   deathbox_transform.scale       = glm::vec3(10000.0f, 0.1f, 10000.0f);
-  registry.assign<Afk::Transform>(deathbox_entity, deathbox_transform);
-  registry.assign<Afk::PhysicsBody>(deathbox_entity, deathbox_entity, &this->physics_body_system,
+  registry.assign<Afk::PhysicsBody>(deathboxes[0], deathboxes[0], &this->physics_body_system,
                                     deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
                                     false, Afk::RigidBodyType::STATIC,
-                                    Afk::Box(1.0f, 1.0f, 01.0f));
-  auto deathbox_tags = TagComponent{deathbox_entity};
-  deathbox_tags.tags.insert(TagComponent::Tag::DEATHZONE);
-  registry.assign<Afk::TagComponent>(deathbox_entity, deathbox_tags);
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
+
+  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[1], Transform{});
+  deathbox_transform.translation  = glm::vec3{-((terrain_width+1)/2.0), 0.0f, 0.0f};
+  deathbox_transform.scale       = glm::vec3(0.1f, 10000.0f, 10000.0f);
+  registry.assign<Afk::PhysicsBody>(deathboxes[1], deathboxes[1], &this->physics_body_system,
+                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
+                                    false, Afk::RigidBodyType::STATIC,
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
+
+  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[2], Transform{});
+  deathbox_transform.translation  = glm::vec3{(terrain_width-1)/2.0, 0.0f, 0.0f};
+  deathbox_transform.scale       = glm::vec3(0.1f, 10000.0f, 10000.0f);
+  registry.assign<Afk::PhysicsBody>(deathboxes[2], deathboxes[2], &this->physics_body_system,
+                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
+                                    false, Afk::RigidBodyType::STATIC,
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
+
+  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[3], Transform{});
+  deathbox_transform.translation  = glm::vec3{0.0f, 0.0f, -((terrain_width+1)/2.0)};
+  deathbox_transform.scale       = glm::vec3(10000.0f, 10000.0f, 0.1f);
+  registry.assign<Afk::PhysicsBody>(deathboxes[3], deathboxes[3], &this->physics_body_system,
+                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
+                                    false, Afk::RigidBodyType::STATIC,
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
+
+  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[4], Transform{});
+  deathbox_transform.translation  = glm::vec3{0.0f, 0.0f, (terrain_width-1)/2.0};
+  deathbox_transform.scale       = glm::vec3(10000.0f, 10000.0f, 0.1f);
+  registry.assign<Afk::PhysicsBody>(deathboxes[4], deathboxes[4], &this->physics_body_system,
+                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
+                                    false, Afk::RigidBodyType::STATIC,
+                                    Afk::Box(1.0f, 1.0f, 1.0f));
 
   this->difficulty_manager.init(AI::DifficultyManager::Difficulty::NORMAL);
 
