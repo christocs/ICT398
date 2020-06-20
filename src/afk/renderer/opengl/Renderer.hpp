@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <string>
 #include <type_traits>
@@ -14,6 +15,9 @@
 // Must be included after GLAD.
 #include <GLFW/glfw3.h>
 
+#include "afk/component/GameObject.hpp"
+#include "afk/renderer/Animation.hpp"
+#include "afk/renderer/Model.hpp"
 #include "afk/renderer/Shader.hpp"
 #include "afk/renderer/opengl/MeshHandle.hpp"
 #include "afk/renderer/opengl/ModelHandle.hpp"
@@ -54,6 +58,7 @@ namespace Afk {
         const std::filesystem::path model_path          = {};
         const std::filesystem::path shader_program_path = {};
         const Transform transform                       = {};
+        const std::optional<GameObject> game_object     = {};
       };
 
       using Models =
@@ -65,6 +70,8 @@ namespace Afk {
       using ShaderPrograms =
           std::unordered_map<std::filesystem::path, ShaderProgramHandle, PathHash, PathEquals>;
       using DrawQueue = std::queue<DrawCommand>;
+      using Animations =
+          std::unordered_map<std::filesystem::path, Model::Animations, PathHash, PathEquals>;
 
       using Window = std::add_pointer<GLFWwindow>::type;
 
@@ -88,8 +95,9 @@ namespace Afk {
       auto set_viewport(int x, int y, int width, int height) const -> void;
       auto draw() -> void;
       auto queue_draw(DrawCommand command) -> void;
-      auto draw_model(const ModelHandle &model, const ShaderProgramHandle &shader_program,
-                      Transform transform) const -> void;
+      auto draw_model(const ModelHandle &model,
+                      const ShaderProgramHandle &shader_program, Transform transform,
+                      std::optional<GameObject> game_object) const -> void;
       auto setup_view(const ShaderProgramHandle &shader_program) const -> void;
 
       // State management
@@ -122,6 +130,8 @@ namespace Afk {
                        const std::string &name, glm::vec3 value) const -> void;
       auto set_uniform(const ShaderProgramHandle &program,
                        const std::string &name, glm::mat4 value) const -> void;
+      auto set_uniform(const ShaderProgramHandle &program, const std::string &name,
+                       const std::vector<glm::mat4> &value) const -> void;
 
       auto set_wireframe(bool status) -> void;
       auto get_wireframe() const -> bool;
@@ -144,6 +154,7 @@ namespace Afk {
       Shaders shaders                = {};
       ShaderPrograms shader_programs = {};
       DrawQueue draw_queue           = {};
+      Animations animations          = {};
     };
   }
 }

@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -19,6 +20,7 @@
 #include <GLFW/glfw3.h>
 
 #include "afk/Afk.hpp"
+#include "afk/component/AnimComponent.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
@@ -34,6 +36,7 @@
 #include "afk/renderer/opengl/TextureHandle.hpp"
 
 using namespace std::string_literals;
+using std::optional;
 using std::pair;
 using std::shared_ptr;
 using std::size_t;
@@ -219,7 +222,7 @@ auto Renderer::draw() -> void {
     const auto &program = this->get_shader_program(command.shader_program_path);
 
     this->draw_queue.pop();
-    this->draw_model(model, program, command.transform);
+    this->draw_model(model, program, command.transform, command.game_object);
   }
 }
 
@@ -238,11 +241,22 @@ auto Renderer::setup_view(const ShaderProgramHandle &shader_program) const -> vo
   this->set_uniform(shader_program, "u_matrices.view", view);
 }
 
-auto Renderer::draw_model(const ModelHandle &model, const ShaderProgramHandle &shader_program,
-                          Transform transform) const -> void {
+auto Renderer::draw_model(const ModelHandle &model,
+                          const ShaderProgramHandle &shader_program, Transform transform,
+                          optional<GameObject> game_object) const -> void {
   glPolygonMode(GL_FRONT_AND_BACK, this->wireframe_enabled ? GL_LINE : GL_FILL);
   this->use_shader(shader_program);
   this->setup_view(shader_program);
+
+  const auto &afk = Afk::Engine::get();
+
+  if (game_object.has_value()) {
+    if (afk.registry.has<Afk::AnimComponent>(game_object.value())) {
+      Io::log << "Da\n";
+    } else {
+      Io::log << "Nyet\n";
+    }
+  }
 
   for (const auto &mesh : model.meshes) {
     auto material_bound = vector<bool>(static_cast<size_t>(Texture::Type::Count));
@@ -392,6 +406,9 @@ auto Renderer::load_model(const Model &model) -> ModelHandle {
   }
 
   this->models[model.file_path] = std::move(modelHandle);
+  afk_assert(this->animations.find(model.file_path) == this->animations.end(),
+             "Found existing animations");
+  this->animations[model.file_path] = model.animations;
 
   Io::log << "Loaded model '" << model.file_path.string() + "'.\n";
 
@@ -552,6 +569,13 @@ auto Renderer::set_uniform(const ShaderProgramHandle &program,
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniformMatrix4fv(glGetUniformLocation(program.id, name.c_str()), 1,
                      GL_FALSE, glm::value_ptr(value));
+}
+
+auto Renderer::set_uniform(const ShaderProgramHandle &program, const string &name,
+                           const vector<mat4> &value) const -> void {
+  afk_assert_debug(program.id > 0, "Invalid shader program ID");
+  glUniformMatrix4fv(glGetUniformLocation(program.id, name.c_str()),
+                     value.size(), GL_FALSE, glm::value_ptr(value[0]));
 }
 
 auto Renderer::set_wireframe(bool status) -> void {

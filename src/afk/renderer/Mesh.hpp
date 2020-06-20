@@ -15,15 +15,16 @@
 
 namespace Afk {
   struct Vertex {
-    constexpr static size_t MAX_BONES = 4;
+    constexpr static size_t MAX_VERTEX_BONES = 4;
+    constexpr static size_t MAX_BONES        = 100;
 
-    glm::vec3 position            = {};
-    glm::vec3 normal              = {};
-    glm::vec2 uvs                 = {};
-    glm::vec3 tangent             = {};
-    glm::vec3 bitangent           = {};
-    Index bone_indices[MAX_BONES] = {};
-    float bone_weights[MAX_BONES] = {};
+    glm::vec3 position                   = {};
+    glm::vec3 normal                     = {};
+    glm::vec2 uvs                        = {};
+    glm::vec3 tangent                    = {};
+    glm::vec3 bitangent                  = {};
+    Index bone_indices[MAX_VERTEX_BONES] = {};
+    float bone_weights[MAX_VERTEX_BONES] = {};
 
     auto push_back_bone(Index bone_index, float bone_weight) -> void;
   };
