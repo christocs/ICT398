@@ -8,6 +8,7 @@ namespace Afk {
    * Animations component
    */
   class AnimComponent : public BaseComponent {
+    AnimComponent(GameObject owner);
     /**
      * Anim status
      */
