@@ -41,8 +41,17 @@ namespace Afk {
 
     struct Render {};
 
-    enum CollisionType { Enemy, Prey, Deathzone };
-    enum CollisionAction { ContactStart, ContactStay, ContactExit };
+    // using struct of bool to get around luabind having no enum support
+    struct CollisionType {
+      bool enemy     = {};
+      bool prey      = {};
+      bool deathzone = {};
+    };
+    struct CollisionAction {
+      bool contact_start = {};
+      bool contact_stay = {};
+      bool contact_end = {};
+    };
 
     struct Collision {
       CollisionType type;

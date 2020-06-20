@@ -2,7 +2,6 @@ local keyboard_script = this:entity():script_data("script/component/camera_keybo
 local health_script = this:entity():script_data("script/component/health.lua")
 
 function debug_stuff(evt)
-    local physics_component = this:entity():get_physics()
     local key_evt = evt:to_key()
 
     if key_evt.key == key.Num1 then

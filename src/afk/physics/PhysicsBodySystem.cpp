@@ -70,15 +70,15 @@ void PhysicsBodySystem::CollisionEventListener::onContact(
     }
 
     if ((object1 != nullptr) && (object2 != nullptr)) {
-      Event::CollisionAction collision_action;
+      Event::CollisionAction collision_action{false, false, false};
       if (contactPair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart) {
-        collision_action = Event::CollisionAction::ContactStart;
+        collision_action.contact_start = true;
       } else if (contactPair.getEventType() ==
                  CollisionCallback::ContactPair::EventType::ContactExit) {
-        collision_action = Event::CollisionAction::ContactExit;
+        collision_action.contact_end = true;
       } else {
         // ContactStay may not be triggered if rigid body is sleeping
-        collision_action = Event::CollisionAction::ContactStay;
+        collision_action.contact_stay = true;
       }
 
       auto &object1_tags =
@@ -100,41 +100,23 @@ void PhysicsBodySystem::CollisionEventListener::onContact(
       // other object tag will never be a nullptr if the player tag is found
       if (player_object_tags != nullptr) {
 //        std::cout << "contact player" << std::endl;
+        Event::Collision collision_event_data{Event::CollisionType{false, false, false}, collision_action};
         if (other_object_tags->count(Afk::TagComponent::ENEMY) == 1) {
-          std::cout << "contact enemy" << std::endl;
-          Event::Collision collision_event_data = {};
-          collision_event_data.action           = collision_action;
-          collision_event_data.type             = Event::CollisionType::Enemy;
-
-          Event event = {};
-          event.type  = Event::Type::Collision;
-          event.data  = collision_event_data;
-          Afk::Engine::get().event_manager.queue_event(event);
+          collision_event_data.type.enemy = 1;
         }
 
         if (other_object_tags->count(Afk::TagComponent::PREY)  == 1) {
-          std::cout << "contact prey" << std::endl;
-          Event::Collision collision_event_data = {};
-          collision_event_data.action           = collision_action;
-          collision_event_data.type             = Event::CollisionType::Prey;
-
-          Event event = {};
-          event.type  = Event::Type::Collision;
-          event.data  = collision_event_data;
-          Afk::Engine::get().event_manager.queue_event(event);
+          collision_event_data.type.prey = 1;
         }
 
         if (other_object_tags->count(Afk::TagComponent::DEATHZONE) == 1) {
-          std::cout << "contact death" << std::endl;
-          Event::Collision collision_event_data = {};
-          collision_event_data.action           = collision_action;
-          collision_event_data.type = Event::CollisionType::Deathzone;
-
-          Event event = {};
-          event.type  = Event::Type::Collision;
-          event.data  = collision_event_data;
-          Afk::Engine::get().event_manager.queue_event(event);
+          collision_event_data.type.deathzone = 1;
         }
+
+        Event event;
+        event.data = collision_event_data;
+        event.type = Event::Type::Collision;
+        Afk::Engine::get().event_manager.queue_event(event);
       }
     }
   }
