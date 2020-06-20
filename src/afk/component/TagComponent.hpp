@@ -5,8 +5,10 @@
 namespace Afk {
   class TagComponent : public BaseComponent {
   public:
-    enum Tag { TERRAIN, PLAYER, ENEMY };
+    enum Tag { TERRAIN, PLAYER, ENEMY, PREY, DEATHZONE };
 
-    std::set<Afk::TagComponent::Tag> tags = {};
+    using Tags = std::set<Afk::TagComponent::Tag>;
+
+    Tags tags = {};
   };
 }

@@ -41,6 +41,14 @@ namespace Afk {
 
     struct Render {};
 
+    enum CollisionType { Enemy, Prey, Deathzone };
+    enum CollisionAction { ContactStart, ContactStay, ContactExit };
+
+    struct Collision {
+      CollisionType type;
+      CollisionAction action;
+    };
+
     // FIXME: Move to keyboard  handler.
     enum class Action { Forward, Backward, Left, Right };
 
@@ -54,11 +62,12 @@ namespace Afk {
       TextEnter,
       MouseScroll,
       Update,
-      Render
+      Render,
+      Collision
     };
 
     using Data =
-        std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render>;
+        std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render, Collision>;
 
     template<typename T>
     auto get() -> T {

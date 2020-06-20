@@ -39,6 +39,7 @@ namespace Afk {
      */
     auto pump_render() -> void;
     auto pump_events() -> void;
+    auto queue_event(Event event) -> void;
     auto register_event(Event::Type type, Callback callback) -> void;
     auto deregister_event(Event::Type type, Callback callback) -> void;
     auto setup_callbacks(Renderer::Window window) -> void;
@@ -68,6 +69,7 @@ namespace Afk {
         {Event::Type::MouseDown, {}},   {Event::Type::MouseUp, {}},
         {Event::Type::MouseMove, {}},   {Event::Type::KeyDown, {}},
         {Event::Type::KeyUp, {}},       {Event::Type::TextEnter, {}},
-        {Event::Type::MouseScroll, {}}, {Event::Type::Update, {}}};
+        {Event::Type::MouseScroll, {}}, {Event::Type::Update, {}},
+        {Event::Type::Collision, {}}};
   };
 }

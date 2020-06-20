@@ -139,7 +139,7 @@ auto Engine::initialize() -> void {
       .add_script("script/component/debug.lua", &this->event_manager);
 
   std::vector<entt::entity> agents{};
-  for (std::size_t i = 0; i < 5; ++i) {
+  for (std::size_t i = 0; i < 4; ++i) {
     agents.push_back(registry.create());
     dtCrowdAgentParams p        = {};
     p.radius                    = .1f;
@@ -152,11 +152,14 @@ auto Engine::initialize() -> void {
     registry.assign<Afk::Transform>(agents[i], agent_transform);
     registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",
                                       "shader/default.prog");
+    auto agent_tags = TagComponent{agents[i]};
+    agent_tags.tags.insert(TagComponent::Tag::ENEMY);
+    registry.assign<Afk::TagComponent>(agents[i], agent_tags);
     auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
         agents[i], agents[i], agent_transform.translation, p);
     auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
         agents[i], agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{0.3f, 1.0f});
+        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{5.0f, 10.0f});
   }
   registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
   registry.get<Afk::AI::AgentComponent>(agents[1]).chase(camera_entity, 10.f);
