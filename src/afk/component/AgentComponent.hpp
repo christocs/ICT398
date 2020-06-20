@@ -48,9 +48,13 @@ namespace Afk {
        * \sa Afk::AI::Wander
        */
       auto wander(const glm::vec3 &target, float radius) -> void;
-
+      /**
+       * Update entity data based on agent data
+       */
       auto update() -> void;
-
+      /**
+       * Agent's ID
+       */
       auto get_id() const -> Afk::AI::Crowds::AgentID;
 
     private:
