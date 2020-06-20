@@ -160,7 +160,7 @@ auto Engine::initialize() -> void {
         agents[i], agents[i], agent_transform.translation, p);
     auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
         agents[i], agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{50.0f, 100.0f});
+        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{10.0f, 20.0f});
   }
   registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
   registry.get<Afk::AI::AgentComponent>(agents[1]).chase(camera_entity, 10.f);
