@@ -3,7 +3,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <random>
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -54,9 +53,9 @@ auto Engine::initialize() -> void {
   Afk::add_engine_bindings(this->lua);
 
   this->terrain_manager.initialize();
-  const int terrain_width  = 372;
-  const int terrain_length = 372;
-  this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 6.0f);
+  const int terrain_width  = 64;
+  const int terrain_length = 64;
+  this->terrain_manager.generate_terrain(terrain_width, terrain_length, 0.05f, 7.5f);
   this->renderer.load_model(this->terrain_manager.get_model());
 
   auto terrain_entity           = registry.create();
@@ -68,7 +67,7 @@ auto Engine::initialize() -> void {
   registry.assign<Afk::Model>(terrain_entity, terrain_entity, terrain_manager.get_model());
   registry.assign<Afk::Transform>(terrain_entity, terrain_transform);
   registry.assign<Afk::PhysicsBody>(terrain_entity, terrain_entity, &this->physics_body_system,
-                                    terrain_transform, 0.01f, 0.0f, 0.0f, 0.0f,
+                                    terrain_transform, 0.3f, 0.0f, 0.0f, 0.0f,
                                     true, Afk::RigidBodyType::STATIC,
                                     this->terrain_manager.height_map);
   auto terrain_tags = TagComponent{terrain_entity};
@@ -140,215 +139,50 @@ auto Engine::initialize() -> void {
       .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
       .add_script("script/component/debug.lua", &this->event_manager);
 
-  // create prey agents that move to a certain spot
-  std::vector<entt::entity> move_agents{};
-  for (std::size_t i = 0; i < 4; ++i) {
+  std::vector<entt::entity> agents{};
+  for (std::size_t i = 0; i < 20; ++i) {
+    agents.push_back(registry.create());
     dtCrowdAgentParams p        = {};
     p.radius                    = .1f;
     p.maxSpeed                  = 1;
     p.maxAcceleration           = 1;
     p.height                    = 1;
-
-    move_agents.push_back(registry.create());
-    auto agent_transform        = Afk::Transform{move_agents[i]};
-    int x = (std::rand() % (terrain_width));
-    int z = (std::rand() % (terrain_width));
-    agent_transform.translation = {x, -10, z};
-    agent_transform.scale       = {.05f, .05f, .05f};
-    registry.assign<Afk::Transform>(move_agents[i], agent_transform);
-    registry.assign<Afk::ModelSource>(move_agents[i], move_agents[i], "res/model/nanosuit/nanosuit.fbx",
+    auto agent_transform        = Afk::Transform{agents[i]};
+    agent_transform.translation = {5 - (i / 10.f), -10, 5 - (i / 10.f)};
+    agent_transform.scale       = {.1f, .1f, .1f};
+    registry.assign<Afk::Transform>(agents[i], agent_transform);
+    registry.assign<Afk::ModelSource>(agents[i], agents[i], "res/model/nanosuit/nanosuit.fbx",
                                       "shader/default.prog");
-    auto agent_tags = TagComponent{move_agents[i]};
-    agent_tags.tags.insert(TagComponent::Tag::PREY);
-    registry.assign<Afk::TagComponent>(move_agents[i], agent_tags);
-    auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
-        move_agents[i], move_agents[i], agent_transform.translation, p);
-    auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
-        move_agents[i], move_agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{1.0f, 2.0f});
-
-    x = (std::rand() % (terrain_width));
-    z = (std::rand() % (terrain_width));
-    registry.get<Afk::AI::AgentComponent>(move_agents[i]).move_to({x, -5, z});
-  }
-
-  // create chase agents which follow you and are enemies
-  std::vector<entt::entity> chase_agents{};
-  for (std::size_t i = 0; i < 20; ++i) {
-    dtCrowdAgentParams p        = {};
-    p.radius                    = .1f;
-    p.maxSpeed                  = 1;
-    p.maxAcceleration           = 1;
-    p.height                    = 1;
-
-    chase_agents.push_back(registry.create());
-    auto agent_transform        = Afk::Transform{chase_agents[i]};
-    int x = (std::rand() % (terrain_width));
-    int z = (std::rand() % (terrain_width));
-    agent_transform.translation = {x, -10, z};
-    agent_transform.scale       = {.05f, .05f, .05f};
-    registry.assign<Afk::Transform>(chase_agents[i], agent_transform);
-    registry.assign<Afk::ModelSource>(chase_agents[i], chase_agents[i], "res/model/nanosuit/nanosuit.fbx",
-                                      "shader/default.prog");
-    auto agent_tags = TagComponent{chase_agents[i]};
+    auto agent_tags = TagComponent{agents[i]};
     agent_tags.tags.insert(TagComponent::Tag::ENEMY);
-    registry.assign<Afk::TagComponent>(chase_agents[i], agent_tags);
+    registry.assign<Afk::TagComponent>(agents[i], agent_tags);
     auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
-        chase_agents[i], chase_agents[i], agent_transform.translation, p);
+        agents[i], agents[i], agent_transform.translation, p);
     auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
-        chase_agents[i], chase_agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{1.0f, 2.0f});
-
-    registry.get<Afk::AI::AgentComponent>(chase_agents[i]).chase(camera_entity, 10.f);
+        agents[i], agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
+        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{5.0f, 10.0f});
+  }
+  registry.get<Afk::AI::AgentComponent>(agents[0]).move_to({25, -5, 25});
+  registry.get<Afk::AI::AgentComponent>(agents[1]).chase(camera_entity, 10.f);
+  registry.get<Afk::AI::AgentComponent>(agents[2]).flee(camera_entity, 10.f);
+  const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
+  registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
+  for (std::size_t ag = 4; ag < 20; ++ag) {
+    registry.get<Afk::AI::AgentComponent>(agents[ag]).wander(glm::vec3{0.f, 0.f, 0.f}, 20.f, 5.f);
   }
 
-  // create flee agents which follow run away from you and are prey
-  std::vector<entt::entity> flee_agents{};
-  for (std::size_t i = 0; i < 20; ++i) {
-    dtCrowdAgentParams p2        = {};
-    p2.radius                    = .1f;
-    p2.maxSpeed                  = 1;
-    p2.maxAcceleration           = 1;
-    p2.height                    = 1;
-
-    flee_agents.push_back(registry.create());
-    auto agent_transform        = Afk::Transform{flee_agents[i]};
-    int x = (std::rand() % (terrain_width));
-    int z = (std::rand() % (terrain_width));
-    agent_transform.translation = {x, -10, z};
-    agent_transform.scale       = {.05f, .05f, .05f};
-    registry.assign<Afk::Transform>(flee_agents[i], agent_transform);
-    registry.assign<Afk::ModelSource>(flee_agents[i], flee_agents[i], "res/model/nanosuit/nanosuit.fbx",
-                                      "shader/default.prog");
-    auto agent_tags = TagComponent{flee_agents[i]};
-    agent_tags.tags.insert(TagComponent::Tag::ENEMY);
-    registry.assign<Afk::TagComponent>(flee_agents[i], agent_tags);
-    auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
-        flee_agents[i], flee_agents[i], agent_transform.translation, p2);
-    auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
-        flee_agents[i], flee_agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{1.0f, 2.0f});
-
-    registry.get<Afk::AI::AgentComponent>(flee_agents[i]).flee(camera_entity, 10.f);
-  }
-
-  // create path agents which follow/patrol a strict path
-  std::vector<entt::entity> path_agents{};
-  for (std::size_t i = 0; i < 20; ++i) {
-    dtCrowdAgentParams p        = {};
-    p.radius                    = .1f;
-    p.maxSpeed                  = 1;
-    p.maxAcceleration           = 1;
-    p.height                    = 1;
-
-    path_agents.push_back(registry.create());
-    auto agent_transform        = Afk::Transform{path_agents[i]};
-    int x = (std::rand() % (terrain_width));
-    int z = (std::rand() % (terrain_width));
-    agent_transform.translation = {x, -10, z};
-    agent_transform.scale       = {.05f, .05f, .05f};
-    registry.assign<Afk::Transform>(path_agents[i], agent_transform);
-    registry.assign<Afk::ModelSource>(path_agents[i], path_agents[i], "res/model/nanosuit/nanosuit.fbx",
-                                      "shader/default.prog");
-    auto agent_tags = TagComponent{path_agents[i]};
-    agent_tags.tags.insert(TagComponent::Tag::ENEMY);
-    registry.assign<Afk::TagComponent>(path_agents[i], agent_tags);
-    auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
-        path_agents[i], path_agents[i], agent_transform.translation, p);
-    auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
-        path_agents[i], path_agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{1.0f, 2.0f});
-
-    Afk::AI::Path path = {};
-    for (auto j = 0; j < 4; j++) {
-      x = (std::rand() % (terrain_width));
-      z = (std::rand() % (terrain_width));
-      path.emplace_back(x, -10.0f, z);
-    }
-    registry.get<Afk::AI::AgentComponent>(path_agents[i]).path(std::move(path), 2.0f);
-  }
-
-  // create path agents which follow/patrol a strict path
-  std::vector<entt::entity> wander_agents{};
-  for (std::size_t i = 0; i < 20; ++i) {
-    dtCrowdAgentParams p        = {};
-    p.radius                    = .1f;
-    p.maxSpeed                  = 1;
-    p.maxAcceleration           = 1;
-    p.height                    = 1;
-
-    wander_agents.push_back(registry.create());
-    auto agent_transform        = Afk::Transform{wander_agents[i]};
-    int x = (std::rand() % (terrain_width));
-    int z = (std::rand() % (terrain_width));
-    agent_transform.translation = {x, -10, z};
-    agent_transform.scale       = {.05f, .05f, .05f};
-    registry.assign<Afk::Transform>(wander_agents[i], agent_transform);
-    registry.assign<Afk::ModelSource>(wander_agents[i], wander_agents[i], "res/model/nanosuit/nanosuit.fbx",
-                                      "shader/default.prog");
-    auto agent_tags = TagComponent{wander_agents[i]};
-    agent_tags.tags.insert(TagComponent::Tag::ENEMY);
-    registry.assign<Afk::TagComponent>(wander_agents[i], agent_tags);
-    auto &agent_component = registry.assign<Afk::AI::AgentComponent>(
-        wander_agents[i], wander_agents[i], agent_transform.translation, p);
-    auto &agent_physics_body = registry.assign<Afk::PhysicsBody>(
-        wander_agents[i], wander_agents[i], &this->physics_body_system, agent_transform, 0.3f, 0.0f,
-        0.0f, 0.0f, true, Afk::RigidBodyType::STATIC, Afk::Capsule{1.0f, 2.0f});
-
-    x = (std::rand() % (terrain_width));
-    z = (std::rand() % (terrain_width));
-    const auto wander_time = (std::rand() % 5) + 2.0f;
-    registry.get<Afk::AI::AgentComponent>(wander_agents[i]).wander(glm::vec3{x, 0.f, z},
-                                                                   20.f, wander_time);
-  }
-
-  std::vector<GameObject> deathboxes = {};
-  for (auto i = 0; i < 5; i++) {
-    deathboxes.push_back(registry.create());
-    auto deathbox_tags = TagComponent{deathboxes[i]};
-    deathbox_tags.tags.insert(TagComponent::Tag::DEATHZONE);
-    registry.assign<Afk::TagComponent>(deathboxes[i], deathbox_tags);
-  }
-
-  auto &deathbox_transform = registry.assign<Afk::Transform>(deathboxes[0], Transform{});
-  deathbox_transform.translation  = glm::vec3{0.0f, -30.0f, 0.0f};
+  auto deathbox_entity           = registry.create();
+  auto deathbox_transform        = Transform{deathbox_entity};
+  deathbox_transform.translation = glm::vec3{0.0f, -30.0f, 0.0f};
   deathbox_transform.scale       = glm::vec3(10000.0f, 0.1f, 10000.0f);
-  registry.assign<Afk::PhysicsBody>(deathboxes[0], deathboxes[0], &this->physics_body_system,
+  registry.assign<Afk::Transform>(deathbox_entity, deathbox_transform);
+  registry.assign<Afk::PhysicsBody>(deathbox_entity, deathbox_entity, &this->physics_body_system,
                                     deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
                                     false, Afk::RigidBodyType::STATIC,
-                                    Afk::Box(1.0f, 1.0f, 1.0f));
-
-  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[1], Transform{});
-  deathbox_transform.translation  = glm::vec3{-((terrain_width+1)/2.0), 0.0f, 0.0f};
-  deathbox_transform.scale       = glm::vec3(0.1f, 10000.0f, 10000.0f);
-  registry.assign<Afk::PhysicsBody>(deathboxes[1], deathboxes[1], &this->physics_body_system,
-                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
-                                    false, Afk::RigidBodyType::STATIC,
-                                    Afk::Box(1.0f, 1.0f, 1.0f));
-
-  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[2], Transform{});
-  deathbox_transform.translation  = glm::vec3{(terrain_width-1)/2.0, 0.0f, 0.0f};
-  deathbox_transform.scale       = glm::vec3(0.1f, 10000.0f, 10000.0f);
-  registry.assign<Afk::PhysicsBody>(deathboxes[2], deathboxes[2], &this->physics_body_system,
-                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
-                                    false, Afk::RigidBodyType::STATIC,
-                                    Afk::Box(1.0f, 1.0f, 1.0f));
-
-  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[3], Transform{});
-  deathbox_transform.translation  = glm::vec3{0.0f, 0.0f, -((terrain_width+1)/2.0)};
-  deathbox_transform.scale       = glm::vec3(10000.0f, 10000.0f, 0.1f);
-  registry.assign<Afk::PhysicsBody>(deathboxes[3], deathboxes[3], &this->physics_body_system,
-                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
-                                    false, Afk::RigidBodyType::STATIC,
-                                    Afk::Box(1.0f, 1.0f, 1.0f));
-
-  deathbox_transform = registry.assign<Afk::Transform>(deathboxes[4], Transform{});
-  deathbox_transform.translation  = glm::vec3{0.0f, 0.0f, (terrain_width-1)/2.0};
-  deathbox_transform.scale       = glm::vec3(10000.0f, 10000.0f, 0.1f);
-  registry.assign<Afk::PhysicsBody>(deathboxes[4], deathboxes[4], &this->physics_body_system,
-                                    deathbox_transform, 0.0f, 0.0f, 0.0f, 0.0f,
-                                    false, Afk::RigidBodyType::STATIC,
-                                    Afk::Box(1.0f, 1.0f, 1.0f));
+                                    Afk::Box(1.0f, 1.0f, 01.0f));
+  auto deathbox_tags = TagComponent{deathbox_entity};
+  deathbox_tags.tags.insert(TagComponent::Tag::DEATHZONE);
+  registry.assign<Afk::TagComponent>(deathbox_entity, deathbox_tags);
 
   this->difficulty_manager.init(AI::DifficultyManager::Difficulty::NORMAL);
 
