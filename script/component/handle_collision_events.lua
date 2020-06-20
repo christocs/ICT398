@@ -3,7 +3,7 @@ local health_script = this:entity():script_data("script/component/health.lua")
 local enemy_health_given = -100
 local prey_health_given = 100
 
-function handle_npc_collisions(evt)
+function collision_event_handler(evt)
     local c_event = evt:to_collision()
 
     if c_event.action.contact_start then
@@ -15,6 +15,10 @@ function handle_npc_collisions(evt)
             health_script.health = enemy_health_given
         end
 
+        if c_event.type.deathzone then
+            health_script.health = health_script.min_health
+        end
+
         if health_script.health > health_script.max_health then
             health_script.health = health_script.max_health
         elseif health_script.health < health_script.min_health then
@@ -23,4 +27,4 @@ function handle_npc_collisions(evt)
     end
 end
 
-this:register_event(event.collision, handle_npc_collisions)
+this:register_event(event.collision, collision_event_handler)

@@ -134,7 +134,7 @@ auto Engine::initialize() -> void {
   registry
       .assign<Afk::ScriptsComponent>(camera_entity, camera_entity, this->lua)
       .add_script("script/component/health.lua", &this->event_manager)
-      .add_script("script/component/handle_npc_collisions.lua", &this->event_manager)
+      .add_script("script/component/handle_collision_events.lua", &this->event_manager)
       .add_script("script/component/camera_keyboard_jetpack_control.lua", &this->event_manager)
       .add_script("script/component/camera_mouse_control.lua", &this->event_manager)
       .add_script("script/component/debug.lua", &this->event_manager);
@@ -167,6 +167,18 @@ auto Engine::initialize() -> void {
   registry.get<Afk::AI::AgentComponent>(agents[2]).flee(camera_entity, 10.f);
   const Afk::AI::Path path = {{2.8f, -9.f, 3.f}, {14.f, -8.f, 4.f}, {20.f, -10.f, -3.5f}};
   registry.get<Afk::AI::AgentComponent>(agents[3]).path(path, 2.f);
+
+  auto deathbox_entity           = registry.create();
+  auto deathbox_transform        = Transform{deathbox_entity};
+  deathbox_transform.translation = glm::vec3{0.0f, -30.0f, 0.0f};
+  deathbox_transform.scale       = glm::vec3(10000.0f, 0.1f, 10000.0f);
+  registry.assign<Afk::Transform>(deathbox_entity, deathbox_transform);
+  registry.assign<Afk::PhysicsBody>(
+      deathbox_entity, deathbox_entity, &this->physics_body_system, deathbox_transform, 0.0f, 0.0f,
+      0.0f, 0.0f, false, Afk::RigidBodyType::STATIC, Afk::Box(1.0f, 1.0f, 01.0f));
+  auto deathbox_tags = TagComponent{deathbox_entity};
+  deathbox_tags.tags.insert(TagComponent::Tag::DEATHZONE);
+  registry.assign<Afk::TagComponent>(deathbox_entity, deathbox_tags);
 
   this->difficulty_manager.init(AI::DifficultyManager::Difficulty::NORMAL);
 
