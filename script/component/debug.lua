@@ -6,7 +6,6 @@ function debug_stuff(evt)
 
     if key_evt.key == key.Num1 then
         engine.toggle_wireframe()
-        health_script.health = health_script.min_health
     end
     if key_evt.key == key.Tilde then
         ui.toggle_menu()
