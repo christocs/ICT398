@@ -1,7 +1,7 @@
 <div align=center>
-  <img src="https://i.imgur.com/cRIXVe7.png" alt="ict397-logo" width="200">
+  <img src="https://i.imgur.com/ltfhqiW.png" alt="ict397-logo" width="200">
   <p>
-    ICT397 Assignment
+    ICT398 Assignment
   </p>
 </div>
 
@@ -19,12 +19,12 @@
 ### macOS
 Install build tools:
 ```
-brew install cmake ninja llvm --with-toolchain
+brew install cmake ninja llvm
 ```
 
 Clone repository:
 ```
-git clone https://github.com/opeik/ICT397.git
+git clone https://github.com/opeik/ICT398.git
 git submodule update --init --recursive --depth 1
 ```
 
@@ -38,9 +38,7 @@ CXX=/usr/local/opt/llvm/bin/clang++ cmake -S . -B build/release -G Ninja -D CMAK
 
 Compile:
 ```
-cd build/debug && ninja && ./ict397
-# Or
-cd build/release && ninja && ./ict397
+cmake --build .
 ```
 
 ### Linux
@@ -58,7 +56,7 @@ sudo apt install clang-9 libstdc++-9-dev ninja-build libgl1-mesa-dev libx11-dev 
 
 Clone repository:
 ```
-git clone https://github.com/opeik/ICT397.git
+git clone https://github.com/opeik/ICT398.git
 git submodule update --init --recursive --depth 1
 ```
 
@@ -72,9 +70,7 @@ CXX=clang++ cmake -S . -B build/release -G Ninja -D CMAKE_BUILD_TYPE=RelWithDebI
 
 Compile:
 ```
-cd build/debug && ninja && ./ict397
-# Or
-cd build/release && ninja && ./ict397
+cmake --build .
 ```
 
 ### Windows
@@ -86,11 +82,11 @@ Enable developer mode:
 Install build tools:
 * [Visual Studio Community][2] (2019 or newer)
   * Install the "C++ CMake tools for Windows" component
-  * (Optional) Install the "Clang compiler for Windows" component
+  * Install the "Clang compiler for Windows" component
 
 Clone repository:
 ```
-git clone https://github.com/opeik/ICT397.git
+git clone https://github.com/opeik/ICT398.git
 git submodule update --init --recursive --depth 1
 ```
 
@@ -98,7 +94,7 @@ Compile:
 * Open Visual Studio
 * Select Open → CMake
 * Select `CMakeLists.txt`
-* Set the startup item to `ict397.exe`
+* Set the startup item to `afk.exe`
 
 ## Contributing
 Please see the [`CONTRIBUTING.md`](CONTRIBUTING.md) file for instructions.
