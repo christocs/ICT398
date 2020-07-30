@@ -37,15 +37,13 @@ namespace Afk {
     std::string ini_path    = {};
     Renderer::Window window = {};
 
-    bool show_stats              = true;
-    bool show_imgui              = false;
-    bool show_about              = false;
-    bool show_log                = false;
-    bool show_model_viewer       = false;
-    bool show_terrain_controller = false;
-    bool show_exit_screen        = false;
-    bool is_initialized          = false;
-    float scale                  = 1.5f;
+    bool show_stats        = true;
+    bool show_imgui        = false;
+    bool show_about        = false;
+    bool show_log          = false;
+    bool show_model_viewer = false;
+    bool is_initialized    = false;
+    float scale            = 1.5f;
 
     std::unordered_map<std::string, ImFont *> fonts = {};
 
@@ -54,7 +52,5 @@ namespace Afk {
     auto draw_about() -> void;
     auto draw_log() -> void;
     auto draw_model_viewer() -> void;
-    auto draw_terrain_controller() -> void;
-    auto draw_exit_screen() -> void;
   };
 }

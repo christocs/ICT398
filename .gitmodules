@@ -10,16 +10,9 @@
 [submodule "lib/cpplocate"]
 	path = lib/cpplocate
 	url = https://github.com/cginternals/cpplocate
-[submodule "lib/lua-bridge"]
-	path = lib/lua-bridge
-	url = https://github.com/vinniefalco/LuaBridge
 [submodule "lib/glm"]
 	path = lib/glm
 	url = https://github.com/g-truc/glm
-[submodule "lib/lua/src"]
-	path = lib/lua/lua
-	url = https://github.com/lua/lua
-	branch = v5.3
 [submodule "lib/glfw"]
 	path = lib/glfw
 	url = https://github.com/glfw/glfw
@@ -39,12 +32,3 @@
 [submodule "lib/ctti"]
 	path = lib/ctti
 	url = https://github.com/Manu343726/ctti
-[submodule "lib/fastnoise-simd/fastnoise-simd"]
-	path = lib/fastnoise-simd/fastnoise-simd
-	url = https://github.com/opeik/FastNoiseSIMD
-[submodule "lib/ozz"]
-	path = lib/ozz_animation
-	url = https://github.com/guillaumeblanc/ozz-animation.git
-[submodule "lib/recastnavigation"]
-	path = lib/recastnavigation
-	url = https://github.com/recastnavigation/recastnavigation.git

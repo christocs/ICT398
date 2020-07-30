@@ -3,14 +3,9 @@
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 
-#include "afk/ai/Crowds.hpp"
-#include "afk/ai/DifficultyManager.hpp"
-#include "afk/ai/NavMeshManager.hpp"
 #include "afk/event/EventManager.hpp"
-#include "afk/physics/PhysicsBodySystem.hpp"
 #include "afk/renderer/Camera.hpp"
 #include "afk/renderer/Renderer.hpp"
-#include "afk/terrain/TerrainManager.hpp"
 #include "afk/ui/Ui.hpp"
 #include "entt/entt.hpp"
 
@@ -20,19 +15,11 @@ namespace Afk {
   public:
     static constexpr const char *GAME_NAME = "ICT397";
 
-    Renderer renderer                   = {};
-    EventManager event_manager          = {};
-    Ui ui                               = {};
-    Camera camera                       = {};
-    TerrainManager terrain_manager      = {};
-    AI::NavMeshManager nav_mesh_manager = {};
-    AI::Crowds crowds                   = {};
-
-    entt::registry registry;
-    Afk::PhysicsBodySystem physics_body_system{glm::vec3(0.0f, -9.81f, 0.0f)};
-    lua_State *lua = nullptr;
-
-    GameObject camera_entity = registry.create();
+    Renderer renderer          = {};
+    EventManager event_manager = {};
+    Ui ui                      = {};
+    Camera camera              = {};
+    entt::registry registry    = entt::registry{};
 
     Engine()               = default;
     ~Engine()              = default;
@@ -51,8 +38,6 @@ namespace Afk {
     auto static get_time() -> float;
     auto get_delta_time() -> float;
     auto get_is_running() const -> bool;
-
-    AI::DifficultyManager difficulty_manager = {};
 
   private:
     bool is_initialized = false;

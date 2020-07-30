@@ -14,6 +14,6 @@ namespace Afk {
     class Renderer;
   }
 
-  using Renderer = OpenGl::Renderer;
+  using Renderer            = OpenGl::Renderer;
   using ShaderProgramHandle = OpenGl::ShaderProgramHandle;
 }

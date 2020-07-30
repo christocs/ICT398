@@ -37,7 +37,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  ${PROJECT_BINARY_DIR}/out)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE  ${PROJECT_BINARY_DIR}/out/lib)
 
 # Define the executable.
-add_executable(${PROJECT_NAME} src/afk/ai/NavMeshManager.cpp src/afk/ai/NavMeshManager.hpp)
+add_executable(${PROJECT_NAME})
 
 # Set C++ standard and output directory.
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -100,18 +100,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     assimp
     reactphysics3d
     cpplocate
-    lua
-    LuaBridge
     glm
     stb
     imgui
     frozen::frozen
     ctti
-    fastnoise-simd
-    ozz_animation
-    Recast
-    Detour
-    DetourCrowd
 )
 
 # Symlink resources to the binary location.
@@ -126,14 +119,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E create_symlink
     ${CMAKE_SOURCE_DIR}/cfg $<TARGET_FILE_DIR:${PROJECT_NAME}>/cfg)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-    ${CMAKE_SOURCE_DIR}/asset $<TARGET_FILE_DIR:${PROJECT_NAME}>/asset)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-    ${CMAKE_SOURCE_DIR}/script $<TARGET_FILE_DIR:${PROJECT_NAME}>/script)
 
 # Setup git header.
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/cmake-git-version-tracking)

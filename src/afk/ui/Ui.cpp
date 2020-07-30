@@ -12,7 +12,6 @@
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
 #include "afk/renderer/Renderer.hpp"
-#include "afk/ai/DifficultyManager.hpp"
 #include "afk/ui/Unicode.hpp"
 #include "cmake/Git.hpp"
 #include "cmake/Version.hpp"
@@ -42,6 +41,8 @@ auto Ui::initialize(Renderer::Window _window) -> void {
   ImGui::StyleColorsDark();
   ImGui_ImplGlfw_InitForOpenGL(this->window, true);
   ImGui_ImplOpenGL3_Init("#version 410");
+
+  Afk::Io::log << Afk::get_absolute_path("res/font/NotoSans-Regular.ttf").string() << '\n';
 
   auto *noto_sans = io.Fonts->AddFontFromFileTTF(
       Afk::get_absolute_path("res/font/NotoSans-Regular.ttf").string().c_str(),
@@ -74,8 +75,6 @@ auto Ui::draw() -> void {
   this->draw_about();
   this->draw_log();
   this->draw_model_viewer();
-  this->draw_terrain_controller();
-  this->draw_exit_screen();
 
   if (this->show_imgui) {
     ImGui::ShowDemoWindow(&this->show_imgui);
@@ -101,7 +100,7 @@ auto Ui::draw_about() -> void {
 }
 
 auto Ui::draw_menu_bar() -> void {
-  // auto &afk = Engine::get();
+  auto &afk = Engine::get();
 
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("Tools")) {
@@ -110,28 +109,6 @@ auto Ui::draw_menu_bar() -> void {
       }
       if (ImGui::MenuItem("Model viewer")) {
         this->show_model_viewer = true;
-      }
-      if (ImGui::MenuItem("Terrain controller")) {
-        this->show_terrain_controller = true;
-      }
-      ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("Difficulty")) {
-      if (ImGui::MenuItem("Easy", nullptr, Afk::Engine::get().difficulty_manager.get_difficulty() == AI::DifficultyManager::Difficulty::EASY)) {
-        if (Afk::Engine::get().difficulty_manager.get_difficulty() != AI::DifficultyManager::Difficulty::EASY) {
-          Afk::Engine::get().difficulty_manager.set_difficulty(AI::DifficultyManager::Difficulty::EASY);
-        }
-      }
-      if (ImGui::MenuItem("Normal", nullptr, Afk::Engine::get().difficulty_manager.get_difficulty() == AI::DifficultyManager::Difficulty::NORMAL)) {
-        if (Afk::Engine::get().difficulty_manager.get_difficulty() != AI::DifficultyManager::Difficulty::NORMAL) {
-          Afk::Engine::get().difficulty_manager.set_difficulty(AI::DifficultyManager::Difficulty::NORMAL);
-        }
-      }
-      if (ImGui::MenuItem("Hard", nullptr, Afk::Engine::get().difficulty_manager.get_difficulty() == AI::DifficultyManager::Difficulty::HARD)) {
-        if (Afk::Engine::get().difficulty_manager.get_difficulty() != AI::DifficultyManager::Difficulty::HARD) {
-          Afk::Engine::get().difficulty_manager.set_difficulty(AI::DifficultyManager::Difficulty::HARD);
-        }
       }
       ImGui::EndMenu();
     }
@@ -148,8 +125,7 @@ auto Ui::draw_menu_bar() -> void {
     }
 
     if (ImGui::MenuItem("Exit")) {
-      // afk.exit();
-      this->show_exit_screen = true;
+      afk.exit();
     }
 
     ImGui::EndMainMenuBar();
@@ -281,35 +257,3 @@ auto Ui::draw_model_viewer() -> void {
   ImGui::End();
 }
 
-auto Ui::draw_terrain_controller() -> void {
-  if (!this->show_terrain_controller) {
-    return;
-  }
-
-  ImGui::SetNextWindowSize({300, 150});
-
-  if (ImGui::Begin("Terrain controller", &this->show_terrain_controller)) {
-    // ImGui::SliderFloat("slider float", &f1, 0.0f, 1.0f, "ratio = %.3f");
-  }
-  ImGui::End();
-}
-
-auto Ui::draw_exit_screen() -> void {
-  if (!this->show_exit_screen) {
-    return;
-  }
-
-  auto &afk          = Engine::get();
-  const auto texture = afk.renderer.get_texture("res/ui/exit.png");
-
-  ImGui::SetNextWindowSize({525, 600});
-  ImGui::Begin("Exit screen", &this->show_exit_screen);
-  ImGui::Image(reinterpret_cast<void *>(texture.id),
-               {static_cast<float>(texture.width), static_cast<float>(texture.height)});
-
-  if (ImGui::Button("Exit")) {
-    afk.exit();
-  }
-
-  ImGui::End();
-}
