@@ -6,6 +6,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/render/Model.hpp"
 #include "afk/render/Texture.hpp"
 

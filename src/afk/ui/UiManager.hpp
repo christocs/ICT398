@@ -5,6 +5,7 @@
 
 #include <imgui/imgui.h>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/render/Renderer.hpp"
 #include "afk/ui/Log.hpp"
 
@@ -19,7 +20,7 @@ namespace afk {
       /**
        * The default font size, in pixels.
        */
-      static constexpr auto FONT_SIZE = 19.0f;
+      static constexpr f32 FONT_SIZE = 19.0f;
 
       ~uiManager();
       uiManager()                  = default;
@@ -47,7 +48,7 @@ namespace afk {
       bool show_log          = false;
       bool show_model_viewer = false;
       bool is_initialized    = false;
-      float scale            = 1.5f;
+      f32 scale              = 1.5f;
 
       std::unordered_map<std::string, ImFont *> fonts = {};
 

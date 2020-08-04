@@ -4,24 +4,26 @@
 #include <string>
 #include <variant>
 
+#include "afk/NumericTypes.hpp"
+
 namespace afk {
   namespace event {
     struct Event {
       struct MouseMove {
-        double x = {};
-        double y = {};
+        f64 x = {};
+        f64 y = {};
       };
 
       struct MouseButton {
-        int button   = {};
+        i32 button   = {};
         bool control = {};
         bool alt     = {};
         bool shift   = {};
       };
 
       struct Key {
-        int key      = {};
-        int scancode = {};
+        i32 key      = {};
+        i32 scancode = {};
         bool control = {};
         bool alt     = {};
         bool shift   = {};
@@ -32,12 +34,12 @@ namespace afk {
       };
 
       struct MouseScroll {
-        double x = {};
-        double y = {};
+        f64 x = {};
+        f64 y = {};
       };
 
       struct Update {
-        float dt = {};
+        f32 dt = {};
       };
 
       struct render {};

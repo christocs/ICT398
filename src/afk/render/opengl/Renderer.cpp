@@ -20,6 +20,7 @@
 #include <GLFW/glfw3.h>
 
 #include "afk/Afk.hpp"
+#include "afk/NumericTypes.hpp"
 #include "afk/component/AnimComponent.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
@@ -79,7 +80,7 @@ constexpr auto gl_shader_types = frozen::make_unordered_map<Shader::Type, GLenum
 
 // FIXME: Move someone more appropriate.
 static auto resize_window_callback([[maybe_unused]] GLFWwindow *window,
-                                   int width, int height) -> void {
+                                   i32 width, i32 height) -> void {
   auto &afk = Engine::get();
   afk.renderer.set_viewport(0, 0, width, height);
 }
@@ -158,7 +159,7 @@ auto renderer::clear_screen(vec4 clear_color) const -> void {
   this->set_option(GL_DEPTH_TEST, true);
 }
 
-auto renderer::set_viewport(int x, int y, int width, int height) const -> void {
+auto renderer::set_viewport(int x, i32 y, i32 width, i32 height) const -> void {
   glViewport(x, y, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 }
 
@@ -537,13 +538,13 @@ auto renderer::set_uniform(const ShaderProgramHandle &program,
 }
 
 auto renderer::set_uniform(const ShaderProgramHandle &program,
-                           const string &name, int value) const -> void {
+                           const string &name, i32 value) const -> void {
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniform1i(glGetUniformLocation(program.id, name.c_str()), static_cast<GLint>(value));
 }
 
 auto renderer::set_uniform(const ShaderProgramHandle &program,
-                           const string &name, float value) const -> void {
+                           const string &name, f32 value) const -> void {
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniform1f(glGetUniformLocation(program.id, name.c_str()), static_cast<GLfloat>(value));
 }

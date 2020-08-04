@@ -1,5 +1,7 @@
 #include "afk/ui/Log.hpp"
 
+#include "afk/NumericTypes.hpp"
+
 using afk::ui::Log;
 
 Log::Log() {
@@ -65,7 +67,7 @@ auto Log::draw(const char *title, bool *open) -> void {
   const auto *buf     = this->buffer.begin();
   const auto *buf_end = this->buffer.end();
   if (this->filter.IsActive()) {
-    for (int line_no = 0; line_no < this->line_offsets.Size; line_no++) {
+    for (auto line_no = 0; line_no < this->line_offsets.Size; line_no++) {
       const auto *line_start = buf + this->line_offsets[line_no];
       const auto *line_end   = (line_no + 1 < this->line_offsets.Size)
                                  ? (buf + this->line_offsets[line_no + 1] - 1)
@@ -80,7 +82,7 @@ auto Log::draw(const char *title, bool *open) -> void {
 
     clipper.Begin(this->line_offsets.Size);
     while (clipper.Step()) {
-      for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++) {
+      for (auto line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++) {
         const auto *line_start = buf + this->line_offsets[line_no];
         const auto *line_end   = (line_no + 1 < this->line_offsets.Size)
                                    ? (buf + this->line_offsets[line_no + 1] - 1)

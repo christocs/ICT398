@@ -3,6 +3,7 @@
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/event/EventManager.hpp"
 #include "afk/render/Camera.hpp"
 #include "afk/render/Renderer.hpp"
@@ -46,8 +47,8 @@ namespace afk {
     auto move_mouse(event::Event event) -> void;
     auto move_keyboard(event::Event event) -> void;
 
-    auto static get_time() -> float;
-    auto get_delta_time() -> float;
+    auto static get_time() -> f32;
+    auto get_delta_time() -> f32;
     auto get_is_running() const -> bool;
 
   private:
@@ -56,8 +57,8 @@ namespace afk {
     /** Is the engine running? */
     bool is_running = true;
     /** The number of frames rendered since the engine started. */
-    int frame_count = {};
+    i32 frame_count = {};
     /** The time, in seconds, since the last update. */
-    float last_update = {};
+    f32 last_update = {};
   };
 }

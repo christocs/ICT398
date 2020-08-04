@@ -5,6 +5,7 @@
 
 #include <glm/glm.hpp>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/physics/Transform.hpp"
 
 namespace afk {
@@ -20,8 +21,8 @@ namespace afk {
       using Channels = std::vector<Channel>;
 
       std::string name  = {};
-      float duration    = {};
-      float frame_rate  = {};
+      f32 duration      = {};
+      f32 frame_rate    = {};
       Channels channels = {};
     };
   }

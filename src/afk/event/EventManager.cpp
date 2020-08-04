@@ -79,8 +79,8 @@ auto eventManager::setup_callbacks(Window window) -> void {
   glfwSetErrorCallback(eventManager::error_callback);
 }
 
-auto eventManager::key_callback([[maybe_unused]] GLFWwindow *window, int key,
-                                int scancode, int action, int mods) -> void {
+auto eventManager::key_callback([[maybe_unused]] GLFWwindow *window, i32 key,
+                                i32 scancode, i32 action, i32 mods) -> void {
   auto &afk = Engine::get();
 
   const auto control = (mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL;
@@ -130,14 +130,14 @@ auto eventManager::char_callback([[maybe_unused]] GLFWwindow *window, uint32_t c
 }
 
 auto eventManager::mouse_pos_callback([[maybe_unused]] GLFWwindow *window,
-                                      double x, double y) -> void {
+                                      f64 x, f64 y) -> void {
   auto &afk = Engine::get();
 
   afk.event_manager.events.push({Event::MouseMove{x, y}, Type::MouseMove});
 }
 
-auto eventManager::mouse_press_callback([[maybe_unused]] GLFWwindow *window, int button,
-                                        int action, [[maybe_unused]] int mods) -> void {
+auto eventManager::mouse_press_callback([[maybe_unused]] GLFWwindow *window, i32 button,
+                                        i32 action, [[maybe_unused]] i32 mods) -> void {
   auto &afk = Engine::get();
 
   const auto control = (mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL;
@@ -149,12 +149,12 @@ auto eventManager::mouse_press_callback([[maybe_unused]] GLFWwindow *window, int
 }
 
 auto eventManager::mouse_scroll_callback([[maybe_unused]] GLFWwindow *window,
-                                         double dx, double dy) -> void {
+                                         f64 dx, f64 dy) -> void {
   auto &afk = Engine::get();
 
   afk.event_manager.events.push({Event::MouseScroll{dx, dy}, Type::MouseScroll});
 }
 
-auto eventManager::error_callback([[maybe_unused]] int error, const char *msg) -> void {
+auto eventManager::error_callback([[maybe_unused]] i32 error, const char *msg) -> void {
   std::cerr << "glfw error: " << msg << '\n';
 }

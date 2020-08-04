@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/component/BaseComponent.hpp"
 
 namespace afk {
@@ -15,7 +16,7 @@ namespace afk {
     enum class Status { Paused, Playing, Stopped };
 
     AnimComponent(GameObject _owner, AnimComponent::Status _status,
-                  const std::string &_name, float _time);
+                  const std::string &_name, f32 _time);
     /**
      * Current anim status
      */
@@ -27,6 +28,6 @@ namespace afk {
     /**
      * Animation time
      */
-    float time = {};
+    f32 time = {};
   };
 }

@@ -53,8 +53,8 @@ auto Engine::move_mouse(Event event) -> void {
   static auto last_y      = 0.0f;
   static auto first_frame = true;
 
-  const auto dx = static_cast<float>(data.x) - last_x;
-  const auto dy = static_cast<float>(data.y) - last_y;
+  const auto dx = static_cast<f32>(data.x) - last_x;
+  const auto dy = static_cast<f32>(data.y) - last_y;
 
   if (!first_frame && !this->ui_manager.show_menu) {
     this->camera.handle_mouse(dx, dy);
@@ -62,8 +62,8 @@ auto Engine::move_mouse(Event event) -> void {
     first_frame = false;
   }
 
-  last_x = static_cast<float>(data.x);
-  last_y = static_cast<float>(data.y);
+  last_x = static_cast<f32>(data.x);
+  last_y = static_cast<f32>(data.y);
 }
 
 auto Engine::move_keyboard(Event event) -> void {
@@ -143,8 +143,8 @@ auto Engine::update() -> void {
  *
  * @return Returns the current time in seconds.
  */
-auto Engine::get_time() -> float {
-  return static_cast<float>(glfwGetTime());
+auto Engine::get_time() -> f32 {
+  return static_cast<f32>(glfwGetTime());
 }
 
 /**
@@ -152,7 +152,7 @@ auto Engine::get_time() -> float {
  *
  * @return Returns the delta time of the last update in seconds.
  */
-auto Engine::get_delta_time() -> float {
+auto Engine::get_delta_time() -> f32 {
   return this->get_time() - this->last_update;
 }
 

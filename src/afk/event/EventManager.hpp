@@ -73,13 +73,13 @@ namespace afk {
       };
 
     private:
-      static auto key_callback(GLFWwindow *window, int key, int scancode,
-                               int action, int mods) -> void;
+      static auto key_callback(GLFWwindow *window, i32 key, i32 scancode,
+                               i32 action, i32 mods) -> void;
       static auto char_callback(GLFWwindow *window, uint32_t codepoint) -> void;
-      static auto mouse_pos_callback(GLFWwindow *window, double x, double y) -> void;
-      static auto mouse_press_callback(GLFWwindow *window, int button,
-                                       int action, int mods) -> void;
-      static auto mouse_scroll_callback(GLFWwindow *window, double dx, double dy) -> void;
+      static auto mouse_pos_callback(GLFWwindow *window, f64 x, f64 y) -> void;
+      static auto mouse_press_callback(GLFWwindow *window, i32 button,
+                                       i32 action, i32 mods) -> void;
+      static auto mouse_scroll_callback(GLFWwindow *window, f64 dx, f64 dy) -> void;
       static auto error_callback(int error, const char *msg) -> void;
 
       bool is_initialized      = false;

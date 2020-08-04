@@ -12,9 +12,9 @@ namespace afk {
 
         Type type    = {};
         GLuint id    = {};
-        int width    = {};
-        int height   = {};
-        int channels = 4;
+        i32 width    = {};
+        i32 height   = {};
+        i32 channels = 4;
       };
     }
   }

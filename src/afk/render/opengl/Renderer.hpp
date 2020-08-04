@@ -15,6 +15,7 @@
 // Must be included after GLAD.
 #include <GLFW/glfw3.h>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/render/Animation.hpp"
 #include "afk/render/Model.hpp"
 #include "afk/render/Shader.hpp"
@@ -91,7 +92,7 @@ namespace afk {
         auto clear_screen(glm::vec4 clear_color = {255.0f, 255.0f, 255.0f, 1.0f}) const
             -> void;
         auto swap_buffers() -> void;
-        auto set_viewport(int x, int y, int width, int height) const -> void;
+        auto set_viewport(int x, i32 y, i32 width, i32 height) const -> void;
         auto draw() -> void;
         auto queue_draw(DrawCommand command) -> void;
         auto draw_model(const ModelHandle &model, const ShaderProgramHandle &shader_program,
@@ -117,9 +118,9 @@ namespace afk {
         auto set_uniform(const ShaderProgramHandle &program,
                          const std::string &name, bool value) const -> void;
         auto set_uniform(const ShaderProgramHandle &program,
-                         const std::string &name, int value) const -> void;
+                         const std::string &name, i32 value) const -> void;
         auto set_uniform(const ShaderProgramHandle &program,
-                         const std::string &name, float value) const -> void;
+                         const std::string &name, f32 value) const -> void;
         auto set_uniform(const ShaderProgramHandle &program,
                          const std::string &name, glm::vec3 value) const -> void;
         auto set_uniform(const ShaderProgramHandle &program,
@@ -136,8 +137,8 @@ namespace afk {
         auto get_shader_programs() const -> const ShaderPrograms &;
 
       private:
-        static constexpr int opengl_major_version = 4;
-        static constexpr int opengl_minor_version = 1;
+        static constexpr i32 opengl_major_version = 4;
+        static constexpr i32 opengl_minor_version = 1;
         static constexpr bool enable_vsync        = true;
 
         bool is_initialized    = false;

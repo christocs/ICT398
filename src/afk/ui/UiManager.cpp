@@ -159,13 +159,13 @@ auto uiManager::draw_stats() -> void {
     const auto pos    = afk.camera.get_position();
     const auto angles = afk.camera.get_angles();
 
-    ImGui::Text("%.1f fps (%.4f ms)", static_cast<double>(io.Framerate),
-                static_cast<double>(io.Framerate) / 1000.0);
+    ImGui::Text("%.1f fps (%.4f ms)", static_cast<f64>(io.Framerate),
+                static_cast<f64>(io.Framerate) / 1000.0);
     ImGui::Separator();
-    ImGui::Text("Position {%.1f, %.1f, %.1f}", static_cast<double>(pos.x),
-                static_cast<double>(pos.y), static_cast<double>(pos.z));
-    ImGui::Text("Angles   {%.1f, %.1f}", static_cast<double>(angles.x),
-                static_cast<double>(angles.y));
+    ImGui::Text("Position {%.1f, %.1f, %.1f}", static_cast<f64>(pos.x),
+                static_cast<f64>(pos.y), static_cast<f64>(pos.z));
+    ImGui::Text("Angles   {%.1f, %.1f}", static_cast<f64>(angles.x),
+                static_cast<f64>(angles.y));
 
     if (ImGui::BeginPopupContextWindow()) {
       if (ImGui::MenuItem("Custom", nullptr, corner == -1)) {

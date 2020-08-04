@@ -2,14 +2,16 @@
 
 #include <glm/glm.hpp>
 
+#include "afk/NumericTypes.hpp"
+
 namespace afk {
   namespace render {
     class Camera {
     public:
       static constexpr glm::vec3 WORLD_UP = {0.0f, 1.0f, 0.0f};
       enum class Movement { Forward, Backward, Left, Right };
-      auto handle_mouse(float deltaX, float deltaY) -> void;
-      auto handle_key(Movement movement, float deltaTime) -> void;
+      auto handle_mouse(f32 deltaX, f32 deltaY) -> void;
+      auto handle_key(Movement movement, f32 deltaTime) -> void;
 
       /**
        * Get the current view matrix
@@ -18,7 +20,7 @@ namespace afk {
       /**
        * Get projection matrix
        */
-      auto get_projection_matrix(int width, int height) const -> glm::mat4;
+      auto get_projection_matrix(int width, i32 height) const -> glm::mat4;
       /**
        * Current camera position
        */
@@ -49,11 +51,11 @@ namespace afk {
       auto get_up() const -> glm::vec3;
 
     private:
-      float fov         = 75.0f;
-      float near        = 0.1f;
-      float far         = 1000.0f;
-      float speed       = 10.0f;
-      float sensitivity = 0.1f;
+      f32 fov         = 75.0f;
+      f32 near        = 0.1f;
+      f32 far         = 1000.0f;
+      f32 speed       = 10.0f;
+      f32 sensitivity = 0.1f;
 
       glm::vec2 angles   = {};
       glm::vec3 position = {};

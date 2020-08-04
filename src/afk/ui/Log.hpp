@@ -2,6 +2,8 @@
 
 #include <imgui/imgui.h>
 
+#include "afk/NumericTypes.hpp"
+
 namespace afk {
   namespace ui {
     /**
@@ -18,7 +20,7 @@ namespace afk {
     private:
       ImGuiTextBuffer buffer     = {};
       ImGuiTextFilter filter     = {};
-      ImVector<int> line_offsets = {};
+      ImVector<i32> line_offsets = {};
       bool auto_scroll           = true;
     };
   }

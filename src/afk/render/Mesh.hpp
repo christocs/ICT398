@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/physics/Transform.hpp"
 #include "afk/render/Bone.hpp"
 #include "afk/render/Index.hpp"
@@ -28,9 +29,9 @@ namespace afk {
       glm::vec3 tangent                    = {};
       glm::vec3 bitangent                  = {};
       Index bone_indices[MAX_VERTEX_BONES] = {};
-      float bone_weights[MAX_VERTEX_BONES] = {};
+      f32 bone_weights[MAX_VERTEX_BONES]   = {};
 
-      auto push_back_bone(Index bone_index, float bone_weight) -> void;
+      auto push_back_bone(Index bone_index, f32 bone_weight) -> void;
     };
     /**
      * Mesh

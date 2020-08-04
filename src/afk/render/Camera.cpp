@@ -7,13 +7,15 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
+#include "afk/NumericTypes.hpp"
+
 using glm::mat4;
 using glm::vec2;
 using glm::vec3;
 
 using afk::render::Camera;
 
-auto Camera::handle_mouse(float dx, float dy) -> void {
+auto Camera::handle_mouse(f32 dx, f32 dy) -> void {
   constexpr auto max_yaw = 89.0f;
 
   this->angles.x += dx * this->sensitivity;
@@ -21,7 +23,7 @@ auto Camera::handle_mouse(float dx, float dy) -> void {
   this->angles.y = std::clamp(this->angles.y, -max_yaw, max_yaw);
 }
 
-auto Camera::handle_key(Movement movement, float dt) -> void {
+auto Camera::handle_key(Movement movement, f32 dt) -> void {
   const auto velocity = this->speed * dt;
 
   switch (movement) {
@@ -44,9 +46,9 @@ auto Camera::get_view_matrix() const -> mat4 {
   return glm::lookAt(this->position, this->position + this->get_front(), this->get_up());
 }
 
-auto Camera::get_projection_matrix(int width, int height) const -> mat4 {
-  const auto w      = static_cast<float>(width);
-  const auto h      = static_cast<float>(height);
+auto Camera::get_projection_matrix(int width, i32 height) const -> mat4 {
+  const auto w      = static_cast<f32>(width);
+  const auto h      = static_cast<f32>(height);
   const auto aspect = h > 0 ? w / h : 0;
 
   return glm::perspective(glm::radians(this->fov), aspect, this->near, this->far);

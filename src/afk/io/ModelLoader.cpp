@@ -17,6 +17,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
@@ -60,18 +61,18 @@ constexpr auto assimp_texture_types =
         {Texture::Type::Height, aiTextureType_HEIGHT},
     });
 
-static auto to_glm(aiMatrix4x4t<float> m) -> mat4 {
+static auto to_glm(aiMatrix4x4t<f32> m) -> mat4 {
   return mat4{m.a1, m.b1, m.c1, m.d1,  //
               m.a2, m.b2, m.c2, m.d2,  //
               m.a3, m.b3, m.c3, m.d3,  //
               m.a4, m.b4, m.c4, m.d4}; //
 }
 
-static auto to_glm(aiVector3t<float> v) -> vec3 {
+static auto to_glm(aiVector3t<f32> v) -> vec3 {
   return vec3{v.x, v.y, v.z};
 }
 
-static auto to_glm(aiQuaterniont<float> q) -> quat {
+static auto to_glm(aiQuaterniont<f32> q) -> quat {
   return quat{q.w, q.x, q.y, q.z};
 }
 
@@ -213,8 +214,8 @@ auto ModelLoader::get_animations(const aiScene *scene) -> Model::Animations {
 
     auto animation       = Animation{};
     animation.name       = string{assimp_animation.mName.data};
-    animation.frame_rate = static_cast<float>(assimp_animation.mTicksPerSecond);
-    animation.duration   = static_cast<float>(assimp_animation.mDuration);
+    animation.frame_rate = static_cast<f32>(assimp_animation.mTicksPerSecond);
+    animation.duration   = static_cast<f32>(assimp_animation.mDuration);
 
     for (auto j = size_t{0}; j < assimp_animation.mNumChannels; ++j) {
       const auto &assimp_channel = *assimp_animation.mChannels[j];

@@ -1,10 +1,11 @@
 #include "afk/render/Mesh.hpp"
 
+#include "afk/NumericTypes.hpp"
 #include "afk/debug/Assert.hpp"
 
 using afk::render::Vertex;
 
-auto Vertex::push_back_bone(Index bone_index, float bone_weight) -> void {
+auto Vertex::push_back_bone(Index bone_index, f32 bone_weight) -> void {
   auto found_empty_element = false;
 
   for (auto i = size_t{0}; i < Vertex::MAX_VERTEX_BONES; ++i) {
