@@ -1,30 +1,45 @@
 [submodule "lib/entt"]
 	path = lib/entt
 	url = https://github.com/skypjack/entt
+	shallow = true
 [submodule "lib/assimp"]
 	path = lib/assimp
 	url = https://github.com/assimp/assimp
+	shallow = true
 [submodule "lib/reactphysics3d"]
 	path = lib/reactphysics3d
 	url = https://github.com/DanielChappuis/reactphysics3d
+	shallow = true
 [submodule "lib/cpplocate"]
 	path = lib/cpplocate
 	url = https://github.com/cginternals/cpplocate
+	shallow = true
 [submodule "lib/glm"]
 	path = lib/glm
 	url = https://github.com/g-truc/glm
+	shallow = true
 [submodule "lib/stb/stb"]
 	path = lib/stb/stb
 	url = https://github.com/nothings/stb
+	shallow = true
 [submodule "lib/imgui"]
 	path = lib/imgui/imgui
 	url = https://github.com/ocornut/imgui
+	shallow = true
 [submodule "cmake/cmake-git-version-tracking"]
 	path = cmake/cmake-git-version-tracking
 	url = https://github.com/andrew-hardin/cmake-git-version-tracking
+	shallow = true
 [submodule "lib/frozen"]
 	path = lib/frozen
 	url = https://github.com/serge-sans-paille/frozen
+	shallow = true
 [submodule "lib/ctti"]
 	path = lib/ctti
 	url = https://github.com/Manu343726/ctti
+	shallow = true
+[submodule "lib/glfw"]
+	path = lib/glfw
+	url = https://github.com/glfw/glfw
+	branch = 3.3-stable
+	shallow = true
