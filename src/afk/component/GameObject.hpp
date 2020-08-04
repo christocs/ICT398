@@ -2,6 +2,6 @@
 
 #include <entt/entt.hpp>
 
-namespace Afk {
+namespace afk {
   using GameObject = entt::entity;
 }

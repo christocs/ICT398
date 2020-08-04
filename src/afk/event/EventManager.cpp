@@ -10,34 +10,40 @@
 
 #include <GLFW/glfw3.h>
 
-using Afk::EventManager;
-using Action = Afk::Event::Action;
+using afk::event::Event;
+using afk::event::eventManager;
+using Window = afk::render::renderer::Window;
+using Action = afk::event::Event::Action;
+using Type   = afk::event::Event::Type;
 
-std::size_t EventManager::Callback::index = 0;
-EventManager::Callback::Callback(std::function<void(Afk::Event)> fn)
+std::size_t eventManager::Callback::index = 0;
+eventManager::Callback::Callback(std::function<void(Event)> fn)
   : func(fn), id(index++) {}
-auto EventManager::Callback::operator==(const EventManager::Callback &rhs) const -> bool {
+auto eventManager::Callback::operator==(const eventManager::Callback &rhs) const -> bool {
   return this->id == rhs.id;
 }
-auto EventManager::Callback::operator()(const Afk::Event &arg) const -> void {
+auto eventManager::Callback::operator()(const Event &arg) const -> void {
   this->func(arg);
 }
 
-auto EventManager::initialize(Renderer::Window window) -> void {
-  afk_assert(!this->is_initialized, "Event manager already initialized");
+auto eventManager::initialize(Window window) -> void {
+  afk_assert(!this->is_initialized, "event manager already initialized");
   this->setup_callbacks(window);
   this->is_initialized = true;
 }
-auto EventManager::pump_render() -> void {
-  constexpr auto render_event = Event{Event::Render{}, Event::Type::Render};
-  for (const auto &event_callback : this->callbacks[Event::Type::Render]) {
+auto eventManager::pump_render() -> void {
+  const auto render_event = Event{Event::render{}, Type::render};
+
+  for (const auto &event_callback : this->callbacks[Type::render]) {
     event_callback(render_event);
   }
 }
 
-auto EventManager::pump_events() -> void {
+auto eventManager::pump_events() -> void {
+  auto &afk = Engine::get();
+
   glfwPollEvents();
-  this->events.push({Event::Update{Afk::Engine::get().get_delta_time()}, Event::Type::Update});
+  this->events.push({Event::Update{afk.get_delta_time()}, Type::Update});
 
   while (this->events.size() > 0) {
     const auto &current_event = this->events.front();
@@ -50,29 +56,30 @@ auto EventManager::pump_events() -> void {
   }
 }
 
-auto EventManager::queue_event(Event event) -> void {
+auto eventManager::push_event(Event event) -> void {
   this->events.push(event);
 }
 
-auto EventManager::register_event(Event::Type type, Callback callback) -> void {
+auto eventManager::register_event(Type type, Callback callback) -> void {
   this->callbacks[type].push_back(callback);
 }
-auto EventManager::deregister_event(Event::Type type, Callback callback) -> void {
-  auto &typ_callbacks = this->callbacks[type];
-  auto callback_pos = std::find(typ_callbacks.begin(), typ_callbacks.end(), callback);
-  typ_callbacks.erase(callback_pos);
+
+auto eventManager::deregister_event(Type type, Callback callback) -> void {
+  auto &type_callbacks = this->callbacks[type];
+  auto callback_pos = std::find(type_callbacks.begin(), type_callbacks.end(), callback);
+  type_callbacks.erase(callback_pos);
 }
 
-auto EventManager::setup_callbacks(Renderer::Window window) -> void {
-  glfwSetMouseButtonCallback(window, EventManager::mouse_press_callback);
-  glfwSetScrollCallback(window, EventManager::mouse_scroll_callback);
-  glfwSetKeyCallback(window, EventManager::key_callback);
-  glfwSetCharCallback(window, EventManager::char_callback);
-  glfwSetCursorPosCallback(window, EventManager::mouse_pos_callback);
-  glfwSetErrorCallback(EventManager::error_callback);
+auto eventManager::setup_callbacks(Window window) -> void {
+  glfwSetMouseButtonCallback(window, eventManager::mouse_press_callback);
+  glfwSetScrollCallback(window, eventManager::mouse_scroll_callback);
+  glfwSetKeyCallback(window, eventManager::key_callback);
+  glfwSetCharCallback(window, eventManager::char_callback);
+  glfwSetCursorPosCallback(window, eventManager::mouse_pos_callback);
+  glfwSetErrorCallback(eventManager::error_callback);
 }
 
-auto EventManager::key_callback([[maybe_unused]] GLFWwindow *window, int key,
+auto eventManager::key_callback([[maybe_unused]] GLFWwindow *window, int key,
                                 int scancode, int action, int mods) -> void {
   auto &afk = Engine::get();
 
@@ -80,12 +87,12 @@ auto EventManager::key_callback([[maybe_unused]] GLFWwindow *window, int key,
   const auto alt     = (mods & GLFW_MOD_ALT) == GLFW_MOD_ALT;
   const auto shift   = (mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT;
 
-  auto type = Event::Type{};
+  auto type = Type{};
 
   switch (action) {
-    case GLFW_PRESS: type = Event::Type::KeyDown; break;
-    case GLFW_RELEASE: type = Event::Type::KeyUp; break;
-    case GLFW_REPEAT: type = Event::Type::KeyRepeat; break;
+    case GLFW_PRESS: type = Type::KeyDown; break;
+    case GLFW_RELEASE: type = Type::KeyUp; break;
+    case GLFW_REPEAT: type = Type::KeyRepeat; break;
   }
 
   afk.event_manager.events.push({Event::Key{key, scancode, control, alt, shift}, type});
@@ -115,34 +122,39 @@ auto EventManager::key_callback([[maybe_unused]] GLFWwindow *window, int key,
   }
 }
 
-auto EventManager::char_callback([[maybe_unused]] GLFWwindow *window, uint32_t codepoint)
+auto eventManager::char_callback([[maybe_unused]] GLFWwindow *window, uint32_t codepoint)
     -> void {
-  Afk::Engine::get().event_manager.events.push({Event::Text{codepoint}, Event::Type::TextEnter});
+  auto &afk = Engine::get();
+
+  afk.event_manager.events.push({Event::Text{codepoint}, Type::TextEnter});
 }
 
-auto EventManager::mouse_pos_callback([[maybe_unused]] GLFWwindow *window,
+auto eventManager::mouse_pos_callback([[maybe_unused]] GLFWwindow *window,
                                       double x, double y) -> void {
-  Afk::Engine::get().event_manager.events.push({Event::MouseMove{x, y}, Event::Type::MouseMove});
+  auto &afk = Engine::get();
+
+  afk.event_manager.events.push({Event::MouseMove{x, y}, Type::MouseMove});
 }
 
-auto EventManager::mouse_press_callback([[maybe_unused]] GLFWwindow *window, int button,
+auto eventManager::mouse_press_callback([[maybe_unused]] GLFWwindow *window, int button,
                                         int action, [[maybe_unused]] int mods) -> void {
   auto &afk = Engine::get();
 
   const auto control = (mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL;
   const auto alt     = (mods & GLFW_MOD_ALT) == GLFW_MOD_ALT;
   const auto shift   = (mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT;
-  const auto type = action == GLFW_PRESS ? Event::Type::MouseDown : Event::Type::MouseUp;
+  const auto type    = action == GLFW_PRESS ? Type::MouseDown : Type::MouseUp;
 
   afk.event_manager.events.push({Event::MouseButton{button, control, alt, shift}, type});
 }
 
-auto EventManager::mouse_scroll_callback([[maybe_unused]] GLFWwindow *window,
+auto eventManager::mouse_scroll_callback([[maybe_unused]] GLFWwindow *window,
                                          double dx, double dy) -> void {
-  Afk::Engine::get().event_manager.events.push(
-      {Event::MouseScroll{dx, dy}, Event::Type::MouseScroll});
+  auto &afk = Engine::get();
+
+  afk.event_manager.events.push({Event::MouseScroll{dx, dy}, Type::MouseScroll});
 }
 
-auto EventManager::error_callback([[maybe_unused]] int error, const char *msg) -> void {
+auto eventManager::error_callback([[maybe_unused]] int error, const char *msg) -> void {
   std::cerr << "glfw error: " << msg << '\n';
 }

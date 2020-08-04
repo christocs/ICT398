@@ -3,11 +3,12 @@
 #include <stdexcept>
 
 #include "afk/Afk.hpp"
+#include "afk/utility/FixedWidthNumeric.hpp"
 
 using std::exception;
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int {
-  auto &afk = Afk::Engine::get();
+  auto &afk = afk::Engine::get();
 
   afk.initialize();
 

@@ -9,8 +9,8 @@
 #include "afk/io/Path.hpp"
 #include "afk/ui/Log.hpp"
 
-namespace Afk {
-  namespace Io {
+namespace afk {
+  namespace io {
     /**
      * Logging
      */
@@ -33,7 +33,7 @@ namespace Afk {
       auto ss   = ostringstream{};
 
       ss << value;
-      afk.ui.log.append("%s", ss.str().c_str());
+      afk.ui_manager.log.append("%s", ss.str().c_str());
       log.log_file << value;
       std::cout << value;
 

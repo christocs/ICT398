@@ -4,22 +4,30 @@
 #include <glm/glm.hpp>
 
 #include "afk/event/EventManager.hpp"
-#include "afk/renderer/Camera.hpp"
-#include "afk/renderer/Renderer.hpp"
-#include "afk/ui/Ui.hpp"
+#include "afk/render/Camera.hpp"
+#include "afk/render/Renderer.hpp"
+#include "afk/ui/UiManager.hpp"
 #include "entt/entt.hpp"
 
-struct lua_State;
-namespace Afk {
+namespace afk {
+  /**
+   * Encapsulates the afk engine state.
+   */
   class Engine {
   public:
+    /** The game name, this is displayed as the window title. */
     static constexpr const char *GAME_NAME = "ICT397";
 
-    Renderer renderer          = {};
-    EventManager event_manager = {};
-    Ui ui                      = {};
-    Camera camera              = {};
-    entt::registry registry    = entt::registry{};
+    /** rendering subsystem. */
+    render::renderer renderer = {};
+    /** event subsystem. */
+    event::eventManager event_manager = {};
+    /** UI subsystem. */
+    ui::uiManager ui_manager = {};
+    /** Camera subsystem. */
+    render::Camera camera = {};
+    /** ECS subsystem. */
+    entt::registry registry = entt::registry{};
 
     Engine()               = default;
     ~Engine()              = default;
@@ -35,14 +43,21 @@ namespace Afk {
     auto render() -> void;
     auto update() -> void;
 
+    auto move_mouse(event::Event event) -> void;
+    auto move_keyboard(event::Event event) -> void;
+
     auto static get_time() -> float;
     auto get_delta_time() -> float;
     auto get_is_running() const -> bool;
 
   private:
+    /** Is the engine initialized? */
     bool is_initialized = false;
-    bool is_running     = true;
-    int frame_count     = {};
-    float last_update   = {};
+    /** Is the engine running? */
+    bool is_running = true;
+    /** The number of frames rendered since the engine started. */
+    int frame_count = {};
+    /** The time, in seconds, since the last update. */
+    float last_update = {};
   };
 }

@@ -21,10 +21,10 @@
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
 #include "afk/physics/Transform.hpp"
-#include "afk/renderer/Animation.hpp"
-#include "afk/renderer/Mesh.hpp"
-#include "afk/renderer/Model.hpp"
-#include "afk/renderer/Texture.hpp"
+#include "afk/render/Animation.hpp"
+#include "afk/render/Mesh.hpp"
+#include "afk/render/Model.hpp"
+#include "afk/render/Texture.hpp"
 
 using namespace std::string_literals;
 using glm::mat4;
@@ -37,11 +37,15 @@ using std::unordered_map;
 using std::vector;
 using std::filesystem::path;
 
-using Afk::Animation;
-using Afk::ModelLoader;
-using Afk::Texture;
-using Afk::Transform;
-namespace Io = Afk::Io;
+using afk::io::ModelLoader;
+using afk::physics::Transform;
+using afk::render::Animation;
+using afk::render::Bone;
+using afk::render::Mesh;
+using afk::render::Model;
+using afk::render::Texture;
+using afk::render::Vertex;
+namespace io = afk::io;
 
 constexpr unsigned ASSIMP_OPTIONS =
     aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs |
@@ -72,7 +76,7 @@ static auto to_glm(aiQuaterniont<float> q) -> quat {
 }
 
 auto ModelLoader::load(const path &file_path) -> Model {
-  const auto abs_path = Afk::get_absolute_path(file_path);
+  const auto abs_path = io::get_absolute_path(file_path);
   auto importer       = Assimp::Importer{};
 
   this->model.file_path = file_path;
@@ -160,7 +164,7 @@ auto ModelLoader::get_indices(const aiMesh *mesh) -> Mesh::Indices {
     const auto face = mesh->mFaces[i];
 
     for (auto j = size_t{0}; j < face.mNumIndices; ++j) {
-      indices.push_back(static_cast<Afk::Index>(face.mIndices[j]));
+      indices.push_back(static_cast<afk::render::Index>(face.mIndices[j]));
       ++num_indices;
     }
   }
@@ -181,7 +185,7 @@ auto ModelLoader::get_bones(const aiMesh *mesh, Mesh::Vertices &vertices)
     if (bone_map.find(name) == bone_map.end()) {
       auto bone           = Bone{};
       bone.name           = name;
-      bone.index          = static_cast<Index>(bone_map.size());
+      bone.index          = static_cast<render::Index>(bone_map.size());
       bone.offset         = to_glm(assimp_bone.mOffsetMatrix);
       bone_map[bone.name] = bone.index;
       bones.push_back(std::move(bone));
@@ -230,7 +234,7 @@ auto ModelLoader::get_animations(const aiScene *scene) -> Model::Animations {
       animation.channels.push_back(std::move(channel));
     }
 
-    Io::log << "Loaded animation " << animation.name << " with "
+    io::log << "Loaded animation " << animation.name << " with "
             << animation.channels.size() << " channels.\n";
 
     animations.push_back(std::move(animation));

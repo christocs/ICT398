@@ -3,7 +3,7 @@
 
 #include "afk/component/BaseComponent.hpp"
 
-namespace Afk {
+namespace afk {
   /**
    * Animations component
    */

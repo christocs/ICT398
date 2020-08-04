@@ -41,7 +41,7 @@ add_executable(${PROJECT_NAME})
 
 # Set C++ standard and output directory.
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
@@ -72,8 +72,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
         # Disable unhelpful warnings.
         -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded
         -Wno-deprecated-declarations -Wno-weak-vtables
-        -Wno-exit-time-destructors -Wno-global-constructors
-        -Wno-c++2a-compat>
+        -Wno-exit-time-destructors -Wno-global-constructors>
     # Visual Studio
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /MANIFEST:NO>
     # Enable the clang sanitizer.
@@ -119,6 +118,18 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E create_symlink
     ${CMAKE_SOURCE_DIR}/cfg $<TARGET_FILE_DIR:${PROJECT_NAME}>/cfg)
+
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+    set(DOXYGEN_IN ${CMAKE_SOURCE_DIR}/.doxyconf)
+
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+    add_custom_target(doc ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_IN}
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM)
+endif (DOXYGEN_FOUND)
 
 # Setup git header.
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/cmake-git-version-tracking)

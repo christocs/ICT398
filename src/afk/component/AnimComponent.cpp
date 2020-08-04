@@ -1,5 +1,5 @@
 #include "afk/component/AnimComponent.hpp"
-using Afk::AnimComponent;
+using afk::AnimComponent;
 
 AnimComponent::AnimComponent(GameObject _owner, AnimComponent::Status _status,
                              const std::string &_name, float _time)

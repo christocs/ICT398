@@ -1,6 +1,6 @@
 #include "afk/ui/Log.hpp"
 
-using Afk::Log;
+using afk::ui::Log;
 
 Log::Log() {
   this->clear();

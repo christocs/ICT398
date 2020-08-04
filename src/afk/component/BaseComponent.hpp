@@ -6,7 +6,7 @@
 
 #include "afk/component/GameObject.hpp"
 
-namespace Afk {
+namespace afk {
   class BaseComponent {
   public:
     BaseComponent() = default;

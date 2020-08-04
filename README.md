@@ -96,6 +96,12 @@ Compile:
 * Select `CMakeLists.txt`
 * Set the startup item to `afk.exe`
 
+### Documentation
+Generate documentation with doxygen:
+```
+doxygen .doxyconf
+```
+
 ## Contributing
 Please see the [`CONTRIBUTING.md`](CONTRIBUTING.md) file for instructions.
 
