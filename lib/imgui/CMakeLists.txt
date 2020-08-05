@@ -8,6 +8,11 @@ else()
     add_library(imgui)
 endif()
 
+set_target_properties(imgui PROPERTIES
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
 
 if(APPLE)
    find_library(APP_SERVICES_LIBRARY ApplicationServices)

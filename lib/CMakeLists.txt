@@ -27,7 +27,7 @@ string(REGEX REPLACE "/W[0-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 # Disable compiler warnings.
 add_compile_options(
     # Clang
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wno-everything>
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-w>
     # GCC
     $<$<CXX_COMPILER_ID:GNU>:-w>
     # Visual Studio
