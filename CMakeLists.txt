@@ -126,7 +126,7 @@ if (DOXYGEN_FOUND)
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
     add_custom_target(doc ALL
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_IN}
-        WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM)
 endif (DOXYGEN_FOUND)
