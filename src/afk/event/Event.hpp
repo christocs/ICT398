@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 #include <variant>
 
@@ -30,7 +29,7 @@ namespace afk {
       };
 
       struct Text {
-        uint32_t codepoint = {};
+        u32 codepoint = {};
       };
 
       struct MouseScroll {

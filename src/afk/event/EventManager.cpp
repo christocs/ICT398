@@ -1,6 +1,7 @@
 #include "afk/event/EventManager.hpp"
 
 #include "afk/Afk.hpp"
+#include "afk/NumericTypes.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/event/Event.hpp"
 #include "afk/io/Log.hpp"
@@ -16,7 +17,7 @@ using Window = afk::render::renderer::Window;
 using Action = afk::event::Event::Action;
 using Type   = afk::event::Event::Type;
 
-std::size_t eventManager::Callback::index = 0;
+usize eventManager::Callback::index = 0;
 eventManager::Callback::Callback(std::function<void(Event)> fn)
   : func(fn), id(index++) {}
 auto eventManager::Callback::operator==(const eventManager::Callback &rhs) const -> bool {
@@ -122,8 +123,7 @@ auto eventManager::key_callback([[maybe_unused]] GLFWwindow *window, i32 key,
   }
 }
 
-auto eventManager::char_callback([[maybe_unused]] GLFWwindow *window, uint32_t codepoint)
-    -> void {
+auto eventManager::char_callback([[maybe_unused]] GLFWwindow *window, u32 codepoint) -> void {
   auto &afk = Engine::get();
 
   afk.event_manager.events.push({Event::Text{codepoint}, Type::TextEnter});

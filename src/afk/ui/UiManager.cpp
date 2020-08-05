@@ -90,12 +90,12 @@ auto uiManager::draw_about() -> void {
   }
 
   ImGui::Begin("About", &this->show_about);
-  ImGui::Text("afk engine version %s build %.6s (%s)", AFK_VERSION,
-              GIT_HEAD_HASH, GIT_IS_DIRTY ? "dirty" : "clean");
+  ImGui::Text("afk engine version %s build %.6s (%s)", ui::to_cstr(AFK_VERSION),
+              ui::to_cstr(GIT_HEAD_HASH), GIT_IS_DIRTY ? "dirty" : "clean");
   ImGui::Separator();
-  ImGui::Text("%s", GIT_COMMIT_SUBJECT);
-  ImGui::Text("Author: %s", GIT_AUTHOR_NAME);
-  ImGui::Text("Date: %s", GIT_COMMIT_DATE);
+  ImGui::Text("%s", ui::to_cstr(GIT_COMMIT_SUBJECT));
+  ImGui::Text("Author: %s", ui::to_cstr(GIT_AUTHOR_NAME));
+  ImGui::Text("Date: %s", ui::to_cstr(GIT_COMMIT_DATE));
   ImGui::End();
 }
 
@@ -256,4 +256,3 @@ auto uiManager::draw_model_viewer() -> void {
   }
   ImGui::End();
 }
-

@@ -101,7 +101,7 @@ auto ModelLoader::load(const path &file_path) -> Model {
 auto ModelLoader::process_node(const aiScene *scene, const aiNode *node,
                                glm::mat4 transform) -> void {
   // Process all meshes at this node.
-  for (auto i = size_t{0}; i < node->mNumMeshes; ++i) {
+  for (auto i = usize{0}; i < node->mNumMeshes; ++i) {
     const auto *mesh = scene->mMeshes[node->mMeshes[i]];
 
     this->model.meshes.push_back(
@@ -109,7 +109,7 @@ auto ModelLoader::process_node(const aiScene *scene, const aiNode *node,
   }
 
   // Process all child nodes.
-  for (auto i = size_t{0}; i < node->mNumChildren; ++i) {
+  for (auto i = usize{0}; i < node->mNumChildren; ++i) {
     this->process_node(scene, node->mChildren[i], transform * to_glm(node->mTransformation));
   }
 }
@@ -137,7 +137,7 @@ auto ModelLoader::get_vertices(const aiMesh *mesh) -> Mesh::Vertices {
 
   vertices.reserve(mesh->mNumVertices);
 
-  for (auto i = size_t{0}; i < mesh->mNumVertices; ++i) {
+  for (auto i = usize{0}; i < mesh->mNumVertices; ++i) {
     auto vertex = Vertex{};
 
     vertex.position = to_glm(mesh->mVertices[i]);
@@ -161,10 +161,10 @@ auto ModelLoader::get_indices(const aiMesh *mesh) -> Mesh::Indices {
   indices.reserve(mesh->mNumFaces);
 
   auto num_indices = 0;
-  for (auto i = size_t{0}; i < mesh->mNumFaces; ++i) {
+  for (auto i = usize{0}; i < mesh->mNumFaces; ++i) {
     const auto face = mesh->mFaces[i];
 
-    for (auto j = size_t{0}; j < face.mNumIndices; ++j) {
+    for (auto j = usize{0}; j < face.mNumIndices; ++j) {
       indices.push_back(static_cast<afk::render::Index>(face.mIndices[j]));
       ++num_indices;
     }
@@ -178,7 +178,7 @@ auto ModelLoader::get_bones(const aiMesh *mesh, Mesh::Vertices &vertices)
   auto bones    = Mesh::Bones{};
   auto bone_map = Mesh::BoneMap{};
 
-  for (auto i = size_t{0}; i < mesh->mNumBones; ++i) {
+  for (auto i = usize{0}; i < mesh->mNumBones; ++i) {
     const auto &assimp_bone = *mesh->mBones[i];
 
     auto name = string{assimp_bone.mName.data};
@@ -194,9 +194,9 @@ auto ModelLoader::get_bones(const aiMesh *mesh, Mesh::Vertices &vertices)
 
     const auto bone_index = bone_map.at(name);
 
-    for (auto j = size_t{0}; j < assimp_bone.mNumWeights; j++) {
+    for (auto j = usize{0}; j < assimp_bone.mNumWeights; j++) {
       const auto &assimp_weight = assimp_bone.mWeights[j];
-      const auto vertex_index   = static_cast<size_t>(assimp_weight.mVertexId);
+      const auto vertex_index   = static_cast<usize>(assimp_weight.mVertexId);
       const auto bone_weight    = assimp_weight.mWeight;
 
       vertices[vertex_index].push_back_bone(bone_index, bone_weight);
@@ -209,7 +209,7 @@ auto ModelLoader::get_bones(const aiMesh *mesh, Mesh::Vertices &vertices)
 auto ModelLoader::get_animations(const aiScene *scene) -> Model::Animations {
   auto animations = Model::Animations{};
 
-  for (auto i = size_t{0}; i < scene->mNumAnimations; ++i) {
+  for (auto i = usize{0}; i < scene->mNumAnimations; ++i) {
     const auto &assimp_animation = *scene->mAnimations[i];
 
     auto animation       = Animation{};
@@ -217,13 +217,13 @@ auto ModelLoader::get_animations(const aiScene *scene) -> Model::Animations {
     animation.frame_rate = static_cast<f32>(assimp_animation.mTicksPerSecond);
     animation.duration   = static_cast<f32>(assimp_animation.mDuration);
 
-    for (auto j = size_t{0}; j < assimp_animation.mNumChannels; ++j) {
+    for (auto j = usize{0}; j < assimp_animation.mNumChannels; ++j) {
       const auto &assimp_channel = *assimp_animation.mChannels[j];
 
       auto channel = Animation::Channel{};
       channel.name = string{assimp_channel.mNodeName.data};
 
-      for (auto k = size_t{0}; k < assimp_channel.mNumPositionKeys; ++k) {
+      for (auto k = usize{0}; k < assimp_channel.mNumPositionKeys; ++k) {
         auto frame        = Transform{};
         frame.translation = to_glm(assimp_channel.mPositionKeys[k].mValue);
         frame.scale       = to_glm(assimp_channel.mScalingKeys[k].mValue);

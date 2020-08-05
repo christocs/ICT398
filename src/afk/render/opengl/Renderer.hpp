@@ -24,6 +24,7 @@
 #include "afk/render/opengl/ShaderHandle.hpp"
 #include "afk/render/opengl/ShaderProgramHandle.hpp"
 #include "afk/render/opengl/TextureHandle.hpp"
+#include "afk/NumericTypes.hpp"
 
 namespace afk {
   namespace render {
@@ -43,7 +44,7 @@ namespace afk {
         using TextureHandle       = opengl::TextureHandle;
 
         struct PathHash {
-          auto operator()(const std::filesystem::path &p) const -> std::size_t {
+          auto operator()(const std::filesystem::path &p) const -> usize {
             return std::filesystem::hash_value(p);
           }
         };
@@ -92,7 +93,7 @@ namespace afk {
         auto clear_screen(glm::vec4 clear_color = {255.0f, 255.0f, 255.0f, 1.0f}) const
             -> void;
         auto swap_buffers() -> void;
-        auto set_viewport(int x, i32 y, i32 width, i32 height) const -> void;
+        auto set_viewport(i32 x, i32 y, i32 width, i32 height) const -> void;
         auto draw() -> void;
         auto queue_draw(DrawCommand command) -> void;
         auto draw_model(const ModelHandle &model, const ShaderProgramHandle &shader_program,
@@ -100,7 +101,7 @@ namespace afk {
         auto setup_view(const ShaderProgramHandle &shader_program) const -> void;
 
         auto use_shader(const ShaderProgramHandle &shader) const -> void;
-        auto set_texture_unit(std::size_t unit) const -> void;
+        auto set_texture_unit(usize unit) const -> void;
         auto bind_texture(const TextureHandle &texture) const -> void;
 
         auto get_model(const std::filesystem::path &file_path) -> const ModelHandle &;

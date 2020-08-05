@@ -35,12 +35,12 @@
 #include "afk/render/opengl/ShaderHandle.hpp"
 #include "afk/render/opengl/ShaderProgramHandle.hpp"
 #include "afk/render/opengl/TextureHandle.hpp"
+#include "afk/ui/Unicode.hpp"
 
 using namespace std::string_literals;
 using std::optional;
 using std::pair;
 using std::shared_ptr;
-using std::size_t;
 using std::string;
 using std::unordered_map;
 using std::vector;
@@ -114,8 +114,8 @@ auto renderer::initialize() -> void {
   glfwWindowHint(GLFW_SAMPLES, 4);
 #endif
 
-  auto *mode   = glfwGetVideoMode(glfwGetPrimaryMonitor());
-  this->window = glfwCreateWindow(mode->width, mode->height, Engine::GAME_NAME,
+  auto *mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+  this->window = glfwCreateWindow(mode->width, mode->height, ui::to_cstr(Engine::GAME_NAME),
                                   glfwGetPrimaryMonitor(), nullptr);
 
   afk_assert(this->window != nullptr, "Failed to create window");
@@ -159,7 +159,7 @@ auto renderer::clear_screen(vec4 clear_color) const -> void {
   this->set_option(GL_DEPTH_TEST, true);
 }
 
-auto renderer::set_viewport(int x, i32 y, i32 width, i32 height) const -> void {
+auto renderer::set_viewport(i32 x, i32 y, i32 width, i32 height) const -> void {
   glViewport(x, y, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 }
 
@@ -207,7 +207,7 @@ auto renderer::get_shader_program(const path &file_path) -> const ShaderProgramH
   return this->shader_programs.at(file_path);
 }
 
-auto renderer::set_texture_unit(size_t unit) const -> void {
+auto renderer::set_texture_unit(usize unit) const -> void {
   afk_assert_debug(unit > 0, "Invalid texure ID");
   glActiveTexture(unit);
 }
@@ -250,20 +250,20 @@ auto renderer::draw_model(const ModelHandle &model, const ShaderProgramHandle &s
   this->setup_view(shader_program);
 
   for (const auto &mesh : model.meshes) {
-    auto material_bound = vector<bool>(static_cast<size_t>(Texture::Type::Count));
+    auto material_bound = vector<bool>(static_cast<usize>(Texture::Type::Count));
 
     // Bind all of the textures to shader uniforms.
-    for (auto i = size_t{0}; i < mesh.textures.size(); ++i) {
+    for (auto i = usize{0}; i < mesh.textures.size(); ++i) {
       this->set_texture_unit(GL_TEXTURE0 + i);
 
       auto name = material_strings.at(mesh.textures[i].type);
 
-      const auto index = static_cast<size_t>(mesh.textures[i].type);
+      const auto index = static_cast<usize>(mesh.textures[i].type);
 
       afk_assert_debug(!material_bound[index], "Material "s + name + " already bound"s);
       material_bound[index] = true;
 
-      this->set_uniform(shader_program, "u_textures."s + name, static_cast<int>(i));
+      this->set_uniform(shader_program, "u_textures."s + name, static_cast<i32>(i));
       this->bind_texture(mesh.textures[i]);
     }
 
@@ -475,7 +475,7 @@ auto renderer::compile_shader(const Shader &shader) -> ShaderHandle {
     auto error_msg    = vector<GLchar>{};
 
     glGetShaderiv(shader_handle.id, GL_INFO_LOG_LENGTH, &error_length);
-    error_msg.resize(static_cast<size_t>(error_length));
+    error_msg.resize(static_cast<usize>(error_length));
     glGetShaderInfoLog(shader_handle.id, error_length, &error_length, error_msg.data());
 
     afk_assert(false, "Shader compilation failed: "s +
@@ -515,7 +515,7 @@ auto renderer::link_shaders(const ShaderProgram &shader_program) -> ShaderProgra
     auto error_msg    = vector<GLchar>{};
 
     glGetProgramiv(shader_program_handle.id, GL_INFO_LOG_LENGTH, &error_length);
-    error_msg.resize(static_cast<size_t>(error_length));
+    error_msg.resize(static_cast<usize>(error_length));
     glGetProgramInfoLog(shader_program_handle.id, error_length, &error_length,
                         error_msg.data());
 

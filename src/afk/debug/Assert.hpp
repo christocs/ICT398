@@ -6,6 +6,7 @@
 #include <string>
 
 #include "afk/io/Log.hpp"
+#include "afk/NumericTypes.hpp"
 
 #if defined(__GNUC__) || defined(__clang__)
   #define AFK_FUNCTION __PRETTY_FUNCTION__
@@ -37,14 +38,14 @@
 namespace afk {
   auto assertion(bool condition, const std::string &msg,
                  const std::string &expression, const std::string &file_name,
-                 std::size_t line_num, const std::string &function_name) -> void;
-  [[noreturn]] auto unreachable(const std::string &file_name, std::size_t line_num,
+                 usize line_num, const std::string &function_name) -> void;
+  [[noreturn]] auto unreachable(const std::string &file_name, usize line_num,
                                 const std::string &function_name) -> void;
 }
 
 inline auto afk::assertion(bool condition, const std::string &msg,
                            const std::string &expression, const std::string &file_path,
-                           size_t line_num, const std::string &function_name) -> void {
+                           usize line_num, const std::string &function_name) -> void {
   if (!condition) {
     const auto error = "\nAssertion '" + expression + "' failed: " + msg +
                        "\n  in " + function_name + "\n  at " + file_path + ":" +
@@ -54,7 +55,7 @@ inline auto afk::assertion(bool condition, const std::string &msg,
   }
 }
 
-inline auto afk::unreachable(const std::string &file_path, size_t line_num,
+inline auto afk::unreachable(const std::string &file_path, usize line_num,
                              const std::string &function_name) -> void {
 
   const auto error = "\nUnreachable statement hit\n  in " + function_name +

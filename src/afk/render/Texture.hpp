@@ -4,16 +4,12 @@
 #include <filesystem>
 #include <vector>
 
+#include "afk/NumericTypes.hpp"
+
 namespace afk {
   namespace render {
     struct Texture {
-      enum class Type : std::size_t {
-        Diffuse = 0,
-        Specular,
-        Normal,
-        Height,
-        Count
-      };
+      enum class Type : usize { Diffuse = 0, Specular, Normal, Height, Count };
 
       Type type                       = Type::Diffuse;
       std::filesystem::path file_path = {};

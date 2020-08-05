@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
+#include "afk/NumericTypes.hpp"
 
 namespace afk {
   namespace render {
-    using Index = uint32_t;
+    using Index = u32;
   }
 }

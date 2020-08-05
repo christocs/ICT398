@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cstdint>
 #include <functional>
 #include <queue>
 #include <unordered_map>
 #include <vector>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/event/Event.hpp"
 #include "afk/render/Renderer.hpp"
 
@@ -26,8 +26,8 @@ namespace afk {
 
       private:
         std::function<void(Event)> func;
-        std::size_t id;
-        static std::size_t index;
+        usize id;
+        static usize index;
       };
 
       eventManager()                     = default;
@@ -75,12 +75,12 @@ namespace afk {
     private:
       static auto key_callback(GLFWwindow *window, i32 key, i32 scancode,
                                i32 action, i32 mods) -> void;
-      static auto char_callback(GLFWwindow *window, uint32_t codepoint) -> void;
+      static auto char_callback(GLFWwindow *window, u32 codepoint) -> void;
       static auto mouse_pos_callback(GLFWwindow *window, f64 x, f64 y) -> void;
       static auto mouse_press_callback(GLFWwindow *window, i32 button,
                                        i32 action, i32 mods) -> void;
       static auto mouse_scroll_callback(GLFWwindow *window, f64 dx, f64 dy) -> void;
-      static auto error_callback(int error, const char *msg) -> void;
+      static auto error_callback(i32 error, const char *msg) -> void;
 
       bool is_initialized      = false;
       std::queue<Event> events = {};

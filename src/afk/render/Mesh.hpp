@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -13,6 +12,7 @@
 #include "afk/render/Bone.hpp"
 #include "afk/render/Index.hpp"
 #include "afk/render/Texture.hpp"
+#include "afk/NumericTypes.hpp"
 
 namespace afk {
   namespace render {
@@ -20,8 +20,8 @@ namespace afk {
      * Vertex data
      */
     struct Vertex {
-      constexpr static size_t MAX_VERTEX_BONES = 4;
-      constexpr static size_t MAX_BONES        = 100;
+      constexpr static usize MAX_VERTEX_BONES = 4;
+      constexpr static usize MAX_BONES        = 100;
 
       glm::vec3 position                   = {};
       glm::vec3 normal                     = {};

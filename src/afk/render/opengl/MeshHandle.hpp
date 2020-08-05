@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 #include <typeindex>
 #include <typeinfo>
 #include <vector>
@@ -10,6 +9,7 @@
 #include <frozen/unordered_map.h>
 #include <glad/glad.h>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/physics/Transform.hpp"
 #include "afk/render/Mesh.hpp"
 #include "afk/render/opengl/TextureHandle.hpp"
@@ -19,8 +19,7 @@ namespace afk {
   namespace render {
     namespace opengl {
       struct IndexHash {
-        constexpr auto operator()(const ctti::type_id_t &value, std::size_t seed) const
-            -> std::size_t {
+        constexpr auto operator()(const ctti::type_id_t &value, usize seed) const -> usize {
           return seed ^ value.hash();
         }
       };
@@ -32,12 +31,12 @@ namespace afk {
 
         static constexpr auto GL_INDICES =
             frozen::unordered_map<ctti::type_id_t, GLenum, 6, IndexHash>(
-                {{ctti::type_id<int8_t>(), GL_BYTE},
-                 {ctti::type_id<uint8_t>(), GL_UNSIGNED_BYTE},
-                 {ctti::type_id<int16_t>(), GL_SHORT},
-                 {ctti::type_id<uint16_t>(), GL_UNSIGNED_SHORT},
-                 {ctti::type_id<int32_t>(), GL_INT},
-                 {ctti::type_id<uint32_t>(), GL_UNSIGNED_INT}});
+                {{ctti::type_id<i8>(), GL_BYTE},
+                 {ctti::type_id<u8>(), GL_UNSIGNED_BYTE},
+                 {ctti::type_id<i16>(), GL_SHORT},
+                 {ctti::type_id<u16>(), GL_UNSIGNED_SHORT},
+                 {ctti::type_id<i32>(), GL_INT},
+                 {ctti::type_id<u32>(), GL_UNSIGNED_INT}});
 
         static constexpr auto INDEX = GL_INDICES.at(ctti::type_id<Index>());
 
@@ -51,12 +50,12 @@ namespace afk {
           BoneWeights
         };
 
-        GLuint vao              = {};
-        GLuint vbo              = {};
-        GLuint ibo              = {};
-        GLuint bones            = {};
-        Textures textures       = {};
-        std::size_t num_indices = {};
+        GLuint vao        = {};
+        GLuint vbo        = {};
+        GLuint ibo        = {};
+        GLuint bones      = {};
+        Textures textures = {};
+        usize num_indices = {};
 
         physics::Transform transform = {};
       };
