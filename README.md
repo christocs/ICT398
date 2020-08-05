@@ -9,6 +9,7 @@
 * [1&nbsp;&nbsp;Building](#building)
   * [1.1&nbsp;&nbsp;Unix](#unix)
   * [1.2&nbsp;&nbsp;Windows](#windows)
+  * [1.3&nbsp;&nbsp;VSCode](#vscode)
 * [2&nbsp;&nbsp;Contributing](#contributing)
 * [3&nbsp;&nbsp;Meta](#meta)
   * [3.1&nbsp;&nbsp;License](#license)
@@ -49,14 +50,6 @@ Compile:
 cmake --build .
 ```
 
-### VSCode
-* Follow [Unix](#unix) instructions for project cloning and dependency installation
-* Install [CMake tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
-* Open the command palette, run:
-  * CMake: Select a kit
-  * CMake: Select variant
-  * CMake: Build
-
 ### Windows
 Enable developer mode:
 * Open Settings
@@ -79,6 +72,14 @@ Compile:
 * Select Open → CMake
 * Select `CMakeLists.txt`
 * Set the startup item to `afk.exe`
+
+### VSCode
+* Follow [Unix](#unix) instructions for project cloning and dependency installation
+* Install [CMake tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
+* Open the command palette, run:
+  * CMake: Select a kit
+  * CMake: Select variant
+  * CMake: Build
 
 ### Documentation
 Generate doxygen:
