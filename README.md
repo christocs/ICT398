@@ -7,33 +7,41 @@
 
 ## Table of Contents
 * [1&nbsp;&nbsp;Building](#building)
-  * [1.1&nbsp;&nbsp;macOS](#macos)
-  * [1.2&nbsp;&nbsp;Linux](#linux)
-  * [1.3&nbsp;&nbsp;Windows](#windows)
+  * [1.1&nbsp;&nbsp;Unix](#unix)
+  * [1.2&nbsp;&nbsp;Windows](#windows)
 * [2&nbsp;&nbsp;Contributing](#contributing)
 * [3&nbsp;&nbsp;Meta](#meta)
   * [3.1&nbsp;&nbsp;License](#license)
   * [3.2&nbsp;&nbsp;Built With](#built-with)
 
 ## Building
-### macOS
-Install build tools:
-```
-brew install cmake ninja llvm
-```
-
+### Unix
 Clone repository:
 ```
 git clone https://github.com/opeik/ICT398.git
-git submodule update --init --recursive --depth 1
+git submodule update --init --recursive
+```
+
+Install build tools:
+
+```
+# macOS
+brew install cmake ninja
+
+# Linux
+apt install build-essential clang ninja-build clang-9 \
+  libstdc++-9-dev ninja-build libgl1-mesa-dev libx11-dev \
+  libxrandr-dev libudev-dev libfreetype6-dev \
+  libopenal-dev libflac++-dev libvorbis-dev \
+  libxinerama-dev libxcursor-dev libxi-dev
 ```
 
 Generate build files:
 ```
 # Debug
-CXX=/usr/local/opt/llvm/bin/clang++ cmake -S . -B build/debug -G Ninja -D CMAKE_BUILD_TYPE=Debug
+CXX=clang++ cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Debug
 # Release
-CXX=/usr/local/opt/llvm/bin/clang++ cmake -S . -B build/release -G Ninja -D CMAKE_BUILD_TYPE=RelWithDebInfo
+CXX=clang++ cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=RelWithDebInfo
 ```
 
 Compile:
@@ -41,37 +49,13 @@ Compile:
 cmake --build .
 ```
 
-### Linux
-Install build tools:
-```
-apt install build-essential clang ninja-build
-```
-
-Install dependencies:
-```
-sudo apt install clang-9 libstdc++-9-dev ninja-build libgl1-mesa-dev libx11-dev \
-   libxrandr-dev libudev-dev libfreetype6-dev libopenal-dev libflac++-dev \
-   libvorbis-dev libxinerama-dev libxcursor-dev libxi-dev
-```
-
-Clone repository:
-```
-git clone https://github.com/opeik/ICT398.git
-git submodule update --init --recursive --depth 1
-```
-
-Generate build files:
-```
-# Debug
-CXX=clang++ cmake -S . -B build/debug -G Ninja -D CMAKE_BUILD_TYPE=Debug
-# Release
-CXX=clang++ cmake -S . -B build/release -G Ninja -D CMAKE_BUILD_TYPE=RelWithDebInfo
-```
-
-Compile:
-```
-cmake --build .
-```
+### VSCode
+* Follow [Unix](#unix) instructions for project cloning and dependency installation
+* Install [CMake tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
+* Open the command palette, run:
+  * CMake: Select a kit
+  * CMake: Select variant
+  * CMake: Build
 
 ### Windows
 Enable developer mode:
@@ -97,7 +81,7 @@ Compile:
 * Set the startup item to `afk.exe`
 
 ### Documentation
-Generate documentation with doxygen:
+Generate doxygen:
 ```
 doxygen .doxyconf
 ```
