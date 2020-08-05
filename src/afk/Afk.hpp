@@ -24,7 +24,7 @@ namespace afk {
     /** event subsystem. */
     event::eventManager event_manager = {};
     /** UI subsystem. */
-    ui::uiManager ui_manager = {};
+    ui::UiManager ui_manager = {};
     /** Camera subsystem. */
     render::Camera camera = {};
     /** ECS subsystem. */

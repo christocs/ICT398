@@ -14,3 +14,7 @@ ostream &operator<<(ostream &os, const u8string &s) {
 auto afk::ui::to_cstr(const std::u8string &s) -> const char * {
   return reinterpret_cast<const char *>(s.data());
 }
+
+auto afk::ui::to_cstr(const char8_t *s) -> const char * {
+  return reinterpret_cast<const char *>(s);
+}

@@ -15,19 +15,19 @@ namespace afk {
     /**
      * Manages the engine user interface.
      */
-    class uiManager {
+    class UiManager {
     public:
       /**
        * The default font size, in pixels.
        */
       static constexpr f32 FONT_SIZE = 19.0f;
 
-      ~uiManager();
-      uiManager()                  = default;
-      uiManager(uiManager &&)      = delete;
-      uiManager(const uiManager &) = delete;
-      auto operator=(const uiManager &) -> uiManager & = delete;
-      auto operator=(uiManager &&) -> uiManager & = delete;
+      ~UiManager();
+      UiManager()                  = default;
+      UiManager(UiManager &&)      = delete;
+      UiManager(const UiManager &) = delete;
+      auto operator=(const UiManager &) -> UiManager & = delete;
+      auto operator=(UiManager &&) -> UiManager & = delete;
 
       bool show_menu   = false;
       afk::ui::Log log = {};

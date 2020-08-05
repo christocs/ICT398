@@ -15,6 +15,7 @@ std::ostream &operator<<(std::ostream &os, const std::u8string &c8);
 namespace afk {
   namespace ui {
     auto to_cstr(const std::u8string &s) -> const char *;
+    auto to_cstr(const char8_t *s) -> const char *;
 
     /**
      * List of the Unicode character ranges.

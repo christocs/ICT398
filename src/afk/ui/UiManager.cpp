@@ -17,19 +17,24 @@
 #include "cmake/Version.hpp"
 
 using afk::Engine;
-using afk::ui::uiManager;
+using afk::ui::UiManager;
 using std::vector;
 using std::filesystem::path;
 
 using Window = afk::render::renderer::Window;
 
-uiManager::~uiManager() {
+UiManager::~UiManager() {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
 }
 
-auto uiManager::initialize(Window _window) -> void {
+/**
+ * Initializes this UI Manager.
+ *
+ * @param _window The window to render to.
+ */
+auto UiManager::initialize(Window _window) -> void {
   afk_assert(_window != nullptr, "Window is uninitialized");
   afk_assert(!this->is_initialized, "UI already initialized");
   this->ini_path = afk::io::get_absolute_path(".imgui.ini").string();
@@ -46,12 +51,12 @@ auto uiManager::initialize(Window _window) -> void {
 
   auto *noto_sans = io.Fonts->AddFontFromFileTTF(
       afk::io::get_absolute_path("res/font/NotoSans-Regular.ttf").string().c_str(),
-      uiManager::FONT_SIZE, nullptr, ui::unicode_ranges.data());
+      UiManager::FONT_SIZE, nullptr, ui::unicode_ranges.data());
   this->fonts["Noto Sans"] = noto_sans;
 
   auto *source_code_pro = io.Fonts->AddFontFromFileTTF(
       afk::io::get_absolute_path("res/font/SourceCodePro-Regular.ttf").string().c_str(),
-      uiManager::FONT_SIZE, nullptr, ui::unicode_ranges.data());
+      UiManager::FONT_SIZE, nullptr, ui::unicode_ranges.data());
   this->fonts["Source Code Pro"] = source_code_pro;
 
   auto &style = ImGui::GetStyle();
@@ -59,13 +64,13 @@ auto uiManager::initialize(Window _window) -> void {
   this->is_initialized = true;
 }
 
-auto uiManager::prepare() const -> void {
+auto UiManager::prepare() const -> void {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 }
 
-auto uiManager::draw() -> void {
+auto UiManager::draw() -> void {
   this->draw_stats();
 
   if (this->show_menu) {
@@ -84,7 +89,7 @@ auto uiManager::draw() -> void {
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-auto uiManager::draw_about() -> void {
+auto UiManager::draw_about() -> void {
   if (!this->show_about) {
     return;
   }
@@ -99,7 +104,7 @@ auto uiManager::draw_about() -> void {
   ImGui::End();
 }
 
-auto uiManager::draw_menu_bar() -> void {
+auto UiManager::draw_menu_bar() -> void {
   auto &afk = Engine::get();
 
   if (ImGui::BeginMainMenuBar()) {
@@ -132,7 +137,7 @@ auto uiManager::draw_menu_bar() -> void {
   }
 }
 
-auto uiManager::draw_stats() -> void {
+auto UiManager::draw_stats() -> void {
   const auto offset_x = 10.0f;
   const auto offset_y = 37.0f;
   static auto corner  = 1;
@@ -193,7 +198,7 @@ auto uiManager::draw_stats() -> void {
   ImGui::End();
 }
 
-auto uiManager::draw_log() -> void {
+auto UiManager::draw_log() -> void {
   if (!this->show_log) {
     return;
   }
@@ -202,7 +207,7 @@ auto uiManager::draw_log() -> void {
   this->log.draw("Log", &this->show_log);
 }
 
-auto uiManager::draw_model_viewer() -> void {
+auto UiManager::draw_model_viewer() -> void {
   if (!this->show_model_viewer) {
     return;
   }
