@@ -5,6 +5,7 @@
 
 #include "afk/NumericTypes.hpp"
 #include "afk/event/EventManager.hpp"
+#include "afk/physics/PhysicsBodySystem.hpp"
 #include "afk/render/Camera.hpp"
 #include "afk/render/Renderer.hpp"
 #include "afk/ui/UiManager.hpp"
@@ -29,6 +30,8 @@ namespace afk {
     render::Camera camera = {};
     /** ECS subsystem. */
     entt::registry registry = entt::registry{};
+    /** Physics subsystem. */
+    physics::PhysicsBodySystem physics_body_system = {};
 
     Engine()               = default;
     ~Engine()              = default;
