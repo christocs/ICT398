@@ -18,6 +18,12 @@ using std::unordered_map;
 using std::filesystem::path;
 using Type = afk::render::Shader::Type;
 
+/**
+ * Returns a shader type from the specified file extension.
+ *
+ * @param extension The shader file extension.
+ * @return The associated shader type.
+ */
 static auto shader_type_from_extension(const string &extension) -> Shader::Type {
   static const auto types = unordered_map<string, Type>{
       {".vert", Type::Vertex},

@@ -72,7 +72,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE
         # Disable unhelpful warnings.
         -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded
         -Wno-deprecated-declarations -Wno-weak-vtables
-        -Wno-exit-time-destructors -Wno-global-constructors>
+        -Wno-exit-time-destructors -Wno-global-constructors
+        -Wno-documentation-unknown-command>
     # Visual Studio
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /MANIFEST:NO>
     # Enable the clang sanitizer.

@@ -12,18 +12,22 @@
 namespace afk {
   namespace io {
     /**
-     * Logging
+     * Handles logging throughout the engine. Log entries are written to
+     * the log file, printed to standard out, and printed to the in game log.
      */
     struct Log {
+      /** The path to the current log file. */
       std::filesystem::path log_path = {};
-      std::ofstream log_file         = {};
+      /** The log file handle. */
+      std::ofstream log_file = {};
 
       Log();
     };
+
     /**
-     * Log things
-     * \param value thing to log
-     * \param log logger
+     * Logs the specified value to the specified log.
+     * @param value The value to log.
+     * @param log The log to use.
      */
     template<typename T>
     auto operator<<(Log &log, T const &value) -> Log & {
@@ -40,6 +44,7 @@ namespace afk {
       return log;
     }
 
+    /** The default logger. */
     inline auto log = Log{};
   }
 }

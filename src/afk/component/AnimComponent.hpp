@@ -15,6 +15,9 @@ namespace afk {
      */
     enum class Status { Paused, Playing, Stopped };
 
+    /**
+     * Tmp
+     */
     AnimComponent(GameObject _owner, AnimComponent::Status _status,
                   const std::string &_name, f32 _time);
     /**

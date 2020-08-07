@@ -21,7 +21,7 @@ using afk::ui::UiManager;
 using std::vector;
 using std::filesystem::path;
 
-using Window = afk::render::renderer::Window;
+using Window = afk::render::Renderer::Window;
 
 UiManager::~UiManager() {
   ImGui_ImplOpenGL3_Shutdown();
@@ -29,14 +29,9 @@ UiManager::~UiManager() {
   ImGui::DestroyContext();
 }
 
-/**
- * Initializes this UI Manager.
- *
- * @param _window The window to render to.
- */
 auto UiManager::initialize(Window _window) -> void {
   afk_assert(_window != nullptr, "Window is uninitialized");
-  afk_assert(!this->is_initialized, "UI already initialized");
+  afk_assert(!this->is_initialized, "UI manager already initialized");
   this->ini_path = afk::io::get_absolute_path(".imgui.ini").string();
   this->window   = _window;
 
