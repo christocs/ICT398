@@ -58,13 +58,16 @@ using afk::render::Shader;
 using afk::render::ShaderProgram;
 using afk::render::Texture;
 using afk::render::opengl::ModelHandle;
-using afk::render::opengl::renderer;
+using afk::render::opengl::Renderer;
 using afk::render::opengl::ShaderHandle;
 using afk::render::opengl::ShaderProgramHandle;
 using afk::render::opengl::TextureHandle;
 using Buffer = afk::render::opengl::MeshHandle::Buffer;
 namespace io = afk::io;
 
+/**
+ * Maps texture types to a string representation.
+ */
 constexpr auto material_strings =
     frozen::make_unordered_map<Texture::Type, const char *>({
         {Texture::Type::Diffuse, "texture_diffuse"},
@@ -73,6 +76,9 @@ constexpr auto material_strings =
         {Texture::Type::Height, "texture_height"},
     });
 
+/**
+ * Maps a shader type to a OpenGL shader enum type.
+ */
 constexpr auto gl_shader_types = frozen::make_unordered_map<Shader::Type, GLenum>({
     {Shader::Type::Vertex, GL_VERTEX_SHADER},
     {Shader::Type::Fragment, GL_FRAGMENT_SHADER},
@@ -85,18 +91,18 @@ static auto resize_window_callback([[maybe_unused]] GLFWwindow *window,
   afk.renderer.set_viewport(0, 0, width, height);
 }
 
-renderer::renderer()
+Renderer::Renderer()
   : models(0, PathHash{}, PathEquals{}), textures(0, PathHash{}, PathEquals{}),
     shaders(0, PathHash{}, PathEquals{}),
     shader_programs(0, PathHash{}, PathEquals{}) {}
 
-renderer::~renderer() {
+Renderer::~Renderer() {
   glfwDestroyWindow(this->window);
   glfwTerminate();
 }
 
-auto renderer::initialize() -> void {
-  afk_assert(!this->is_initialized, "renderer already initialized");
+auto Renderer::initialize() -> void {
+  afk_assert(!this->is_initialized, "Renderer already initialized");
   afk_assert(glfwInit(), "Failed to initialize GLFW");
 
   // FIXME: Give user an option to change graphics settings.
@@ -127,7 +133,7 @@ auto renderer::initialize() -> void {
   this->is_initialized = true;
 }
 
-auto renderer::set_option(GLenum option, bool state) const -> void {
+auto Renderer::set_option(GLenum option, bool state) const -> void {
   if (state) {
     glEnable(option);
   } else {
@@ -135,7 +141,7 @@ auto renderer::set_option(GLenum option, bool state) const -> void {
   }
 }
 
-auto renderer::get_window_size() const -> ivec2 {
+auto Renderer::get_window_size() const -> ivec2 {
   auto width  = 0;
   auto height = 0;
   glfwGetFramebufferSize(this->window, &width, &height);
@@ -143,7 +149,7 @@ auto renderer::get_window_size() const -> ivec2 {
   return ivec2{width, height};
 }
 
-auto renderer::clear_screen(vec4 clear_color) const -> void {
+auto Renderer::clear_screen(vec4 clear_color) const -> void {
   afk_assert_debug(clear_color.x >= 0.0f && clear_color.x <= 255.0f,
                    "Red channel out of range");
   afk_assert_debug(clear_color.y >= 0.0f && clear_color.y <= 255.0f,
@@ -159,15 +165,15 @@ auto renderer::clear_screen(vec4 clear_color) const -> void {
   this->set_option(GL_DEPTH_TEST, true);
 }
 
-auto renderer::set_viewport(i32 x, i32 y, i32 width, i32 height) const -> void {
+auto Renderer::set_viewport(i32 x, i32 y, i32 width, i32 height) const -> void {
   glViewport(x, y, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 }
 
-auto renderer::swap_buffers() -> void {
+auto Renderer::swap_buffers() -> void {
   glfwSwapBuffers(this->window);
 }
 
-auto renderer::get_model(const path &file_path) -> const ModelHandle & {
+auto Renderer::get_model(const path &file_path) -> const ModelHandle & {
   const auto is_loaded = this->models.count(file_path) == 1;
 
   if (!is_loaded) {
@@ -177,7 +183,7 @@ auto renderer::get_model(const path &file_path) -> const ModelHandle & {
   return this->models.at(file_path);
 }
 
-auto renderer::get_texture(const path &file_path) -> const TextureHandle & {
+auto Renderer::get_texture(const path &file_path) -> const TextureHandle & {
   const auto is_loaded = this->textures.count(file_path) == 1;
 
   if (!is_loaded) {
@@ -187,7 +193,7 @@ auto renderer::get_texture(const path &file_path) -> const TextureHandle & {
   return this->textures.at(file_path);
 }
 
-auto renderer::get_shader(const path &file_path) -> const ShaderHandle & {
+auto Renderer::get_shader(const path &file_path) -> const ShaderHandle & {
   const auto is_loaded = this->shaders.count(file_path) == 1;
 
   if (!is_loaded) {
@@ -197,7 +203,7 @@ auto renderer::get_shader(const path &file_path) -> const ShaderHandle & {
   return this->shaders.at(file_path);
 }
 
-auto renderer::get_shader_program(const path &file_path) -> const ShaderProgramHandle & {
+auto Renderer::get_shader_program(const path &file_path) -> const ShaderProgramHandle & {
   const auto is_loaded = this->shader_programs.count(file_path) == 1;
 
   if (!is_loaded) {
@@ -207,17 +213,17 @@ auto renderer::get_shader_program(const path &file_path) -> const ShaderProgramH
   return this->shader_programs.at(file_path);
 }
 
-auto renderer::set_texture_unit(usize unit) const -> void {
+auto Renderer::set_texture_unit(usize unit) const -> void {
   afk_assert_debug(unit > 0, "Invalid texure ID");
   glActiveTexture(unit);
 }
 
-auto renderer::bind_texture(const TextureHandle &texture) const -> void {
+auto Renderer::bind_texture(const TextureHandle &texture) const -> void {
   afk_assert_debug(texture.id > 0, "Invalid texture unit");
   glBindTexture(GL_TEXTURE_2D, texture.id);
 }
 
-auto renderer::draw() -> void {
+auto Renderer::draw() -> void {
   while (!this->draw_queue.empty()) {
     const auto command  = this->draw_queue.front();
     const auto &model   = this->get_model(command.model_path);
@@ -228,11 +234,11 @@ auto renderer::draw() -> void {
   }
 }
 
-auto renderer::queue_draw(DrawCommand command) -> void {
+auto Renderer::queue_draw(DrawCommand command) -> void {
   this->draw_queue.push(command);
 }
 
-auto renderer::setup_view(const ShaderProgramHandle &shader_program) const -> void {
+auto Renderer::setup_view(const ShaderProgramHandle &shader_program) const -> void {
   const auto &afk        = Engine::get();
   const auto window_size = this->get_window_size();
   const auto projection =
@@ -243,7 +249,7 @@ auto renderer::setup_view(const ShaderProgramHandle &shader_program) const -> vo
   this->set_uniform(shader_program, "u_matrices.view", view);
 }
 
-auto renderer::draw_model(const ModelHandle &model, const ShaderProgramHandle &shader_program,
+auto Renderer::draw_model(const ModelHandle &model, const ShaderProgramHandle &shader_program,
                           Transform transform) const -> void {
   glPolygonMode(GL_FRONT_AND_BACK, this->wireframe_enabled ? GL_LINE : GL_FILL);
   this->use_shader(shader_program);
@@ -290,12 +296,12 @@ auto renderer::draw_model(const ModelHandle &model, const ShaderProgramHandle &s
   }
 }
 
-auto renderer::use_shader(const ShaderProgramHandle &shader) const -> void {
+auto Renderer::use_shader(const ShaderProgramHandle &shader) const -> void {
   afk_assert_debug(shader.id > 0, "Invalid shader ID");
   glUseProgram(shader.id);
 }
 
-auto renderer::load_mesh(const Mesh &mesh) -> MeshHandle {
+auto Renderer::load_mesh(const Mesh &mesh) -> MeshHandle {
   afk_assert(mesh.vertices.size() > 0, "Mesh missing vertices");
   afk_assert(mesh.indices.size() > 0, "Mesh missing indices");
   afk_assert(mesh.indices.size() < std::numeric_limits<afk::render::Index>::max(),
@@ -370,7 +376,7 @@ auto renderer::load_mesh(const Mesh &mesh) -> MeshHandle {
   return mesh_handle;
 }
 
-auto renderer::load_model(const Model &model) -> ModelHandle {
+auto Renderer::load_model(const Model &model) -> ModelHandle {
   const auto is_loaded = this->models.count(model.file_path) == 1;
 
   afk_assert(!is_loaded, "Model with path '"s + model.file_path.string() + "' already loaded"s);
@@ -406,7 +412,7 @@ auto renderer::load_model(const Model &model) -> ModelHandle {
   return this->models[model.file_path];
 }
 
-auto renderer::load_texture(const Texture &texture) -> TextureHandle {
+auto Renderer::load_texture(const Texture &texture) -> TextureHandle {
   const auto is_loaded = this->textures.count(texture.file_path) == 1;
   const auto abs_path  = afk::io::get_absolute_path(texture.file_path);
 
@@ -451,7 +457,7 @@ auto renderer::load_texture(const Texture &texture) -> TextureHandle {
   return this->textures[texture.file_path];
 }
 
-auto renderer::compile_shader(const Shader &shader) -> ShaderHandle {
+auto Renderer::compile_shader(const Shader &shader) -> ShaderHandle {
   const auto is_loaded = this->shaders.count(shader.file_path) == 1;
 
   afk_assert(!is_loaded, "Shader with path '"s + shader.file_path.string() + "' already loaded"s);
@@ -489,7 +495,7 @@ auto renderer::compile_shader(const Shader &shader) -> ShaderHandle {
   return this->shaders[shader.file_path];
 }
 
-auto renderer::link_shaders(const ShaderProgram &shader_program) -> ShaderProgramHandle {
+auto Renderer::link_shaders(const ShaderProgram &shader_program) -> ShaderProgramHandle {
   const auto is_loaded = this->shader_programs.count(shader_program.file_path) == 1;
 
   afk_assert(!is_loaded, "Shader program with path '"s +
@@ -530,64 +536,68 @@ auto renderer::link_shaders(const ShaderProgram &shader_program) -> ShaderProgra
   return this->shader_programs[shader_program.file_path];
 }
 
-auto renderer::set_uniform(const ShaderProgramHandle &program,
+auto Renderer::set_uniform(const ShaderProgramHandle &program,
                            const string &name, bool value) const -> void {
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniform1i(glGetUniformLocation(program.id, name.c_str()),
               static_cast<GLboolean>(value));
 }
 
-auto renderer::set_uniform(const ShaderProgramHandle &program,
+auto Renderer::set_uniform(const ShaderProgramHandle &program,
                            const string &name, i32 value) const -> void {
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniform1i(glGetUniformLocation(program.id, name.c_str()), static_cast<GLint>(value));
 }
 
-auto renderer::set_uniform(const ShaderProgramHandle &program,
+auto Renderer::set_uniform(const ShaderProgramHandle &program,
                            const string &name, f32 value) const -> void {
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniform1f(glGetUniformLocation(program.id, name.c_str()), static_cast<GLfloat>(value));
 }
 
-auto renderer::set_uniform(const ShaderProgramHandle &program,
+/// @cond DOXYGEN_IGNORE
+
+auto Renderer::set_uniform(const ShaderProgramHandle &program,
                            const string &name, vec3 value) const -> void {
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniform3fv(glGetUniformLocation(program.id, name.c_str()), 1, glm::value_ptr(value));
 }
 
-auto renderer::set_uniform(const ShaderProgramHandle &program,
+auto Renderer::set_uniform(const ShaderProgramHandle &program,
                            const string &name, mat4 value) const -> void {
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniformMatrix4fv(glGetUniformLocation(program.id, name.c_str()), 1,
                      GL_FALSE, glm::value_ptr(value));
 }
 
-auto renderer::set_uniform(const ShaderProgramHandle &program, const string &name,
+auto Renderer::set_uniform(const ShaderProgramHandle &program, const string &name,
                            const vector<mat4> &value) const -> void {
   afk_assert_debug(program.id > 0, "Invalid shader program ID");
   glUniformMatrix4fv(glGetUniformLocation(program.id, name.c_str()),
                      value.size(), GL_FALSE, glm::value_ptr(value[0]));
 }
 
-auto renderer::set_wireframe(bool status) -> void {
+/// @endcond
+
+auto Renderer::set_wireframe(bool status) -> void {
   this->wireframe_enabled = status;
 }
 
-auto renderer::get_wireframe() const -> bool {
+auto Renderer::get_wireframe() const -> bool {
   return this->wireframe_enabled;
 }
 
-auto renderer::get_models() const -> const Models & {
+auto Renderer::get_models() const -> const Models & {
   return this->models;
 }
 
-auto renderer::get_textures() const -> const Textures & {
+auto Renderer::get_textures() const -> const Textures & {
   return this->textures;
 }
 
-auto renderer::get_shaders() const -> const Shaders & {
+auto Renderer::get_shaders() const -> const Shaders & {
   return this->shaders;
 }
-auto renderer::get_shader_programs() const -> const ShaderPrograms & {
+auto Renderer::get_shader_programs() const -> const ShaderPrograms & {
   return this->shader_programs;
 }

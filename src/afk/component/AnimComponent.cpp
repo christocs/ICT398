@@ -3,6 +3,7 @@
 #include "afk/NumericTypes.hpp"
 
 using afk::AnimComponent;
+using afk::GameObject;
 
 AnimComponent::AnimComponent(GameObject _owner, AnimComponent::Status _status,
                              const std::string &_name, f32 _time)

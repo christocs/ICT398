@@ -12,10 +12,16 @@
 namespace afk {
   namespace render {
     namespace opengl {
-      class renderer;
+      class Renderer;
+      struct ModelHandle;
     }
 
-    using renderer            = render::opengl::renderer;
+    /** The selected renderer. */
+    using Renderer            = render::opengl::Renderer;
+    using MeshHandle          = render::opengl::MeshHandle;
+    using ModelHandle         = render::opengl::ModelHandle;
+    using ShaderHandle        = render::opengl::ShaderHandle;
     using ShaderProgramHandle = render::opengl::ShaderProgramHandle;
+    using TextureHandle       = render::opengl::TextureHandle;
   }
 }

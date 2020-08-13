@@ -24,9 +24,11 @@ using afk::physics::Transform;
 using afk::render::Texture;
 using Movement = afk::render::Camera::Movement;
 
-/**
- * Initializes the afk engine.
- */
+auto Engine::get() -> Engine & {
+  static auto instance = Engine{};
+
+  return instance;
+}
 auto Engine::initialize() -> void {
   afk_assert(!this->is_initialized, "Engine already initialized");
 
@@ -35,15 +37,65 @@ auto Engine::initialize() -> void {
   this->ui_manager.initialize(this->renderer.window);
 
   this->event_manager.register_event(Event::Type::MouseMove,
-                                     event::eventManager::Callback{[this](Event event) {
+                                     event::EventManager::Callback{[this](Event event) {
                                        this->move_mouse(event);
                                      }});
   this->event_manager.register_event(
-      Event::Type::KeyDown, event::eventManager::Callback{[this](Event event) {
+      Event::Type::KeyDown, event::EventManager::Callback{[this](Event event) {
         this->move_keyboard(event);
       }});
 
   this->is_initialized = true;
+}
+
+auto Engine::render() -> void {
+  auto t        = Transform{};
+  t.scale       = vec3{0.25f};
+  t.translation = vec3{0.0f, -1.0f, 0.0f};
+
+  this->renderer.queue_draw({"res/model/city/city.fbx", "shader/default.prog", t});
+
+  this->renderer.clear_screen({135.0f, 206.0f, 235.0f, 1.0f});
+  this->ui_manager.prepare();
+  this->renderer.draw();
+  this->event_manager.pump_render();
+  this->ui_manager.draw();
+  this->renderer.swap_buffers();
+}
+
+auto Engine::update() -> void {
+  this->event_manager.pump_events();
+
+  if (glfwWindowShouldClose(this->renderer.window)) {
+    this->is_running = false;
+  }
+
+  if (this->ui_manager.show_menu) {
+    glfwSetInputMode(this->renderer.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  } else {
+    glfwSetInputMode(this->renderer.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  }
+
+  // this->update_camera();
+
+  ++this->frame_count;
+  this->last_update = afk::Engine::get_time();
+}
+
+auto Engine::exit() -> void {
+  this->is_running = false;
+}
+
+auto Engine::get_time() -> f32 {
+  return static_cast<f32>(glfwGetTime());
+}
+
+auto Engine::get_delta_time() -> f32 {
+  return this->get_time() - this->last_update;
+}
+
+auto Engine::get_is_running() const -> bool {
+  return this->is_running;
 }
 
 auto Engine::move_mouse(Event event) -> void {
@@ -76,91 +128,4 @@ auto Engine::move_keyboard(Event event) -> void {
   } else if (event.type == Event::Type::KeyDown && key == GLFW_KEY_1) {
     this->renderer.set_wireframe(!this->renderer.get_wireframe());
   }
-}
-
-/**
- * Returns a reference to the current engine instance.
- *
- * @return Returns a reference to the current engine instance.
- */
-auto Engine::get() -> Engine & {
-  static auto instance = Engine{};
-
-  return instance;
-}
-
-/**
- * Exits the engine.
- */
-auto Engine::exit() -> void {
-  this->is_running = false;
-}
-
-/**
- * Draws one frame and swaps the front and back framebuffer.
- */
-auto Engine::render() -> void {
-  auto t        = Transform{};
-  t.scale       = vec3{0.25f};
-  t.translation = vec3{0.0f, -1.0f, 0.0f};
-
-  this->renderer.queue_draw({"res/model/city/city.fbx", "shader/default.prog", t});
-
-  this->renderer.clear_screen({135.0f, 206.0f, 235.0f, 1.0f});
-  this->ui_manager.prepare();
-  this->renderer.draw();
-  this->event_manager.pump_render();
-  this->ui_manager.draw();
-  this->renderer.swap_buffers();
-}
-
-/**
- * Advances the game simulation for one tick.
- */
-auto Engine::update() -> void {
-  this->event_manager.pump_events();
-
-  if (glfwWindowShouldClose(this->renderer.window)) {
-    this->is_running = false;
-  }
-
-  if (this->ui_manager.show_menu) {
-    glfwSetInputMode(this->renderer.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-  } else {
-    glfwSetInputMode(this->renderer.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  }
-
-  // this->update_camera();
-
-  ++this->frame_count;
-  this->last_update = afk::Engine::get_time();
-}
-
-/**
- * Returns the current time in seconds.
- *
- * The current time is counted since the start of the engine.
- *
- * @return Returns the current time in seconds.
- */
-auto Engine::get_time() -> f32 {
-  return static_cast<f32>(glfwGetTime());
-}
-
-/**
- * Returns the delta time of the last update in seconds.
- *
- * @return Returns the delta time of the last update in seconds.
- */
-auto Engine::get_delta_time() -> f32 {
-  return this->get_time() - this->last_update;
-}
-
-/**
- * Returns if the engine is running.
- *
- * @return Returns if the engine is running.
- */
-auto Engine::get_is_running() const -> bool {
-  return this->is_running;
 }

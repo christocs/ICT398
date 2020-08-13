@@ -20,15 +20,15 @@ namespace afk {
     /** The game name, this is displayed as the window title. */
     static constexpr const char8_t *GAME_NAME = u8"ICT397";
 
-    /** rendering subsystem. */
-    render::renderer renderer = {};
-    /** event subsystem. */
-    event::eventManager event_manager = {};
-    /** UI subsystem. */
+    /** The rendering subsystem. */
+    render::Renderer renderer = {};
+    /** The event subsystem. */
+    event::EventManager event_manager = {};
+    /** The UI subsystem. */
     ui::UiManager ui_manager = {};
-    /** Camera subsystem. */
+    /** The camera subsystem. */
     render::Camera camera = {};
-    /** ECS subsystem. */
+    /** The ECS subsystem. */
     entt::registry registry = entt::registry{};
     /** Physics subsystem. */
     physics::PhysicsBodySystem physics_body_system = {};
@@ -40,19 +40,71 @@ namespace afk {
     auto operator=(const Engine &) -> Engine & = delete;
     auto operator=(Engine &&) -> Engine & = delete;
 
+    /**
+     * Returns a reference to the current engine instance.
+     *
+     * @return Returns a reference to the current engine instance.
+     */
     static auto get() -> Engine &;
 
-    auto exit() -> void;
+    /**
+     * Initializes the afk engine.
+     */
     auto initialize() -> void;
+
+    /**
+     * Draws one frame and swaps the front and back framebuffer.
+     */
     auto render() -> void;
+
+    /**
+     * Advances the game simulation for one tick.
+     */
     auto update() -> void;
 
-    auto move_mouse(event::Event event) -> void;
-    auto move_keyboard(event::Event event) -> void;
+    /**
+     * Exits the engine.
+     */
+    auto exit() -> void;
 
+    /**
+     * Returns the current time in seconds.
+     *
+     * The current time is counted since the start of the engine.
+     *
+     * @return Returns the current time in seconds.
+     */
     auto static get_time() -> f32;
+
+    /**
+     * Returns the delta time of the last update in seconds.
+     *
+     * @return Returns the delta time of the last update in seconds.
+     */
     auto get_delta_time() -> f32;
+
+    /**
+     * Returns if the engine is running.
+     *
+     * @return True if the engine is running.
+     */
     auto get_is_running() const -> bool;
+
+    /**
+     * Handles the mouse being moved.
+     * @todo Move into an input manager
+     *
+     * @param event The mouse move event.
+     */
+    auto move_mouse(event::Event event) -> void;
+
+    /**
+     * Handles a key being pressed.
+     * @todo Move into an input manager
+     *
+     * @param event The key press event.
+     */
+    auto move_keyboard(event::Event event) -> void;
 
   private:
     /** Is the engine initialized? */

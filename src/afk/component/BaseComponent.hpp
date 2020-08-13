@@ -6,6 +6,8 @@
 
 #include "afk/component/GameObject.hpp"
 
+/// @cond DOXYGEN_IGNORE
+
 namespace afk {
   class BaseComponent {
   public:
@@ -15,3 +17,5 @@ namespace afk {
     GameObject owning_entity = {entt::null};
   };
 }
+
+/// @endcond

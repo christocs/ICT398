@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <vector>
 
-#include "afk/component/BaseComponent.hpp"
 #include "afk/render/Animation.hpp"
 #include "afk/render/Mesh.hpp"
 #include "afk/render/Texture.hpp"
@@ -11,23 +10,32 @@
 namespace afk {
   namespace render {
     /**
-     * Model component
+     * Encapsulates a 3D model.
      */
-    struct Model : public BaseComponent {
-      using Meshes     = std::vector<Mesh>;
+    struct Model {
+      /** A collection of meshes. */
+      using Meshes = std::vector<Mesh>;
+      /** A collection of animations. */
       using Animations = std::vector<Animation>;
 
-      Meshes meshes         = {};
+      /** The model meshes. */
+      Meshes meshes = {};
+      /** The model animations. */
       Animations animations = {};
 
+      /** The model file path. */
       std::filesystem::path file_path = {};
-      std::filesystem::path file_dir  = {};
+      /** The model file directory. */
+      std::filesystem::path file_dir = {};
 
       Model() = default;
-      Model(GameObject e);
+
+      /**
+       * Constructs and loads a model from the specified file path.
+       *
+       * @param _file_path The model file path.
+       */
       Model(const std::filesystem::path &_file_path);
-      Model(GameObject e, const std::filesystem::path &_file_path);
-      Model(GameObject e, const Model &source);
     };
   }
 }

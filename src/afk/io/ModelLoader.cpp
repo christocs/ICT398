@@ -48,11 +48,13 @@ using afk::render::Texture;
 using afk::render::Vertex;
 namespace io = afk::io;
 
+/** The assimp importer options to use. */
 constexpr unsigned ASSIMP_OPTIONS =
     aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs |
     aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace |
     aiProcess_GlobalScale | aiProcess_LimitBoneWeights;
 
+/** Maps the assimp texture types to engine ones. */
 constexpr auto assimp_texture_types =
     frozen::make_unordered_map<Texture::Type, aiTextureType>({
         {Texture::Type::Diffuse, aiTextureType_DIFFUSE},
@@ -61,6 +63,12 @@ constexpr auto assimp_texture_types =
         {Texture::Type::Height, aiTextureType_HEIGHT},
     });
 
+/**
+ * Converts the specified assimp matrix to a glm matrix.
+ *
+ * @param m The assimp matrix to convert.
+ * @return The converted glm matrix.
+ */
 static auto to_glm(aiMatrix4x4t<f32> m) -> mat4 {
   return mat4{m.a1, m.b1, m.c1, m.d1,  //
               m.a2, m.b2, m.c2, m.d2,  //
@@ -68,10 +76,22 @@ static auto to_glm(aiMatrix4x4t<f32> m) -> mat4 {
               m.a4, m.b4, m.c4, m.d4}; //
 }
 
+/**
+ * Converts the specified assimp vector to a glm vector.
+ *
+ * @param v The assimp vector to convert.
+ * @return The converted glm vector.
+ */
 static auto to_glm(aiVector3t<f32> v) -> vec3 {
   return vec3{v.x, v.y, v.z};
 }
 
+/**
+ * Converts the specified assimp quaternion to a glm quaternion.
+ *
+ * @param q The assimp quaternion to convert.
+ * @return The converted glm quaternion.
+ */
 static auto to_glm(aiQuaterniont<f32> q) -> quat {
   return quat{q.w, q.x, q.y, q.z};
 }
@@ -160,17 +180,57 @@ auto ModelLoader::get_indices(const aiMesh *mesh) -> Mesh::Indices {
 
   indices.reserve(mesh->mNumFaces);
 
-  auto num_indices = 0;
   for (auto i = usize{0}; i < mesh->mNumFaces; ++i) {
     const auto face = mesh->mFaces[i];
 
     for (auto j = usize{0}; j < face.mNumIndices; ++j) {
       indices.push_back(static_cast<afk::render::Index>(face.mIndices[j]));
-      ++num_indices;
     }
   }
 
   return indices;
+}
+
+auto ModelLoader::get_material_textures(const aiMaterial *material, Texture::Type type)
+    -> Mesh::Textures {
+  auto textures = Mesh::Textures{};
+
+  const auto texture_count = material->GetTextureCount(assimp_texture_types.at(type));
+
+  textures.reserve(texture_count);
+
+  for (auto i = 0u; i < texture_count; ++i) {
+    auto assimp_path = aiString{};
+    material->GetTexture(assimp_texture_types.at(type), i, &assimp_path);
+    const auto file_path = get_texture_path(path{string{assimp_path.data}});
+
+    auto texture      = Texture{};
+    texture.type      = type;
+    texture.file_path = file_path;
+    textures.push_back(texture);
+  }
+
+  return textures;
+}
+
+auto ModelLoader::get_textures(const aiMaterial *material) -> Mesh::Textures {
+  auto textures = Mesh::Textures{};
+
+  const auto diffuse = this->get_material_textures(material, Texture::Type::Diffuse);
+  const auto specular = this->get_material_textures(material, Texture::Type::Specular);
+  const auto normal = this->get_material_textures(material, Texture::Type::Normal);
+  const auto height = this->get_material_textures(material, Texture::Type::Height);
+
+  textures.insert(textures.end(), std::make_move_iterator(diffuse.begin()),
+                  std::make_move_iterator(diffuse.end()));
+  textures.insert(textures.end(), std::make_move_iterator(specular.begin()),
+                  std::make_move_iterator(specular.end()));
+  textures.insert(textures.end(), std::make_move_iterator(normal.begin()),
+                  std::make_move_iterator(normal.end()));
+  textures.insert(textures.end(), std::make_move_iterator(height.begin()),
+                  std::make_move_iterator(height.end()));
+
+  return textures;
 }
 
 auto ModelLoader::get_bones(const aiMesh *mesh, Mesh::Vertices &vertices)
@@ -242,48 +302,6 @@ auto ModelLoader::get_animations(const aiScene *scene) -> Model::Animations {
   }
 
   return animations;
-}
-
-auto ModelLoader::get_material_textures(const aiMaterial *material, Texture::Type type)
-    -> Mesh::Textures {
-  auto textures = Mesh::Textures{};
-
-  const auto texture_count = material->GetTextureCount(assimp_texture_types.at(type));
-
-  textures.reserve(texture_count);
-
-  for (auto i = 0u; i < texture_count; ++i) {
-    auto assimp_path = aiString{};
-    material->GetTexture(assimp_texture_types.at(type), i, &assimp_path);
-    const auto file_path = get_texture_path(path{string{assimp_path.data}});
-
-    auto texture      = Texture{};
-    texture.type      = type;
-    texture.file_path = file_path;
-    textures.push_back(texture);
-  }
-
-  return textures;
-}
-
-auto ModelLoader::get_textures(const aiMaterial *material) -> Mesh::Textures {
-  auto textures = Mesh::Textures{};
-
-  const auto diffuse = this->get_material_textures(material, Texture::Type::Diffuse);
-  const auto specular = this->get_material_textures(material, Texture::Type::Specular);
-  const auto normal = this->get_material_textures(material, Texture::Type::Normal);
-  const auto height = this->get_material_textures(material, Texture::Type::Height);
-
-  textures.insert(textures.end(), std::make_move_iterator(diffuse.begin()),
-                  std::make_move_iterator(diffuse.end()));
-  textures.insert(textures.end(), std::make_move_iterator(specular.begin()),
-                  std::make_move_iterator(specular.end()));
-  textures.insert(textures.end(), std::make_move_iterator(normal.begin()),
-                  std::make_move_iterator(normal.end()));
-  textures.insert(textures.end(), std::make_move_iterator(height.begin()),
-                  std::make_move_iterator(height.end()));
-
-  return textures;
 }
 
 auto ModelLoader::get_texture_path(const path &file_path) const -> path {

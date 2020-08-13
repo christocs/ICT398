@@ -10,9 +10,15 @@
 
 namespace afk {
   namespace render {
+    /**
+     * Encapsulates a skeletal bone used for animation.
+     */
     struct Bone {
+      /** The bone name. */
       std::string name = {};
-      Index index      = {};
+      /** The bone index. */
+      Index index = {};
+      /** The bone offset. */
       glm::mat4 offset = {};
     };
   }
