@@ -9,6 +9,8 @@
 
 #include "afk/NumericTypes.hpp"
 #include "afk/physics/PhysicsBody.hpp"
+#include "afk/render/Debug.hpp"
+#include "afk/render/Renderer.hpp"
 #include "glm/vec3.hpp"
 
 namespace afk {
@@ -21,7 +23,9 @@ namespace afk {
     public:
       PhysicsBodySystem();
 
-      auto update(entt::registry *registry, float dt) -> void;
+      auto update(float dt) -> void;
+
+      auto get_debug_model() -> afk::render::Model;
 
     private:
       class CollisionEventListener : public rp3d::EventListener {
@@ -34,14 +38,32 @@ namespace afk {
         std::vector<glm::vec3> contact_points = {};
       };
 
+      class Logger : public rp3d::Logger {
+        void log(Level level, const std::string &physicsWorldName, Category category,
+                 const std::string &message, const char *filename, int lineNumber);
+      };
+
+      // todo: give better names
+      auto set_debug_physics_item(const afk::render::debug::PhysicsView &physics_view,
+                                  bool status) -> void;
+      auto get_debug_physics_item(const afk::render::debug::PhysicsView &physics_view) const
+          -> bool;
+
+      //      auto get_debug_model() -> afk::render::Model;
+
+      auto get_debug_mesh() -> afk::render::Mesh;
+
       std::queue<Collision> collision_enter_queue = {};
       std::queue<Collision> collision_exit_queue  = {};
 
       rp3d::PhysicsCommon physics_common = {};
-      rp3d::PhysicsWorld *world          = physics_common.createPhysicsWorld();
+      rp3d::PhysicsWorld *world          = nullptr;
       CollisionEventListener listener    = {};
+      afk::render::Model model           = {};
+      Logger logger = {};
 
       friend class PhysicsBody;
+      friend afk::render::Renderer;
     };
   }
 }
