@@ -24,6 +24,7 @@
 #include "afk/render/opengl/ShaderHandle.hpp"
 #include "afk/render/opengl/ShaderProgramHandle.hpp"
 #include "afk/render/opengl/TextureHandle.hpp"
+#include "afk/render/Debug.hpp"
 
 namespace afk {
   namespace render {
@@ -329,6 +330,9 @@ namespace afk {
          * Returns the current wireframe status.
          */
         auto get_wireframe() const -> bool;
+        // todo: give better names
+        auto set_debug_physics_item(const afk::render::debug::PhysicsView &physics_view, bool status) -> void;
+        auto get_debug_physics_item(const afk::render::debug::PhysicsView &physics_view) const -> bool;
 
         /**
          * Returns the model handle container.

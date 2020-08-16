@@ -591,6 +591,14 @@ auto Renderer::get_models() const -> const Models & {
   return this->models;
 }
 
+auto Renderer::set_debug_physics_item(const afk::render::debug::PhysicsView &physics_view, bool status) -> void {
+  afk::Engine::get().physics_body_system.set_debug_physics_item(physics_view, status);
+}
+
+auto Renderer::get_debug_physics_item(const afk::render::debug::PhysicsView &physics_view) const -> bool {
+  return afk::Engine::get().physics_body_system.get_debug_physics_item(physics_view);
+}
+
 auto Renderer::get_textures() const -> const Textures & {
   return this->textures;
 }

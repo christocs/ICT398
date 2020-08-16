@@ -9,7 +9,6 @@
 #include "afk/render/Camera.hpp"
 #include "afk/render/Renderer.hpp"
 #include "afk/ui/UiManager.hpp"
-#include "entt/entt.hpp"
 
 namespace afk {
   /**

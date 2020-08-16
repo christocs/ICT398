@@ -45,15 +45,52 @@ auto Engine::initialize() -> void {
         this->move_keyboard(event);
       }});
 
+  auto box_entity           = registry.create();
+  auto box_transform        = afk::physics::Transform{};
+  box_transform.translation = glm::vec3(2.0f, 0.0f, -0.4f);
+  box_transform.scale       = glm::vec3(1.0f);
+//  auto box_model            = afk::render::Model("res/model/box/box.obj");
+//  this->renderer.load_model(box_model);
+  registry.emplace<afk::physics::Transform>(box_entity, box_transform);
+  auto physics_body = afk::physics::PhysicsBody{box_entity, &this->physics_body_system, box_transform, afk::physics::Box(1.0f, 1.0f, 1.0f)};
+  registry.emplace<afk::physics::PhysicsBody>(
+      box_entity, physics_body);
+
+  auto box_entity2           = registry.create();
+  auto box_transform2        = afk::physics::Transform{};
+  box_transform2.translation = glm::vec3{2.0f, 0.0f, 0.4f};
+  box_transform2.scale       = glm::vec3(1.0f);
+//  auto box_model            = afk::render::Model("res/model/box/box.obj");
+//  this->renderer.load_model(box_model);
+  registry.emplace<afk::physics::Transform>(box_entity2, box_transform2);
+  auto physics_body2 = afk::physics::PhysicsBody{box_entity2, &this->physics_body_system, box_transform2, afk::physics::Box(1.0f, 1.0f, 1.0f)};
+  registry.emplace<afk::physics::PhysicsBody>(
+      box_entity2, physics_body2);
+
   this->is_initialized = true;
 }
 
 auto Engine::render() -> void {
-  auto t        = Transform{};
-  t.scale       = vec3{0.25f};
-  t.translation = vec3{0.0f, -1.0f, 0.0f};
+//  auto t        = Transform{};
+//  t.scale       = vec3{0.25f};
+//  t.translation = vec3{0.0f, -1.0f, 0.0f};
 
-  this->renderer.queue_draw({"res/model/city/city.fbx", "shader/default.prog", t});
+//  this->renderer.queue_draw({"res/model/city/city.fbx", "shader/default.prog", t});
+
+//  auto t2 = Transform{};
+//  t2.translation = vec3{-1.0f, 0.0f, 2.0f};
+//  this->renderer.queue_draw({"res/model/box/box.obj", "shader/default.prog", t2});
+//  auto t3 = Transform{};
+//  t3.translation = vec3{1.0f, 0.0f, 2.0f};
+//  this->renderer.queue_draw({"res/model/box/box.obj", "shader/default.prog", t3});
+
+  auto t4 = Transform{};
+  t4.translation = vec3{0.0f};
+  auto render_model = this->physics_body_system.get_debug_model();
+  if (!render_model.meshes[0].vertices.empty()) {
+    auto render_model_handle = this->renderer.load_model(render_model);
+    this->renderer.queue_draw({render_model.file_path, "shader/default.prog", t4});
+  }
 
   this->renderer.clear_screen({135.0f, 206.0f, 235.0f, 1.0f});
   this->ui_manager.prepare();
@@ -75,6 +112,8 @@ auto Engine::update() -> void {
   } else {
     glfwSetInputMode(this->renderer.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   }
+
+  this->physics_body_system.update(afk::Engine::get_time());
 
   // this->update_camera();
 
