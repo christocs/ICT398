@@ -49,23 +49,15 @@ auto Engine::initialize() -> void {
   auto box_transform        = afk::physics::Transform{};
   box_transform.translation = glm::vec3(2.0f, 0.0f, -0.4f);
   box_transform.scale       = glm::vec3(1.0f);
-//  auto box_model            = afk::render::Model("res/model/box/box.obj");
+  auto box_model            = afk::render::Model("res/model/box/box.obj");
 //  this->renderer.load_model(box_model);
-  registry.emplace<afk::physics::Transform>(box_entity, box_transform);
-  auto physics_body = afk::physics::PhysicsBody{box_entity, &this->physics_body_system, box_transform, afk::physics::Box(1.0f, 1.0f, 1.0f)};
+//  registry.emplace<afk::physics::Transform>(box_entity, box_transform);
+  auto collision_body = afk::physics::CollisionBodyCollection{};
+  collision_body.push_back(afk::physics::CollisionBody{afk::physics::CollisionBodyType::Box, afk::physics::shape::Box{0.1f, 0.3f, 0.1f}, Transform{}});
+  collision_body.push_back(afk::physics::CollisionBody{afk::physics::CollisionBodyType::Box, afk::physics::shape::Box{0.3f, 0.1f, 0.1f}, Transform{}});
+  auto physics_body = afk::physics::PhysicsBody{box_entity, &this->physics_body_system, box_transform, collision_body};
   registry.emplace<afk::physics::PhysicsBody>(
       box_entity, physics_body);
-
-  auto box_entity2           = registry.create();
-  auto box_transform2        = afk::physics::Transform{};
-  box_transform2.translation = glm::vec3{2.0f, 0.0f, 0.4f};
-  box_transform2.scale       = glm::vec3(1.0f);
-//  auto box_model            = afk::render::Model("res/model/box/box.obj");
-//  this->renderer.load_model(box_model);
-  registry.emplace<afk::physics::Transform>(box_entity2, box_transform2);
-  auto physics_body2 = afk::physics::PhysicsBody{box_entity2, &this->physics_body_system, box_transform2, afk::physics::Box(1.0f, 1.0f, 1.0f)};
-  registry.emplace<afk::physics::PhysicsBody>(
-      box_entity2, physics_body2);
 
   this->is_initialized = true;
 }
