@@ -22,25 +22,38 @@ PhysicsBody::PhysicsBody(GameObject e, PhysicsBodySystem *physics_system,
     // do NOT allocate memory yourself, let reactphysics3d handle it
     rp3d::CollisionShape *rp3d_collision_shape = nullptr;
 
-    // avoid proper runtime checking of types
+    // need to apply parent scale at the shape level, as scale cannot be applied to the parent body level
+    auto collision_transform = collision_body.transform;
+    collision_transform.scale.x *= transform.scale.x;
+    collision_transform.scale.y *= transform.scale.y;
+    collision_transform.scale.z *= transform.scale.z;
+
+    // todo: use std::visit for runtime type checking
     if (collision_body.type == CollisionBodyType::Box) {
-      rp3d_collision_shape = this->createShapeBox(
-          std::get<shape::Box>(collision_body.body), collision_body.transform);
+      rp3d_collision_shape = afk::physics::PhysicsBody::createShapeBox(
+          std::get<shape::Box>(collision_body.body), collision_transform.scale);
     } else if (collision_body.type == CollisionBodyType::Sphere) {
-      rp3d_collision_shape = this->createShapeSphere(
-          std::get<shape::Sphere>(collision_body.body), collision_body.transform);
+      rp3d_collision_shape = afk::physics::PhysicsBody::createShapeSphere(
+          std::get<shape::Sphere>(collision_body.body), collision_transform.scale);
     } else if (collision_body.type == CollisionBodyType::Capsule) {
-      rp3d_collision_shape = this->createShapeCapsule(
-          std::get<shape::Capsule>(collision_body.body), collision_body.transform);
+      rp3d_collision_shape = afk::physics::PhysicsBody::createShapeCapsule(
+          std::get<shape::Capsule>(collision_body.body), collision_transform.scale);
     } else {
-        afk_assert(false, "Exhausted collision body types");
+      afk_assert(false, "Exhausted collision body types");
     }
 
-    this->collider =
-        this->body->addCollider(rp3d_collision_shape, rp3d::Transform::identity());
-  }
+    const auto rp3d_transform =
+        rp3d::Transform(rp3d::Vector3(collision_transform.translation.x,
+                                      collision_transform.translation.y,
+                                      collision_transform.translation.z),
+                        rp3d::Quaternion(collision_transform.rotation.x,
+                                         collision_transform.rotation.y,
+                                         collision_transform.rotation.z,
+                                         collision_transform.rotation.w));
 
-  this->collider->setIsTrigger(true);
+    auto collider = this->body->addCollider(rp3d_collision_shape, rp3d_transform);
+    collider->setIsTrigger(true);
+  }
 }
 
 void PhysicsBody::translate(glm::vec3 translate) {
@@ -57,27 +70,25 @@ void PhysicsBody::set_pos(glm::vec3 pos) {
 }
 
 rp3d::BoxShape *PhysicsBody::createShapeBox(const afk::physics::shape::Box &box,
-                                 const afk::physics::Transform &transform) {
+                                            const glm::vec3 &scale) {
   auto &engine = afk::Engine::get();
-  return engine.physics_body_system.physics_common.createBoxShape(rp3d::Vector3(
-    box.x * transform.scale.x, box.y * transform.scale.y,
-    box.z * transform.scale.z));
+  return engine.physics_body_system.physics_common.createBoxShape(
+      rp3d::Vector3(box.x * scale.x, box.y * scale.y, box.z * scale.z));
 }
 
 rp3d::SphereShape *PhysicsBody::createShapeSphere(const afk::physics::shape::Sphere &sphere,
-                                 const afk::physics::Transform &transform) {
+                                                  const glm::vec3 &scale) {
   // Note: have to scale sphere equally on every axis (otherwise it wouldn't be a sphere), so scaling the average of each axis
-  const auto scale_factor =
-      (transform.scale.x + transform.scale.y + transform.scale.z) / 3.0f;
+  const auto scale_factor = (scale.x + scale.y + scale.z) / 3.0f;
 
   auto &engine = afk::Engine::get();
   return engine.physics_body_system.physics_common.createSphereShape(sphere * scale_factor);
 }
 
 rp3d::CapsuleShape *PhysicsBody::createShapeCapsule(const afk::physics::shape::Capsule &capsule,
-                                 const afk::physics::Transform &transform) {
+                                                    const glm::vec3 &scale) {
   auto &engine = afk::Engine::get();
-  return engine.physics_body_system.physics_common.createCapsuleShape(
-      capsule.radius * ((transform.scale.x + transform.scale.y) / 2.0f),
-      capsule.height * transform.scale.y);
+  auto shape   = engine.physics_body_system.physics_common.createCapsuleShape(
+      capsule.radius * ((scale.x + scale.y) / 2.0f), capsule.height * scale.y);
+  return shape;
 }

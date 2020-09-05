@@ -25,7 +25,7 @@ namespace afk {
     enum CollisionBodyType { Box, Sphere, Capsule };
 
     struct CollisionBody {
-      CollisionBodyType type            = {};
+      CollisionBodyType type            = {}; // todo: remove need for this by using std::visit
       CollisionBodyVariant body         = {};
       afk::physics::Transform transform = {}; // transform relative to parent
     };
@@ -52,18 +52,16 @@ namespace afk {
       void set_pos(glm::vec3 pos);
 
     private:
-      rp3d::BoxShape *createShapeBox(const afk::physics::shape::Box &shape,
-                                     const afk::physics::Transform &transform);
+      static rp3d::BoxShape *createShapeBox(const afk::physics::shape::Box &shape,
+                                            const glm::vec3 &scale);
 
-      rp3d::SphereShape *createShapeSphere(const afk::physics::shape::Sphere &shape,
-                                           const afk::physics::Transform &transform);
+      static rp3d::SphereShape *createShapeSphere(const afk::physics::shape::Sphere &shape,
+                                                  const glm::vec3 &scale);
 
-      rp3d::CapsuleShape *createShapeCapsule(const afk::physics::shape::Capsule &shape,
-                                             const afk::physics::Transform &transform);
+      static rp3d::CapsuleShape *createShapeCapsule(const afk::physics::shape::Capsule &shape,
+                                                    const glm::vec3 &scale);
 
-      rp3d::RigidBody *body                 = nullptr;
-      rp3d::Collider *collider              = nullptr;
-      rp3d::CollisionShape *collision_shape = nullptr;
+      rp3d::RigidBody *body    = nullptr;
 
       friend class PhysicsBodySystem;
     };

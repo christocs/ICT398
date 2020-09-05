@@ -16,6 +16,8 @@ PhysicsBodySystem::PhysicsBodySystem() {
   this->world->setIsGravityEnabled(false);
   this->world->setEventListener(&listener);
   this->world->setIsDebugRenderingEnabled(true);
+  // todo: turn it back on
+  this->world->enableSleeping(false);
 
   // Create the default logger
 //  rp3d::DefaultLogger *logger = this->physics_common.createDefaultLogger();
@@ -41,12 +43,12 @@ PhysicsBodySystem::PhysicsBodySystem() {
   //  this->set_debug_physics_item(afk::render::debug::PhysicsView::COLLIDER_BROADPHASE_AABB, true);
   //  this->set_debug_physics_item(afk::render::debug::PhysicsView::COLLIDER_AABB, true);
 
-//  this->world->getDebugRenderer().setIsDebugItemDisplayed(
-//      rp3d::DebugRenderer::DebugItem::COLLIDER_AABB, true);
-//  this->world->getDebugRenderer().setIsDebugItemDisplayed(
-//      rp3d::DebugRenderer::DebugItem::COLLIDER_BROADPHASE_AABB, true);
-//  this->world->getDebugRenderer().setIsDebugItemDisplayed(
-//      rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
+  this->world->getDebugRenderer().setIsDebugItemDisplayed(
+      rp3d::DebugRenderer::DebugItem::COLLIDER_AABB, true);
+  this->world->getDebugRenderer().setIsDebugItemDisplayed(
+      rp3d::DebugRenderer::DebugItem::COLLIDER_BROADPHASE_AABB, true);
+  this->world->getDebugRenderer().setIsDebugItemDisplayed(
+      rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
   this->world->getDebugRenderer().setIsDebugItemDisplayed(
       rp3d::DebugRenderer::DebugItem::CONTACT_POINT, true);
   this->world->getDebugRenderer().setIsDebugItemDisplayed(
