@@ -55,7 +55,7 @@ auto Engine::initialize() -> void {
   auto collision_body = afk::physics::CollisionBodyCollection{};
   collision_body.push_back(afk::physics::CollisionBody{afk::physics::CollisionBodyType::Box, afk::physics::shape::Box{0.1f, 0.3f, 0.1f}, Transform{}});
   collision_body.push_back(afk::physics::CollisionBody{afk::physics::CollisionBodyType::Box, afk::physics::shape::Box{0.3f, 0.1f, 0.1f}, Transform{}});
-  auto physics_body = afk::physics::PhysicsBody{box_entity, &this->physics_body_system, box_transform, collision_body};
+  auto physics_body = afk::physics::PhysicsBody{box_entity, &this->physics_body_system, box_transform, collision_body, afk::physics::BodyType::Static};
   registry.emplace<afk::physics::PhysicsBody>(
       box_entity, physics_body);
 

@@ -7,7 +7,7 @@ using afk::physics::PhysicsBody;
 
 PhysicsBody::PhysicsBody(GameObject e, PhysicsBodySystem *physics_system,
                          const Transform &transform,
-                         const CollisionBodyCollection &collision_bodies) {
+                         const CollisionBodyCollection &collision_bodies, BodyType type) {
   this->owning_entity = e;
 
   this->body = physics_system->world->createRigidBody(rp3d::Transform(
@@ -54,6 +54,8 @@ PhysicsBody::PhysicsBody(GameObject e, PhysicsBodySystem *physics_system,
     auto collider = this->body->addCollider(rp3d_collision_shape, rp3d_transform);
     collider->setIsTrigger(true);
   }
+
+  this->type = type;
 }
 
 void PhysicsBody::translate(glm::vec3 translate) {

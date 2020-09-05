@@ -186,11 +186,11 @@ namespace afk {
 
       /** Maps each event type to a collection of callbacks. */
       std::unordered_map<Event::Type, std::vector<Callback>> callbacks = {
-          {Event::Type::MouseDown, {}},   {Event::Type::MouseUp, {}},
-          {Event::Type::MouseMove, {}},   {Event::Type::KeyDown, {}},
-          {Event::Type::KeyUp, {}},       {Event::Type::TextEnter, {}},
-          {Event::Type::MouseScroll, {}}, {Event::Type::Update, {}},
-      };
+          {Event::Type::MouseDown, {}},       {Event::Type::MouseUp, {}},
+          {Event::Type::MouseMove, {}},       {Event::Type::KeyDown, {}},
+          {Event::Type::KeyUp, {}},           {Event::Type::TextEnter, {}},
+          {Event::Type::MouseScroll, {}},     {Event::Type::Update, {}},
+          {Event::Type::CollisionImpulse, {}}};
     };
   }
 }

@@ -4,6 +4,7 @@
 #include <variant>
 
 #include "afk/NumericTypes.hpp"
+#include "afk/physics/PhysicsBody.hpp"
 
 namespace afk {
   namespace event {
@@ -85,6 +86,13 @@ namespace afk {
        */
       enum class Action { Forward, Backward, Left, Right };
 
+      // todo: better names
+      struct CollisionImpulseBodyData {
+        afk::physics::BodyType type;
+        afk::GameObject body_id;
+      };
+      using CollisionImpulse = std::array<CollisionImpulseBodyData, 2>;
+
       /**
        * Denotes an event type.
        */
@@ -99,13 +107,14 @@ namespace afk {
         MouseScroll,
         Update,
         Render,
+        CollisionImpulse, // todo: better name
       };
 
       /**
        * Encapsulates all possible event data.
        */
       using Data =
-          std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render>;
+          std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render, CollisionImpulse>;
 
       /**
        * Returns the data contained in this event.

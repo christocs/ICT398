@@ -53,9 +53,6 @@ namespace afk {
 
       auto get_debug_mesh() -> afk::render::Mesh;
 
-      std::queue<Collision> collision_enter_queue = {};
-      std::queue<Collision> collision_exit_queue  = {};
-
       rp3d::PhysicsCommon physics_common = {};
       rp3d::PhysicsWorld *world          = nullptr;
       CollisionEventListener listener    = {};

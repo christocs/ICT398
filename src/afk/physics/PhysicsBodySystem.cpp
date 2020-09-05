@@ -4,6 +4,8 @@
 
 #include "afk/Afk.hpp"
 #include "afk/NumericTypes.hpp"
+#include "afk/debug/Assert.hpp"
+#include "afk/event/Event.hpp"
 #include "afk/io/Log.hpp"
 
 using afk::physics::PhysicsBodySystem;
@@ -20,7 +22,7 @@ PhysicsBodySystem::PhysicsBodySystem() {
   this->world->enableSleeping(false);
 
   // Create the default logger
-//  rp3d::DefaultLogger *logger = this->physics_common.createDefaultLogger();
+  //  rp3d::DefaultLogger *logger = this->physics_common.createDefaultLogger();
 
   // Log level (warnings and errors)
   auto logLevel =
@@ -29,10 +31,10 @@ PhysicsBodySystem::PhysicsBodySystem() {
                             static_cast<afk::u16>(rp3d::Logger::Level::Error));
 
   // Output the logs into an HTML file
-//    logger->addStreamDestination(afk::io::log, logLevel, rp3d::DefaultLogger::Format::Text);
+  //    logger->addStreamDestination(afk::io::log, logLevel, rp3d::DefaultLogger::Format::Text);
 
   // Output the logs into an HTML file
-//  logger->addFileDestination("rp3d_log_.html", logLevel, rp3d::DefaultLogger::Format::HTML);
+  //  logger->addFileDestination("rp3d_log_.html", logLevel, rp3d::DefaultLogger::Format::HTML);
 
   // Set the logger
   this->physics_common.setLogger(&(this->logger));
@@ -87,7 +89,9 @@ void PhysicsBodySystem::CollisionEventListener::onContact(
     afk::GameObject *object1 = nullptr;
     afk::GameObject *object2 = nullptr;
 
-    auto physics_view = afk::Engine::get().registry.view<PhysicsBody>();
+    auto engine       = &afk::Engine::get();
+    auto registry     = &engine->registry;
+    auto physics_view = registry->view<PhysicsBody>();
     for (auto &entity : physics_view) {
       auto &physics_component = physics_view.get<PhysicsBody>(entity);
       if (physics_component.body->getEntity().id == body1_id) {
@@ -100,31 +104,58 @@ void PhysicsBodySystem::CollisionEventListener::onContact(
       }
     }
 
-    if ((object1 != nullptr) && (object2 != nullptr)) {
+    afk_assert(object1 != nullptr,
+               "collision callback couldn't find object 1 in entt");
+    afk_assert(object2 != nullptr,
+               "collision callback couldn't find object 2 in entt");
+
+    // only proceed if not colliding with self
+    if (*object1 != *object2) {
+      auto body1         = registry->get<afk::physics::PhysicsBody>(*object1);
+      auto body2         = registry->get<afk::physics::PhysicsBody>(*object2);
+      auto event_manager = &engine->event_manager;
 
       if (contactPair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart) {
-        std::vector<glm::vec3> contact_points = {};
-        contact_points.reserve(contactPair.getNbContactPoints());
-        for (u32 i = 0; i < contactPair.getNbContactPoints(); ++i) {
-          auto contact_point = contactPair.getContactPoint(i).getWorldNormal();
-          contact_points.emplace_back(contact_point.x, contact_point.y,
-                                      contact_point.z);
-        }
-        afk::Engine::get().physics_body_system.collision_enter_queue.emplace(
-            PhysicsBodySystem::Collision{*object1, *object2, std::move(contact_points)});
+        auto data = afk::event::Event::CollisionImpulse{};
+        data[0].type = body1.type;
+        data[0].body_id = *object1;
+        data[1].type = body2.type;
+        data[1].body_id = *object2;
+        event_manager->push_event(afk::event::Event{
+          data,
+          afk::event::Event::Type::CollisionImpulse
+        });
+        //        std::vector<glm::vec3> contact_points = {};
+        //        contact_points.reserve(contactPair.getNbContactPoints());
+        //        for (u32 i = 0; i < contactPair.getNbContactPoints(); ++i) {
+        //          auto contact_point = contactPair.getContactPoint(i).getWorldNormal();
+        //          contact_points.emplace_back(contact_point.x, contact_point.y,
+        //                                      contact_point.z);
+        //        }
+        //        afk::Engine::get().physics_body_system.collision_enter_queue.emplace(
+        //            PhysicsBodySystem::Collision{*object1, *object2, std::move(contact_points)});
       } else if (contactPair.getEventType() ==
                  CollisionCallback::ContactPair::EventType::ContactExit) {
-        std::vector<glm::vec3> contact_points = {};
-        contact_points.reserve(contactPair.getNbContactPoints());
-        for (u32 i = 0; i < contactPair.getNbContactPoints(); ++i) {
-          auto contact_point = contactPair.getContactPoint(i).getWorldNormal();
-          contact_points.emplace_back(contact_point.x, contact_point.y,
-                                      contact_point.z);
-        }
-        afk::Engine::get().physics_body_system.collision_enter_queue.emplace(
-            PhysicsBodySystem::Collision{*object1, *object2, std::move(contact_points)});
+        //        std::vector<glm::vec3> contact_points = {};
+        //        contact_points.reserve(contactPair.getNbContactPoints());
+        //        for (u32 i = 0; i < contactPair.getNbContactPoints(); ++i) {
+        //          auto contact_point = contactPair.getContactPoint(i).getWorldNormal();
+        //          contact_points.emplace_back(contact_point.x, contact_point.y,
+        //                                      contact_point.z);
+        //        }
+        //        afk::Engine::get().physics_body_system.collision_enter_queue.emplace(
+        //            PhysicsBodySystem::Collision{*object1, *object2, std::move(contact_points)});
       } else {
         // ContactStay may not be triggered if rigid body is sleeping
+        auto data = afk::event::Event::CollisionImpulse{};
+        data[0].type = body1.type;
+        data[0].body_id = *object1;
+        data[1].type = body2.type;
+        data[1].body_id = *object2;
+        event_manager->push_event(afk::event::Event{
+            data,
+            afk::event::Event::Type::CollisionImpulse
+        });
       }
     }
   }
@@ -190,13 +221,13 @@ auto PhysicsBodySystem::get_debug_mesh() -> afk::render::Mesh {
 
   auto debug_renderer = &this->world->getDebugRenderer();
   auto triangles      = debug_renderer->getTriangles();
-//  afk::io::log << "no triangles: " << std::to_string(triangles.size()) << "\n";
-//  afk::io::log << "no lines: " << std::to_string(debug_renderer->getNbLines()) << "\n";
+  //  afk::io::log << "no triangles: " << std::to_string(triangles.size()) << "\n";
+  //  afk::io::log << "no lines: " << std::to_string(debug_renderer->getNbLines()) << "\n";
 
   // note: some points may be duplicated
   auto no_vertices = usize{0};
   for (auto i = usize{0}; i < triangles.size(); ++i) {
-//    afk::io::log << "no i: " << std::to_string(i) << "\n";
+    //    afk::io::log << "no i: " << std::to_string(i) << "\n";
     auto vertex1     = afk::render::Vertex{};
     vertex1.position = glm::vec3{triangles[i].point1.x, triangles[i].point1.y,
                                  triangles[i].point1.z};
@@ -221,7 +252,8 @@ auto PhysicsBodySystem::get_debug_mesh() -> afk::render::Mesh {
   return mesh;
 }
 
-void PhysicsBodySystem::Logger::log(Level level, const std::string &physicsWorldName, Category category,
-const std::string &message, const char *filename, int lineNumber) {
+void PhysicsBodySystem::Logger::log(Level level, const std::string &physicsWorldName,
+                                    Category category, const std::string &message,
+                                    const char *filename, int lineNumber) {
   afk::io::log << "[" << getLevelName(level) << "] " << message << "\n";
 }

@@ -24,8 +24,10 @@ namespace afk {
 
     enum CollisionBodyType { Box, Sphere, Capsule };
 
+    enum BodyType { Static, Dynamic };
+
     struct CollisionBody {
-      CollisionBodyType type            = {}; // todo: remove need for this by using std::visit
+      CollisionBodyType type = {}; // todo: remove need for this by using std::visit
       CollisionBodyVariant body         = {};
       afk::physics::Transform transform = {}; // transform relative to parent
     };
@@ -41,7 +43,7 @@ namespace afk {
        */
       PhysicsBody(GameObject body, PhysicsBodySystem *physics_system,
                   const afk::physics::Transform &transform,
-                  const CollisionBodyCollection &collision_bodies);
+                  const CollisionBodyCollection &collision_bodies, BodyType type);
 
       // todo add rotate method
 
@@ -61,7 +63,9 @@ namespace afk {
       static rp3d::CapsuleShape *createShapeCapsule(const afk::physics::shape::Capsule &shape,
                                                     const glm::vec3 &scale);
 
-      rp3d::RigidBody *body    = nullptr;
+      rp3d::RigidBody *body = nullptr;
+
+      BodyType type = {};
 
       friend class PhysicsBodySystem;
     };
