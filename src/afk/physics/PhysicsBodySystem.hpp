@@ -32,12 +32,6 @@ namespace afk {
         virtual void onContact(const rp3d::CollisionCallback::CallbackData &callback_data) override;
       };
 
-      struct Collision {
-        GameObject entity1                    = {};
-        GameObject entity2                    = {};
-        std::vector<glm::vec3> contact_points = {};
-      };
-
       class Logger : public rp3d::Logger {
         void log(Level level, const std::string &physicsWorldName, Category category,
                  const std::string &message, const char *filename, int lineNumber);
@@ -48,8 +42,6 @@ namespace afk {
                                   bool status) -> void;
       auto get_debug_physics_item(const afk::render::debug::PhysicsView &physics_view) const
           -> bool;
-
-      //      auto get_debug_model() -> afk::render::Model;
 
       auto get_debug_mesh() -> afk::render::Mesh;
 

@@ -88,10 +88,21 @@ namespace afk {
 
       // todo: better names
       struct CollisionImpulseBodyData {
-        afk::physics::BodyType type;
-        afk::GameObject body_id;
+        CollisionImpulseBodyData(afk::physics::BodyType _type,
+                                 afk::GameObject _id, glm::vec3 _contact_point)
+          : type(_type), id(_id), contact_point(_contact_point) {}
+        CollisionImpulseBodyData() = delete;
+
+        afk::physics::BodyType type; // type can be retrieved from physics body component, but stored here for easy access
+        afk::GameObject id;
+        glm::vec3 contact_point = {};
       };
-      using CollisionImpulse = std::array<CollisionImpulseBodyData, 2>;
+
+      struct CollisionImpulse {
+        CollisionImpulseBodyData body1;
+        CollisionImpulseBodyData body2;
+        std::vector<glm::vec3> collision_normals = {};
+      };
 
       /**
        * Denotes an event type.

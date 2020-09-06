@@ -58,11 +58,13 @@ PhysicsBodySystem::PhysicsBodySystem() {
       rp3d::DebugRenderer::DebugItem::CONTACT_NORMAL, true);
 }
 
-auto debug_count = usize{0};
 auto PhysicsBodySystem::update(float dt) -> void {
   this->world->update(dt);
 
-  auto debug_mesh = this->get_debug_mesh();
+  // todo: instead of creating new models to store, replace the existing debug
+  // model in OpenGL todo: also get debug lines from reactphysics3d
+  static auto debug_count = usize{0};
+  auto debug_mesh         = this->get_debug_mesh();
   if (this->model.meshes.empty()) {
     this->model.meshes.push_back(std::move(debug_mesh));
   } else {
@@ -81,18 +83,22 @@ void PhysicsBodySystem::CollisionEventListener::onContact(
   for (rp3d::uint p = 0; p < callback_data.getNbContactPairs(); p++) {
 
     // Get the contact pair
-    CollisionCallback::ContactPair contactPair = callback_data.getContactPair(p);
+    const auto contact_pair = callback_data.getContactPair(p);
 
-    auto engine       = &afk::Engine::get();
-    auto registry     = &engine->registry;
+    auto engine   = &afk::Engine::get();
+    auto registry = &engine->registry;
 
     const auto body_to_ecs_map = &engine->physics_body_system.rp3d_body_to_ecs_map;
-    auto body1IdMapIterator = body_to_ecs_map->find(contactPair.getBody1()->getEntity().id);
-    afk_assert(body1IdMapIterator != body_to_ecs_map->end(), "Could not find body 1 id in rp3d_body_to_ecs_map");
+    auto body1IdMapIterator =
+        body_to_ecs_map->find(contact_pair.getBody1()->getEntity().id);
+    afk_assert(body1IdMapIterator != body_to_ecs_map->end(),
+               "Could not find body 1 id in rp3d_body_to_ecs_map");
     auto object1 = body1IdMapIterator->second;
-    
-    auto body2IdMapIterator = body_to_ecs_map->find(contactPair.getBody2()->getEntity().id);
-    afk_assert(body2IdMapIterator != body_to_ecs_map->end(), "Could not find body 2 id in rp3d_body_to_ecs_map");
+
+    auto body2IdMapIterator =
+        body_to_ecs_map->find(contact_pair.getBody2()->getEntity().id);
+    afk_assert(body2IdMapIterator != body_to_ecs_map->end(),
+               "Could not find body 2 id in rp3d_body_to_ecs_map");
     auto object2 = body2IdMapIterator->second;
 
     // only proceed if not colliding with self
@@ -101,47 +107,29 @@ void PhysicsBodySystem::CollisionEventListener::onContact(
       auto body2         = registry->get<afk::physics::PhysicsBody>(object2);
       auto event_manager = &engine->event_manager;
 
-      if (contactPair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart) {
-        auto data = afk::event::Event::CollisionImpulse{};
-        data[0].type = body1.type;
-        data[0].body_id = object1;
-        data[1].type = body2.type;
-        data[1].body_id = object2;
-        event_manager->push_event(afk::event::Event{
-          data,
-          afk::event::Event::Type::CollisionImpulse
-        });
-        //        std::vector<glm::vec3> contact_points = {};
-        //        contact_points.reserve(contactPair.getNbContactPoints());
-        //        for (u32 i = 0; i < contactPair.getNbContactPoints(); ++i) {
-        //          auto contact_point = contactPair.getContactPoint(i).getWorldNormal();
-        //          contact_points.emplace_back(contact_point.x, contact_point.y,
-        //                                      contact_point.z);
-        //        }
-        //        afk::Engine::get().physics_body_system.collision_enter_queue.emplace(
-        //            PhysicsBodySystem::Collision{object1, object2, std::move(contact_points)});
-      } else if (contactPair.getEventType() ==
-                 CollisionCallback::ContactPair::EventType::ContactExit) {
-        //        std::vector<glm::vec3> contact_points = {};
-        //        contact_points.reserve(contactPair.getNbContactPoints());
-        //        for (u32 i = 0; i < contactPair.getNbContactPoints(); ++i) {
-        //          auto contact_point = contactPair.getContactPoint(i).getWorldNormal();
-        //          contact_points.emplace_back(contact_point.x, contact_point.y,
-        //                                      contact_point.z);
-        //        }
-        //        afk::Engine::get().physics_body_system.collision_enter_queue.emplace(
-        //            PhysicsBodySystem::Collision{object1, object2, std::move(contact_points)});
-      } else {
-        // ContactStay may not be triggered if rigid body is sleeping
-        auto data = afk::event::Event::CollisionImpulse{};
-        data[0].type = body1.type;
-        data[0].body_id = object1;
-        data[1].type = body2.type;
-        data[1].body_id = object2;
-        event_manager->push_event(afk::event::Event{
-            data,
-            afk::event::Event::Type::CollisionImpulse
-        });
+      contact_pair.getContactPoint(1);
+
+      // treat contact enter and contact stay as "impulses"
+      // note: this implementation requires rigid bodies to never sleep
+      if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
+          contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStay) {
+        auto data = afk::event::Event::CollisionImpulse{
+            afk::event::Event::CollisionImpulseBodyData{body1.type, object1, glm::vec3{1.0}},
+            afk::event::Event::CollisionImpulseBodyData{body2.type, object2, glm::vec3{1.0}},
+            {}};
+
+        afk_assert(contact_pair.getNbContactPoints() > 0,
+                   "No contact points found on collision");
+
+        data.collision_normals.reserve(contact_pair.getNbContactPoints());
+        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
+          auto contact_normal = contact_pair.getContactPoint(i).getWorldNormal();
+          data.collision_normals.emplace_back(contact_normal.x, contact_normal.y,
+                                              contact_normal.z);
+        }
+
+        event_manager->push_event(
+            afk::event::Event{data, afk::event::Event::Type::CollisionImpulse});
       }
     }
   }
