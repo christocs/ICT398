@@ -53,11 +53,12 @@ namespace afk {
 
       auto get_debug_mesh() -> afk::render::Mesh;
 
-      rp3d::PhysicsCommon physics_common = {};
-      rp3d::PhysicsWorld *world          = nullptr;
-      CollisionEventListener listener    = {};
-      afk::render::Model model           = {};
-      Logger logger = {};
+      rp3d::PhysicsCommon physics_common                            = {};
+      rp3d::PhysicsWorld *world                                     = nullptr;
+      CollisionEventListener listener                               = {};
+      afk::render::Model model                                      = {};
+      std::unordered_map<u32, afk::GameObject> rp3d_body_to_ecs_map = {};
+      Logger logger                                                 = {};
 
       friend class PhysicsBody;
       friend afk::render::Renderer;

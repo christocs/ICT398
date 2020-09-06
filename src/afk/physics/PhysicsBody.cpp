@@ -7,7 +7,7 @@ using afk::physics::PhysicsBody;
 
 PhysicsBody::PhysicsBody(GameObject e, PhysicsBodySystem *physics_system,
                          const Transform &transform,
-                         const CollisionBodyCollection &collision_bodies, BodyType type) {
+                         const CollisionBodyCollection &collision_bodies, BodyType _type) {
   this->owning_entity = e;
 
   this->body = physics_system->world->createRigidBody(rp3d::Transform(
@@ -17,6 +17,13 @@ PhysicsBody::PhysicsBody(GameObject e, PhysicsBodySystem *physics_system,
                        transform.rotation.z, transform.rotation.w)));
 
   this->body->setType(rp3d::BodyType::STATIC);
+
+  auto rp3d_body_id = this->body->getEntity().id;
+  auto rp3d_body_to_ecs_map = &afk::Engine::get().physics_body_system.rp3d_body_to_ecs_map;
+  afk_assert(rp3d_body_to_ecs_map->count(rp3d_body_id) < 1, "AFK game object already has a physics body assigned");
+  rp3d_body_to_ecs_map->insert({rp3d_body_id, e});
+
+  this->type = _type;
 
   for (const auto &collision_body : collision_bodies) {
     // do NOT allocate memory yourself, let reactphysics3d handle it
@@ -54,8 +61,6 @@ PhysicsBody::PhysicsBody(GameObject e, PhysicsBodySystem *physics_system,
     auto collider = this->body->addCollider(rp3d_collision_shape, rp3d_transform);
     collider->setIsTrigger(true);
   }
-
-  this->type = type;
 }
 
 void PhysicsBody::translate(glm::vec3 translate) {

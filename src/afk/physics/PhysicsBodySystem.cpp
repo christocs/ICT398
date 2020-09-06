@@ -1,6 +1,7 @@
 #include "afk/physics/PhysicsBodySystem.hpp"
 
 #include <iostream>
+#include <unordered_map>
 
 #include "afk/Afk.hpp"
 #include "afk/NumericTypes.hpp"
@@ -82,45 +83,30 @@ void PhysicsBodySystem::CollisionEventListener::onContact(
     // Get the contact pair
     CollisionCallback::ContactPair contactPair = callback_data.getContactPair(p);
 
-    // find colliding entities in AFK's ECS
-    const auto &body1_id = contactPair.getBody1()->getEntity().id;
-    const auto &body2_id = contactPair.getBody2()->getEntity().id;
-
-    afk::GameObject *object1 = nullptr;
-    afk::GameObject *object2 = nullptr;
-
     auto engine       = &afk::Engine::get();
     auto registry     = &engine->registry;
-    auto physics_view = registry->view<PhysicsBody>();
-    for (auto &entity : physics_view) {
-      auto &physics_component = physics_view.get<PhysicsBody>(entity);
-      if (physics_component.body->getEntity().id == body1_id) {
-        object1 = const_cast<afk::GameObject *>(&entity);
-      } else if (physics_component.body->getEntity().id == body2_id) {
-        object2 = const_cast<afk::GameObject *>(&entity);
-      }
-      if ((object1 != nullptr) && (object2 != nullptr)) {
-        break;
-      }
-    }
 
-    afk_assert(object1 != nullptr,
-               "collision callback couldn't find object 1 in entt");
-    afk_assert(object2 != nullptr,
-               "collision callback couldn't find object 2 in entt");
+    const auto body_to_ecs_map = &engine->physics_body_system.rp3d_body_to_ecs_map;
+    auto body1IdMapIterator = body_to_ecs_map->find(contactPair.getBody1()->getEntity().id);
+    afk_assert(body1IdMapIterator != body_to_ecs_map->end(), "Could not find body 1 id in rp3d_body_to_ecs_map");
+    auto object1 = body1IdMapIterator->second;
+    
+    auto body2IdMapIterator = body_to_ecs_map->find(contactPair.getBody2()->getEntity().id);
+    afk_assert(body2IdMapIterator != body_to_ecs_map->end(), "Could not find body 2 id in rp3d_body_to_ecs_map");
+    auto object2 = body2IdMapIterator->second;
 
     // only proceed if not colliding with self
-    if (*object1 != *object2) {
-      auto body1         = registry->get<afk::physics::PhysicsBody>(*object1);
-      auto body2         = registry->get<afk::physics::PhysicsBody>(*object2);
+    if (object1 != object2) {
+      auto body1         = registry->get<afk::physics::PhysicsBody>(object1);
+      auto body2         = registry->get<afk::physics::PhysicsBody>(object2);
       auto event_manager = &engine->event_manager;
 
       if (contactPair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart) {
         auto data = afk::event::Event::CollisionImpulse{};
         data[0].type = body1.type;
-        data[0].body_id = *object1;
+        data[0].body_id = object1;
         data[1].type = body2.type;
-        data[1].body_id = *object2;
+        data[1].body_id = object2;
         event_manager->push_event(afk::event::Event{
           data,
           afk::event::Event::Type::CollisionImpulse
@@ -133,7 +119,7 @@ void PhysicsBodySystem::CollisionEventListener::onContact(
         //                                      contact_point.z);
         //        }
         //        afk::Engine::get().physics_body_system.collision_enter_queue.emplace(
-        //            PhysicsBodySystem::Collision{*object1, *object2, std::move(contact_points)});
+        //            PhysicsBodySystem::Collision{object1, object2, std::move(contact_points)});
       } else if (contactPair.getEventType() ==
                  CollisionCallback::ContactPair::EventType::ContactExit) {
         //        std::vector<glm::vec3> contact_points = {};
@@ -144,14 +130,14 @@ void PhysicsBodySystem::CollisionEventListener::onContact(
         //                                      contact_point.z);
         //        }
         //        afk::Engine::get().physics_body_system.collision_enter_queue.emplace(
-        //            PhysicsBodySystem::Collision{*object1, *object2, std::move(contact_points)});
+        //            PhysicsBodySystem::Collision{object1, object2, std::move(contact_points)});
       } else {
         // ContactStay may not be triggered if rigid body is sleeping
         auto data = afk::event::Event::CollisionImpulse{};
         data[0].type = body1.type;
-        data[0].body_id = *object1;
+        data[0].body_id = object1;
         data[1].type = body2.type;
-        data[1].body_id = *object2;
+        data[1].body_id = object2;
         event_manager->push_event(afk::event::Event{
             data,
             afk::event::Event::Type::CollisionImpulse
