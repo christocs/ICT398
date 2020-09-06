@@ -63,7 +63,7 @@ namespace afk {
       static rp3d::CapsuleShape *createShapeCapsule(const afk::physics::shape::Capsule &shape,
                                                     const glm::vec3 &scale);
 
-      rp3d::RigidBody *body = nullptr;
+      rp3d::CollisionBody *body = nullptr;
 
       BodyType type = {};
 
