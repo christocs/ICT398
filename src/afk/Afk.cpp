@@ -59,6 +59,17 @@ auto Engine::initialize() -> void {
   registry.emplace<afk::physics::PhysicsBody>(
       box_entity, physics_body);
 
+  auto ball_entity           = registry.create();
+  auto ball_transform        = afk::physics::Transform{};
+  ball_transform.translation = glm::vec3(1.0f, 0.0f, 1.0f);
+  ball_transform.scale       = glm::vec3(1.0f);
+  auto collision_body_ball = afk::physics::CollisionBodyCollection{};
+  collision_body_ball.push_back(afk::physics::CollisionBody{afk::physics::CollisionBodyType::Sphere, afk::physics::shape::Sphere{2.5f}, Transform{}});
+  auto physics_body_ball = afk::physics::PhysicsBody{ball_entity, &this->physics_body_system, ball_transform, collision_body_ball, afk::physics::BodyType::Dynamic};
+  registry.emplace<afk::physics::PhysicsBody>(
+      ball_entity, physics_body_ball);
+  registry.emplace<afk::physics::Transform>(ball_entity, ball_transform);
+
   this->is_initialized = true;
 }
 
