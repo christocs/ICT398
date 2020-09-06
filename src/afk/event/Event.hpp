@@ -2,6 +2,7 @@
 
 #include <string>
 #include <variant>
+#include <glm/glm.hpp>
 
 #include "afk/NumericTypes.hpp"
 #include "afk/physics/PhysicsBody.hpp"

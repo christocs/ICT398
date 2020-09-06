@@ -118,16 +118,17 @@ void PhysicsBodySystem::CollisionCallback::onContact(
     auto registry = &engine->registry;
 
     const auto body_to_ecs_map = &engine->physics_body_system.rp3d_body_to_ecs_map;
+
+    afk_assert(body_to_ecs_map->count(contact_pair.getBody1()->getEntity().id) > 0,
+               "Could not find body 1 id in rp3d_body_to_ecs_map");
     auto body1IdMapIterator =
         body_to_ecs_map->find(contact_pair.getBody1()->getEntity().id);
-    afk_assert(body1IdMapIterator != body_to_ecs_map->end(),
-               "Could not find body 1 id in rp3d_body_to_ecs_map");
     auto object1 = body1IdMapIterator->second;
 
+    afk_assert(body_to_ecs_map->count(contact_pair.getBody2()->getEntity().id) > 0,
+               "Could not find body 2 id in rp3d_body_to_ecs_map");
     auto body2IdMapIterator =
         body_to_ecs_map->find(contact_pair.getBody2()->getEntity().id);
-    afk_assert(body2IdMapIterator != body_to_ecs_map->end(),
-               "Could not find body 2 id in rp3d_body_to_ecs_map");
     auto object2 = body2IdMapIterator->second;
 
     // only proceed if not colliding with self
