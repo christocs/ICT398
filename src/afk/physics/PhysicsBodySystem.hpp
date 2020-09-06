@@ -50,7 +50,6 @@ namespace afk {
 
       rp3d::PhysicsCommon physics_common   = {};
       rp3d::PhysicsWorld *world            = nullptr;
-      CollisionEventListener listener      = {};
       CollisionCallback collision_callback = {};
       afk::render::Model model             = {};
       std::unordered_map<rp3d::uint, afk::GameObject> rp3d_body_to_ecs_map = {};
