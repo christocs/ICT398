@@ -67,6 +67,8 @@ namespace afk {
 
       BodyType type = {};
 
+      glm::vec3 velocity = {0.0f, 0.0f, 0.0f};
+
       friend class PhysicsBodySystem;
     };
   }

@@ -51,6 +51,7 @@ namespace afk {
       afk::render::Model model                                      = {};
       std::unordered_map<u32, afk::GameObject> rp3d_body_to_ecs_map = {};
       Logger logger                                                 = {};
+      glm::vec3 gravity = {0.0f, -9.81f, 0.0f};
 
       friend class PhysicsBody;
       friend afk::render::Renderer;

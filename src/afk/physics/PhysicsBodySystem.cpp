@@ -61,6 +61,34 @@ PhysicsBodySystem::PhysicsBodySystem() {
 auto PhysicsBodySystem::update(float dt) -> void {
   this->world->update(dt);
 
+  auto registry = &afk::Engine().get().registry;
+  auto physics_body_view =
+      registry->view<afk::physics::PhysicsBody, afk::physics::Transform>();
+
+  // apply gravity acceleration
+  for (auto &entity : physics_body_view) {
+    auto body = physics_body_view.get<afk::physics::PhysicsBody>(entity);
+    if (body.type != afk::physics::BodyType::Static) {
+      body.velocity.x += (dt * this->gravity.x);
+      body.velocity.y += (dt * this->gravity.y);
+      body.velocity.z += (dt * this->gravity.z);
+    }
+  }
+
+  // update position according to velocity
+  for (auto &entity : physics_body_view) {
+    auto body = physics_body_view.get<afk::physics::PhysicsBody>(entity);
+    if (body.type != afk::physics::BodyType::Static) {
+      auto transform = physics_body_view.get<afk::physics::Transform>(entity);
+
+      transform.translation.x = (dt * body.velocity.x);
+      transform.translation.y = (dt * body.velocity.y);
+      transform.translation.z = (dt * body.velocity.z);
+
+      body.set_pos(transform.translation);
+    }
+  }
+
   // todo: instead of creating new models to store, replace the existing debug
   // model in OpenGL todo: also get debug lines from reactphysics3d
   static auto debug_count = usize{0};
