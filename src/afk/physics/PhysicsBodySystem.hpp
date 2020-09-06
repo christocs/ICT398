@@ -7,6 +7,7 @@
 #include <entt/entt.hpp>
 #include <reactphysics3d/reactphysics3d.h>
 
+#include "afk/event/Event.hpp"
 #include "afk/NumericTypes.hpp"
 #include "afk/physics/PhysicsBody.hpp"
 #include "afk/render/Debug.hpp"
@@ -40,6 +41,7 @@ namespace afk {
                  const std::string &message, const char *filename, int lineNumber);
       };
 
+      void resolve_collision_event(const afk::event::Event::CollisionImpulse &data);
       // todo: give better names
       auto set_debug_physics_item(const afk::render::debug::PhysicsView &physics_view,
                                   bool status) -> void;

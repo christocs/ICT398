@@ -6,7 +6,6 @@
 #include "afk/Afk.hpp"
 #include "afk/NumericTypes.hpp"
 #include "afk/debug/Assert.hpp"
-#include "afk/event/Event.hpp"
 #include "afk/io/Log.hpp"
 
 using afk::physics::PhysicsBodySystem;
@@ -17,25 +16,15 @@ using afk::render::debug::PhysicsView;
 PhysicsBodySystem::PhysicsBodySystem() {
   this->world = this->physics_common.createPhysicsWorld();
   this->world->setIsGravityEnabled(false);
-//  this->world->setEventListener(&listener);
+  //  this->world->setEventListener(&listener);
   this->world->setIsDebugRenderingEnabled(true);
   // todo: turn it back on
   this->world->enableSleeping(false);
 
-  // Create the default logger
-  //  rp3d::DefaultLogger *logger = this->physics_common.createDefaultLogger();
-
-  // Log level (warnings and errors)
-  auto logLevel =
-      static_cast<afk::u16>(static_cast<afk::u16>(rp3d::Logger::Level::Information) |
-                            static_cast<afk::u16>(rp3d::Logger::Level::Warning) |
-                            static_cast<afk::u16>(rp3d::Logger::Level::Error));
-
-  // Output the logs into an HTML file
-  //    logger->addStreamDestination(afk::io::log, logLevel, rp3d::DefaultLogger::Format::Text);
-
-  // Output the logs into an HTML file
-  //  logger->addFileDestination("rp3d_log_.html", logLevel, rp3d::DefaultLogger::Format::HTML);
+   auto event_manager = &afk::Engine::get().event_manager;
+    event_manager->register_event(afk::event::Event::Type::CollisionImpulse, event::EventManager::Callback{[this](afk::event::Event event) {
+      this->resolve_collision_event(std::get<afk::event::Event::CollisionImpulse>(event.data));
+    }});
 
   // Set the logger
   this->physics_common.setLogger(&(this->logger));
@@ -65,6 +54,8 @@ PhysicsBodySystem::~PhysicsBodySystem() {
 auto PhysicsBodySystem::update(float dt) -> void {
   // don't call update(dt) unless needing to show debug renderer
   this->world->update(dt);
+  // test collisions AFTER the existing velocity has been applied, so it can fire events to update for the next frame
+  // todo: check if this puts physics 1 frame out of sync (maybe solution should be handled first?)
   this->world->testCollision(this->collision_callback);
 
   auto registry = &afk::Engine::get().registry;
@@ -106,8 +97,7 @@ auto PhysicsBodySystem::update(float dt) -> void {
   // todo: update reactphysics world with where the object changes position in the game world
 }
 
-void PhysicsBodySystem::CollisionCallback::onContact(
-    const rp3d::CollisionCallback::CallbackData &callback_data) {
+void PhysicsBodySystem::CollisionCallback::onContact(const rp3d::CollisionCallback::CallbackData &callback_data) {
   // For each contact pair
   for (rp3d::uint p = 0; p < callback_data.getNbContactPairs(); p++) {
 
@@ -144,7 +134,7 @@ void PhysicsBodySystem::CollisionCallback::onContact(
         // note: this implementation requires rigid bodies to never sleep
         if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
             contact_pair.getEventType() ==
-            CollisionCallback::ContactPair::EventType::ContactStay) {
+                CollisionCallback::ContactPair::EventType::ContactStay) {
           auto data = afk::event::Event::CollisionImpulse{
               afk::event::Event::CollisionImpulseBodyData{body1.type, object1,
                                                           glm::vec3{1.0}},
@@ -169,6 +159,19 @@ void PhysicsBodySystem::CollisionCallback::onContact(
       }
     }
   }
+}
+
+auto PhysicsBodySystem::resolve_collision_event(const afk::event::Event::CollisionImpulse &data) -> void {
+//  make dynamic bodies come to a halt
+//  auto registry = &afk::Engine::get().registry;
+//  auto body1 = registry->get<afk::physics::PhysicsBody>(data.body1.id);
+//  auto body2 = registry->get<afk::physics::PhysicsBody>(data.body2.id);
+//  if (body1.type == afk::physics::BodyType::Dynamic) {
+//    body1.velocity = glm::vec3{0.0f, 0.0f, 0.0f};
+//  }
+//  if (body2.type == afk::physics::BodyType::Dynamic) {
+//    body2.velocity = glm::vec3{0.0f, 0.0f, 0.0f};
+//  }
 }
 
 auto PhysicsBodySystem::set_debug_physics_item(const PhysicsView &physics_view,
