@@ -137,6 +137,8 @@ auto Engine::render() -> void {
 auto Engine::update() -> void {
   this->event_manager.pump_events();
 
+  this->update_camera_pos();
+
   if (glfwWindowShouldClose(this->renderer.window)) {
     this->is_running = false;
   }
@@ -200,5 +202,25 @@ auto Engine::move_keyboard(Event event) -> void {
     this->ui_manager.show_menu = !this->ui_manager.show_menu;
   } else if (event.type == Event::Type::KeyDown && key == GLFW_KEY_1) {
     this->renderer.set_wireframe(!this->renderer.get_wireframe());
+  }
+}
+
+auto Engine::update_camera_pos() -> void {
+  if (!this->ui_manager.show_menu) {
+    if (this->event_manager.key_state.at(Event::Action::Forward)) {
+      this->camera.handle_key(Movement::Forward, this->get_delta_time());
+    }
+
+    if (this->event_manager.key_state.at(Event::Action::Left)) {
+      this->camera.handle_key(Movement::Left, this->get_delta_time());
+    }
+
+    if (this->event_manager.key_state.at(Event::Action::Backward)) {
+      this->camera.handle_key(Movement::Backward, this->get_delta_time());
+    }
+
+    if (this->event_manager.key_state.at(Event::Action::Right)) {
+      this->camera.handle_key(Movement::Right, this->get_delta_time());
+    }
   }
 }

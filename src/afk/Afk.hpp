@@ -105,6 +105,12 @@ namespace afk {
      */
     auto move_keyboard(event::Event event) -> void;
 
+    /**
+     * Handles camera movement depending on key presses
+     * @todo Move into an input manager
+     */
+    auto update_camera_pos() -> void;
+
   private:
     /** Is the engine initialized? */
     bool is_initialized = false;
