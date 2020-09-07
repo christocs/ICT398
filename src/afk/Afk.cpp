@@ -45,12 +45,12 @@ auto Engine::initialize() -> void {
       Event::Type::KeyDown, event::EventManager::Callback{[this](Event event) {
         this->move_keyboard(event);
       }});
-  this->event_manager.register_event(
-      afk::event::Event::Type::CollisionImpulse,
-      event::EventManager::Callback{[this](afk::event::Event event) {
-        this->physics_body_system.resolve_collision_event(
-            std::get<afk::event::Event::CollisionImpulse>(event.data));
-      }});
+//  this->event_manager.register_event(
+//      afk::event::Event::Type::CollisionImpulse,
+//      event::EventManager::Callback{[this](afk::event::Event event) {
+//        this->physics_body_system.resolve_collision_event(
+//            std::get<afk::event::Event::CollisionImpulse>(event.data));
+//      }});
 
   auto zero_transform        = Transform{};
   zero_transform.translation = glm::vec3{0.0f};
