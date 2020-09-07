@@ -21,10 +21,13 @@ PhysicsBodySystem::PhysicsBodySystem() {
   // todo: turn it back on
   this->world->enableSleeping(false);
 
-   auto event_manager = &afk::Engine::get().event_manager;
-    event_manager->register_event(afk::event::Event::Type::CollisionImpulse, event::EventManager::Callback{[this](afk::event::Event event) {
-      this->resolve_collision_event(std::get<afk::event::Event::CollisionImpulse>(event.data));
-    }});
+  auto event_manager = &afk::Engine::get().event_manager;
+  event_manager->register_event(
+      afk::event::Event::Type::CollisionImpulse,
+      event::EventManager::Callback{[this](afk::event::Event event) {
+        this->resolve_collision_event(
+            std::get<afk::event::Event::CollisionImpulse>(event.data));
+      }});
 
   // Set the logger
   this->physics_common.setLogger(&(this->logger));
@@ -136,10 +139,8 @@ void PhysicsBodySystem::CollisionCallback::onContact(const rp3d::CollisionCallba
             contact_pair.getEventType() ==
                 CollisionCallback::ContactPair::EventType::ContactStay) {
           auto data = afk::event::Event::CollisionImpulse{
-              afk::event::Event::CollisionImpulseBodyData{body1.type, object1,
-                                                          glm::vec3{1.0}},
-              afk::event::Event::CollisionImpulseBodyData{body2.type, object2,
-                                                          glm::vec3{1.0}},
+              afk::event::Event::CollisionImpulseBodyData{object1, glm::vec3{1.0}},
+              afk::event::Event::CollisionImpulseBodyData{object2, glm::vec3{1.0}},
               {}};
 
           afk_assert(contact_pair.getNbContactPoints() > 0,
@@ -161,17 +162,18 @@ void PhysicsBodySystem::CollisionCallback::onContact(const rp3d::CollisionCallba
   }
 }
 
-auto PhysicsBodySystem::resolve_collision_event(const afk::event::Event::CollisionImpulse &data) -> void {
-//  make dynamic bodies come to a halt
-//  auto registry = &afk::Engine::get().registry;
-//  auto body1 = registry->get<afk::physics::PhysicsBody>(data.body1.id);
-//  auto body2 = registry->get<afk::physics::PhysicsBody>(data.body2.id);
-//  if (body1.type == afk::physics::BodyType::Dynamic) {
-//    body1.velocity = glm::vec3{0.0f, 0.0f, 0.0f};
-//  }
-//  if (body2.type == afk::physics::BodyType::Dynamic) {
-//    body2.velocity = glm::vec3{0.0f, 0.0f, 0.0f};
-//  }
+auto PhysicsBodySystem::resolve_collision_event(const afk::event::Event::CollisionImpulse &data)
+    -> void {
+  //  make dynamic bodies come to a halt
+  //  auto registry = &afk::Engine::get().registry;
+  //  auto body1 = registry->get<afk::physics::PhysicsBody>(data.body1.id);
+  //  auto body2 = registry->get<afk::physics::PhysicsBody>(data.body2.id);
+  //  if (body1.type == afk::physics::BodyType::Dynamic) {
+  //    body1.velocity = glm::vec3{0.0f, 0.0f, 0.0f};
+  //  }
+  //  if (body2.type == afk::physics::BodyType::Dynamic) {
+  //    body2.velocity = glm::vec3{0.0f, 0.0f, 0.0f};
+  //  }
 }
 
 auto PhysicsBodySystem::set_debug_physics_item(const PhysicsView &physics_view,
@@ -240,7 +242,6 @@ auto PhysicsBodySystem::get_debug_mesh() -> afk::render::Mesh {
   // note: some points may be duplicated
   auto no_vertices = usize{0};
   for (auto i = usize{0}; i < triangles.size(); ++i) {
-    //    afk::io::log << "no i: " << std::to_string(i) << "\n";
     auto vertex1     = afk::render::Vertex{};
     vertex1.position = glm::vec3{triangles[i].point1.x, triangles[i].point1.y,
                                  triangles[i].point1.z};
