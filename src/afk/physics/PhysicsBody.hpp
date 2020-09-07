@@ -22,9 +22,9 @@ namespace afk {
     using CollisionBodyVariant =
         std::variant<afk::physics::shape::Box, afk::physics::shape::Sphere, afk::physics::shape::Capsule>;
 
-    enum CollisionBodyType { Box, Sphere, Capsule };
+    enum class CollisionBodyType { Box, Sphere, Capsule };
 
-    enum BodyType { Static, Dynamic };
+    enum class BodyType { Static, Dynamic };
 
     struct CollisionBody {
       CollisionBodyType type = {}; // todo: remove need for this by using std::visit
