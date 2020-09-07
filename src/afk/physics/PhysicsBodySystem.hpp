@@ -7,8 +7,8 @@
 #include <entt/entt.hpp>
 #include <reactphysics3d/reactphysics3d.h>
 
-#include "afk/event/Event.hpp"
 #include "afk/NumericTypes.hpp"
+#include "afk/event/Event.hpp"
 #include "afk/physics/PhysicsBody.hpp"
 #include "afk/render/Debug.hpp"
 #include "afk/render/Renderer.hpp"
@@ -28,10 +28,11 @@ namespace afk {
 
       auto update(float dt) -> void;
 
+      void resolve_collision_event(const afk::event::Event::CollisionImpulse &data);
+
       auto get_debug_model() -> afk::render::Model;
 
     private:
-
       class CollisionCallback : public rp3d::CollisionCallback {
         virtual void onContact(const rp3d::CollisionCallback::CallbackData &callback_data);
       };
@@ -41,7 +42,6 @@ namespace afk {
                  const std::string &message, const char *filename, int lineNumber);
       };
 
-      void resolve_collision_event(const afk::event::Event::CollisionImpulse &data);
       // todo: give better names
       auto set_debug_physics_item(const afk::render::debug::PhysicsView &physics_view,
                                   bool status) -> void;
@@ -55,7 +55,7 @@ namespace afk {
       CollisionCallback collision_callback = {};
       afk::render::Model model             = {};
       std::unordered_map<rp3d::uint, entt::entity> rp3d_body_to_ecs_map = {};
-      Logger logger                                                        = {};
+      Logger logger                                                     = {};
       glm::vec3 gravity = {0.0f, -9.81f, 0.0f};
 
       friend class PhysicsBody;

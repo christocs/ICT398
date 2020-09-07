@@ -18,14 +18,6 @@ PhysicsBodySystem::PhysicsBodySystem() {
   // todo: turn it back on
   this->world->enableSleeping(false);
 
-  auto event_manager = &afk::Engine::get().event_manager;
-  event_manager->register_event(
-      afk::event::Event::Type::CollisionImpulse,
-      event::EventManager::Callback{[this](afk::event::Event event) {
-        this->resolve_collision_event(
-            std::get<afk::event::Event::CollisionImpulse>(event.data));
-      }});
-
   // Set the logger
   this->physics_common.setLogger(&(this->logger));
 
