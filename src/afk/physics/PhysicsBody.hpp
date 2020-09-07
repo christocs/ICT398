@@ -41,7 +41,7 @@ namespace afk {
       /**
        * constructor
        */
-      PhysicsBody(GameObject body, PhysicsBodySystem *physics_system,
+      PhysicsBody(entt::entity body, PhysicsBodySystem *physics_system,
                   const afk::physics::Transform &transform,
                   const CollisionBodyCollection &collision_bodies, BodyType type);
 

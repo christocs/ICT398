@@ -1,12 +1,9 @@
 #include "afk/physics/PhysicsBodySystem.hpp"
 
-#include <iostream>
 #include <unordered_map>
 
 #include "afk/Afk.hpp"
-#include "afk/NumericTypes.hpp"
 #include "afk/debug/Assert.hpp"
-#include "afk/io/Log.hpp"
 
 using afk::physics::PhysicsBodySystem;
 using afk::physics::Transform;
@@ -139,8 +136,8 @@ void PhysicsBodySystem::CollisionCallback::onContact(const rp3d::CollisionCallba
             contact_pair.getEventType() ==
                 CollisionCallback::ContactPair::EventType::ContactStay) {
           auto data = afk::event::Event::CollisionImpulse{
-              afk::event::Event::CollisionImpulseBodyData{object1, glm::vec3{1.0}},
-              afk::event::Event::CollisionImpulseBodyData{object2, glm::vec3{1.0}},
+              afk::event::Event::CollisionImpulse::CollisionImpulseBodyData{object1, glm::vec3{1.0}},
+              afk::event::Event::CollisionImpulse::CollisionImpulseBodyData{object2, glm::vec3{1.0}},
               {}};
 
           afk_assert(contact_pair.getNbContactPoints() > 0,

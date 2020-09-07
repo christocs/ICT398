@@ -3,9 +3,9 @@
 #include <string>
 #include <variant>
 #include <glm/glm.hpp>
+#include <entt/entt.hpp>
 
 #include "afk/NumericTypes.hpp"
-#include "afk/physics/PhysicsBody.hpp"
 
 namespace afk {
   namespace event {
@@ -88,18 +88,15 @@ namespace afk {
       enum class Action { Forward, Backward, Left, Right };
 
       // todo: better names
-      struct CollisionImpulseBodyData {
-        CollisionImpulseBodyData(afk::physics::BodyType _type,
-                                 afk::GameObject _id, glm::vec3 _contact_point)
-          : type(_type), id(_id), contact_point(_contact_point) {}
-        CollisionImpulseBodyData() = delete;
-
-        afk::physics::BodyType type; // type can be retrieved from physics body component, but stored here for easy access
-        afk::GameObject id;
-        glm::vec3 contact_point = {};
-      };
-
       struct CollisionImpulse {
+        struct CollisionImpulseBodyData {
+          CollisionImpulseBodyData(entt::entity _id, glm::vec3 _contact_point)
+              : id(_id), contact_point(_contact_point) {}
+          CollisionImpulseBodyData() = delete;
+
+          entt::entity id;
+          glm::vec3 contact_point = {};
+        };
         CollisionImpulseBodyData body1;
         CollisionImpulseBodyData body2;
         std::vector<glm::vec3> collision_normals = {};

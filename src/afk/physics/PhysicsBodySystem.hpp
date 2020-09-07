@@ -54,7 +54,7 @@ namespace afk {
       rp3d::PhysicsWorld *world            = nullptr;
       CollisionCallback collision_callback = {};
       afk::render::Model model             = {};
-      std::unordered_map<rp3d::uint, afk::GameObject> rp3d_body_to_ecs_map = {};
+      std::unordered_map<rp3d::uint, entt::entity> rp3d_body_to_ecs_map = {};
       Logger logger                                                        = {};
       glm::vec3 gravity = {0.0f, -9.81f, 0.0f};
 

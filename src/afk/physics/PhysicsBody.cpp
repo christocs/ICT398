@@ -5,7 +5,7 @@
 
 using afk::physics::PhysicsBody;
 
-PhysicsBody::PhysicsBody(GameObject e, PhysicsBodySystem *physics_system,
+PhysicsBody::PhysicsBody(entt::entity e, PhysicsBodySystem *physics_system,
                          const Transform &transform,
                          const CollisionBodyCollection &collision_bodies, BodyType _type) {
   // store which entt game object PhysicsBody belongs to

@@ -18,7 +18,7 @@ namespace afk {
     /**
      * Tmp
      */
-    AnimComponent(GameObject _owner, AnimComponent::Status _status,
+    AnimComponent(entt::entity _owner, AnimComponent::Status _status,
                   const std::string &_name, f32 _time);
     /**
      * Current anim status

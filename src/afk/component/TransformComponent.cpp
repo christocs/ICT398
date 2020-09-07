@@ -1,7 +1,6 @@
 #include "afk/component/TransformComponent.hpp"
 
-using afk::GameObject;
 using afk::TransformComponent;
 
-TransformComponent::TransformComponent(GameObject _owner)
+TransformComponent::TransformComponent(entt::entity _owner)
   : BaseComponent(_owner), Transform() {}

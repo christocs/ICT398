@@ -17,6 +17,6 @@ namespace afk {
      *
      * @param _owner The owner the constructed transform component.
      */
-    TransformComponent(GameObject _owner);
+    TransformComponent(entt::entity _owner);
   };
 }
