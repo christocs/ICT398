@@ -37,8 +37,11 @@ namespace afk {
 
     bool draw_physics_debug = false;
 
-    Engine()               = default;
-    ~Engine()              = default;
+  private:
+    Engine()  = default;
+    ~Engine() = default;
+
+  public:
     Engine(Engine &&)      = delete;
     Engine(const Engine &) = delete;
     auto operator=(const Engine &) -> Engine & = delete;

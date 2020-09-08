@@ -46,12 +46,12 @@ auto Engine::initialize() -> void {
       Event::Type::KeyDown, event::EventManager::Callback{[this](Event event) {
         this->move_keyboard(event);
       }});
-//  this->event_manager.register_event(
-//      afk::event::Event::Type::CollisionImpulse,
-//      event::EventManager::Callback{[this](afk::event::Event event) {
-//        this->physics_body_system.resolve_collision_event(
-//            std::get<afk::event::Event::CollisionImpulse>(event.data));
-//      }});
+  //  this->event_manager.register_event(
+  //      afk::event::Event::Type::CollisionImpulse,
+  //      event::EventManager::Callback{[this](afk::event::Event event) {
+  //        this->physics_body_system.resolve_collision_event(
+  //            std::get<afk::event::Event::CollisionImpulse>(event.data));
+  //      }});
 
   auto zero_transform        = Transform{};
   zero_transform.translation = glm::vec3{0.0f};
@@ -72,9 +72,16 @@ auto Engine::initialize() -> void {
   auto box_transform        = afk::physics::Transform{};
   box_transform.translation = glm::vec3(2.0f, 0.0f, -0.4f);
   box_transform.scale       = glm::vec3(1.0f);
+<<<<<<< HEAD
 //  auto box_model            = afk::render::Model("res/model/tav7/tav7.obj");
 //    this->renderer.load_model(box_model);
 //    registry.emplace<afk::physics::Transform>(box_entity, box_transform);
+=======
+  auto box_model            = afk::render::Model("res/model/box/box.obj");
+
+  //  this->renderer.load_model(box_model);
+  //  registry.emplace<afk::physics::Transform>(box_entity, box_transform);
+>>>>>>> 8b211208b6643f6ea2d593a0758bd440d339d5c0
   auto collision_body = afk::physics::CollisionBodyCollection{};
   collision_body.push_back(afk::physics::CollisionBody{
       afk::physics::CollisionBodyType::Box,
