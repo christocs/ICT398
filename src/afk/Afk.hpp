@@ -29,8 +29,13 @@ namespace afk {
     render::Camera camera = {};
     /** The ECS subsystem. */
     entt::registry registry = entt::registry{};
+
+    entt::entity camera_entity = registry.create();
+
     /** Physics subsystem. */
-    physics::PhysicsBodySystem physics_body_system = {};
+    afk::physics::PhysicsBodySystem physics_body_system = {};
+
+    bool draw_physics_debug = false;
 
     Engine()               = default;
     ~Engine()              = default;

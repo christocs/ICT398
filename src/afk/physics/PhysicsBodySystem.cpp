@@ -119,33 +119,30 @@ void PhysicsBodySystem::CollisionCallback::onContact(const rp3d::CollisionCallba
       auto body2         = registry->get<afk::physics::PhysicsBody>(object2);
       auto event_manager = &engine->event_manager;
 
-      // only bother processing contacts between two non-static objects
-      if (body1.type != BodyType::Static || body2.type != BodyType::Static) {
+      // treat contact enter and contact stay as "impulses"
+      // note: this implementation requires rigid bodies to never sleep
+      if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
+          contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStay) {
+        auto data = afk::event::Event::CollisionImpulse{
+            afk::event::Event::CollisionImpulse::CollisionImpulseBodyData{
+                object1, glm::vec3{1.0}},
+            afk::event::Event::CollisionImpulse::CollisionImpulseBodyData{
+                object2, glm::vec3{1.0}},
+            {}};
 
-        // treat contact enter and contact stay as "impulses"
-        // note: this implementation requires rigid bodies to never sleep
-        if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
-            contact_pair.getEventType() ==
-                CollisionCallback::ContactPair::EventType::ContactStay) {
-          auto data = afk::event::Event::CollisionImpulse{
-              afk::event::Event::CollisionImpulse::CollisionImpulseBodyData{object1, glm::vec3{1.0}},
-              afk::event::Event::CollisionImpulse::CollisionImpulseBodyData{object2, glm::vec3{1.0}},
-              {}};
+        afk_assert(contact_pair.getNbContactPoints() > 0,
+                   "No contact points found on collision");
 
-          afk_assert(contact_pair.getNbContactPoints() > 0,
-                     "No contact points found on collision");
-
-          data.collision_normals.reserve(contact_pair.getNbContactPoints());
-          for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
-            auto contact_normal = contact_pair.getContactPoint(i).getWorldNormal();
-            data.collision_normals.emplace_back(contact_normal.x, contact_normal.y,
-                                                contact_normal.z);
-          }
-          afk::io::log << "fire collision ************ \n";
-
-          event_manager->push_event(
-              afk::event::Event{data, afk::event::Event::Type::CollisionImpulse});
+        data.collision_normals.reserve(contact_pair.getNbContactPoints());
+        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
+          auto contact_normal = contact_pair.getContactPoint(i).getWorldNormal();
+          data.collision_normals.emplace_back(contact_normal.x, contact_normal.y,
+                                              contact_normal.z);
         }
+        afk::io::log << "fire collision ************ \n";
+
+        event_manager->push_event(
+            afk::event::Event{data, afk::event::Event::Type::CollisionImpulse});
       }
     }
   }
