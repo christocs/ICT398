@@ -45,12 +45,12 @@ auto Engine::initialize() -> void {
       Event::Type::KeyDown, event::EventManager::Callback{[this](Event event) {
         this->move_keyboard(event);
       }});
-//  this->event_manager.register_event(
-//      afk::event::Event::Type::CollisionImpulse,
-//      event::EventManager::Callback{[this](afk::event::Event event) {
-//        this->physics_body_system.resolve_collision_event(
-//            std::get<afk::event::Event::CollisionImpulse>(event.data));
-//      }});
+  //  this->event_manager.register_event(
+  //      afk::event::Event::Type::CollisionImpulse,
+  //      event::EventManager::Callback{[this](afk::event::Event event) {
+  //        this->physics_body_system.resolve_collision_event(
+  //            std::get<afk::event::Event::CollisionImpulse>(event.data));
+  //      }});
 
   auto zero_transform        = Transform{};
   zero_transform.translation = glm::vec3{0.0f};
@@ -60,6 +60,7 @@ auto Engine::initialize() -> void {
   box_transform.translation = glm::vec3(2.0f, 0.0f, -0.4f);
   box_transform.scale       = glm::vec3(1.0f);
   auto box_model            = afk::render::Model("res/model/box/box.obj");
+
   //  this->renderer.load_model(box_model);
   //  registry.emplace<afk::physics::Transform>(box_entity, box_transform);
   auto collision_body = afk::physics::CollisionBodyCollection{};
@@ -117,6 +118,11 @@ auto Engine::render() -> void {
   //  auto t3 = Transform{};
   //  t3.translation = vec3{1.0f, 0.0f, 2.0f};
   //  this->renderer.queue_draw({"res/model/box/box.obj", "shader/default.prog", t3});
+
+  auto city_transform        = Transform{};
+  city_transform.scale       = vec3{0.25f};
+  city_transform.translation = vec3{0.0f, -1.0f, 0.0f};
+  this->renderer.queue_draw({"res/model/city/city.fbx", "shader/default.prog", city_transform});
 
   auto t4           = Transform{};
   t4.translation    = vec3{0.0f};

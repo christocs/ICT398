@@ -32,8 +32,11 @@ namespace afk {
     /** Physics subsystem. */
     physics::PhysicsBodySystem physics_body_system = {};
 
-    Engine()               = default;
-    ~Engine()              = default;
+  private:
+    Engine()  = default;
+    ~Engine() = default;
+
+  public:
     Engine(Engine &&)      = delete;
     Engine(const Engine &) = delete;
     auto operator=(const Engine &) -> Engine & = delete;

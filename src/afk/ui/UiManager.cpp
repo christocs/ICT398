@@ -198,7 +198,7 @@ auto UiManager::draw_log() -> void {
     return;
   }
 
-  ImGui::SetNextWindowSize({500, 400});
+  ImGui::SetNextWindowSize({500, 400}, ImGuiCond_FirstUseEver);
   this->log.draw("Log", &this->show_log);
 }
 
