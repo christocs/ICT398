@@ -40,6 +40,6 @@
 	shallow = true
 [submodule "lib/glfw"]
 	path = lib/glfw
-	url = https://github.com/glfw/glfw
+	url = https://github.com/glfw/glfw.git
 	branch = 3.3-stable
 	shallow = true
