@@ -4,11 +4,14 @@
 #include <glm/glm.hpp>
 
 #include "afk/NumericTypes.hpp"
+#include "afk/config/ConfigManager.hpp"
+#include "afk/ecs/Ecs.hpp"
 #include "afk/event/EventManager.hpp"
+#include "afk/prefab/PrefabManager.hpp"
 #include "afk/render/Camera.hpp"
 #include "afk/render/Renderer.hpp"
+#include "afk/scene/SceneManager.hpp"
 #include "afk/ui/UiManager.hpp"
-#include "entt/entt.hpp"
 
 namespace afk {
   /**
@@ -19,6 +22,10 @@ namespace afk {
     /** The game name, this is displayed as the window title. */
     static constexpr const char8_t *GAME_NAME = u8"ICT397";
 
+    /** The config subsystem. */
+    config::ConfigManager config_manager = {};
+    /** The ECS subsystem. */
+    ecs::Ecs ecs = {};
     /** The rendering subsystem. */
     render::Renderer renderer = {};
     /** The event subsystem. */
@@ -27,11 +34,16 @@ namespace afk {
     ui::UiManager ui_manager = {};
     /** The camera subsystem. */
     render::Camera camera = {};
-    /** The ECS subsystem. */
-    entt::registry registry = entt::registry{};
+    /** The prefab subsystem. */
+    prefab::PrefabManager prefab_manager = {};
+    /** The scene subsystem. */
+    scene::SceneManager scene_manager = {};
 
-    Engine()               = default;
-    ~Engine()              = default;
+  private:
+    Engine()  = default;
+    ~Engine() = default;
+
+  public:
     Engine(Engine &&)      = delete;
     Engine(const Engine &) = delete;
     auto operator=(const Engine &) -> Engine & = delete;

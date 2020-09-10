@@ -9,6 +9,8 @@ using afk::render::Model;
 
 using std::filesystem::path;
 
+/// @cond DOXYGEN_IGNORE
+
 Model::Model(const path &_file_path) {
   auto tmp = ModelLoader{}.load(_file_path);
 
@@ -16,3 +18,5 @@ Model::Model(const path &_file_path) {
   this->file_path = std::move(tmp.file_path);
   this->file_dir  = std::move(tmp.file_dir);
 }
+
+/// @endcond

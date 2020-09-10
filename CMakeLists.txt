@@ -1,6 +1,11 @@
 # Set cmake minimum version.
 cmake_minimum_required(VERSION 3.16)
 
+# See: https://cmake.org/cmake/help/latest/policy/CMP0042.html
+if (APPLE)
+    set(CMAKE_MACOSX_RPATH ON)
+endif (APPLE)
+
 # Set the project details.
 set(PROJECT_NAME afk)
 project(${PROJECT_NAME}
@@ -29,8 +34,8 @@ if(UNIX AND NOT APPLE)
 endif()
 
 # Set build output directories.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/out)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/out/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY          ${PROJECT_BINARY_DIR}/out)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY          ${PROJECT_BINARY_DIR}/out/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG    ${PROJECT_BINARY_DIR}/out)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG    ${PROJECT_BINARY_DIR}/out/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  ${PROJECT_BINARY_DIR}/out)
@@ -68,7 +73,9 @@ endif()
 target_compile_options(${PROJECT_NAME} PRIVATE
     # Clang
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:
-        -Weverything -fcolor-diagnostics
+        -Weverything # Enable all warnings.
+        -fcolor-diagnostics # Enable coloured compiler output.
+        -fvisibility=hidden # Deal with static library visiblity nonsense.
         # Disable unhelpful warnings.
         -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded
         -Wno-deprecated-declarations -Wno-weak-vtables
@@ -78,9 +85,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /MANIFEST:NO>
     # Enable the clang sanitizer.
     $<$<AND:$<CONFIG:Debug>,$<CXX_COMPILER_ID:Clang>,$<PLATFORM_ID:${SANITIZER_OS}>>:${SANITIZER_FLAGS}>
-    # Set default visibility to hidden.
-    $<$<AND:$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>,$<PLATFORM_ID:Windows>>:
-        -fvisibility=hidden -fvisibility-inlines-hidden>
 )
 
 # Link against the clang sanitizer.
@@ -105,20 +109,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     imgui
     frozen::frozen
     ctti
+    nlohmann_json::nlohmann_json
 )
 
 # Symlink resources to the binary location.
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E create_symlink
     ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-    ${CMAKE_SOURCE_DIR}/shader $<TARGET_FILE_DIR:${PROJECT_NAME}>/shader)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-    ${CMAKE_SOURCE_DIR}/cfg $<TARGET_FILE_DIR:${PROJECT_NAME}>/cfg)
 
 find_package(Doxygen)
 if (DOXYGEN_FOUND)

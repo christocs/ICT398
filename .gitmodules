@@ -43,3 +43,8 @@
 	url = https://github.com/glfw/glfw.git
 	branch = 3.3-stable
 	shallow = true
+[submodule "lib/json"]
+	path = lib/json
+	url = https://github.com/nlohmann/json.git
+	branch = master
+	shallow = true

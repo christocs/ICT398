@@ -21,10 +21,10 @@
 
 #include "afk/Afk.hpp"
 #include "afk/NumericTypes.hpp"
-#include "afk/component/AnimComponent.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/io/Unicode.hpp"
 #include "afk/render/Bone.hpp"
 #include "afk/render/Mesh.hpp"
 #include "afk/render/Model.hpp"
@@ -35,7 +35,6 @@
 #include "afk/render/opengl/ShaderHandle.hpp"
 #include "afk/render/opengl/ShaderProgramHandle.hpp"
 #include "afk/render/opengl/TextureHandle.hpp"
-#include "afk/ui/Unicode.hpp"
 
 using namespace std::string_literals;
 using std::optional;
@@ -92,43 +91,50 @@ static auto resize_window_callback([[maybe_unused]] GLFWwindow *window,
 }
 
 Renderer::Renderer()
-  : models(0, PathHash{}, PathEquals{}), textures(0, PathHash{}, PathEquals{}),
-    shaders(0, PathHash{}, PathEquals{}),
+  : glfw_context(), models(0, PathHash{}, PathEquals{}),
+    textures(0, PathHash{}, PathEquals{}), shaders(0, PathHash{}, PathEquals{}),
     shader_programs(0, PathHash{}, PathEquals{}) {}
 
-Renderer::~Renderer() {
-  glfwDestroyWindow(this->window);
-  glfwTerminate();
-}
-
 auto Renderer::initialize() -> void {
-  afk_assert(!this->is_initialized, "Renderer already initialized");
-  afk_assert(glfwInit(), "Failed to initialize GLFW");
+  const auto &afk = afk::Engine::get();
 
-  // FIXME: Give user an option to change graphics settings.
+  afk_assert(!this->is_initialized, "Renderer already initialized");
+
+  const auto &config = afk.config_manager.config;
+
+  const auto antialiasing_samples =
+      config.video.antialiasing_enabled ? config.video.antialiasing_samples : 0;
+
   glfwWindowHint(GLFW_OPENGL_API, GLFW_OPENGL_API);
   glfwWindowHint(GLFW_NATIVE_CONTEXT_API, GLFW_NATIVE_CONTEXT_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, this->opengl_major_version);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, this->opengl_minor_version);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, this->enable_vsync ? GLFW_TRUE : GLFW_FALSE);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, config.video.vsync_enabled ? GLFW_TRUE : GLFW_FALSE);
   glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
   glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-#ifndef __APPLE__
-  glfwWindowHint(GLFW_SAMPLES, 4);
-#endif
+  glfwWindowHint(GLFW_SAMPLES, antialiasing_samples);
 
-  auto *mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-  this->window = glfwCreateWindow(mode->width, mode->height, ui::to_cstr(Engine::GAME_NAME),
-                                  glfwGetPrimaryMonitor(), nullptr);
+  auto *primary_monitor  = glfwGetPrimaryMonitor();
+  const auto *video_mode = glfwGetVideoMode(primary_monitor);
+  auto *monitor = config.video.fullscreen_enabled ? primary_monitor : nullptr;
+
+  const auto width = config.video.fullscreen_enabled ? video_mode->width
+                                                     : config.video.resolution_width;
+  const auto height = config.video.fullscreen_enabled ? video_mode->height
+                                                      : config.video.resolution_height;
+
+  this->window = Window{glfwCreateWindow(width, height, afk::io::to_cstr(Engine::GAME_NAME),
+                                         monitor, nullptr),
+                        &glfwDestroyWindow};
 
   afk_assert(this->window != nullptr, "Failed to create window");
-  glfwMakeContextCurrent(this->window);
+  glfwMakeContextCurrent(this->window.get());
   afk_assert(gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)),
              "Failed to initialize GLAD");
-  glfwSetFramebufferSizeCallback(this->window, resize_window_callback);
+  glfwSetFramebufferSizeCallback(this->window.get(), resize_window_callback);
 
   this->is_initialized = true;
 }
@@ -144,7 +150,7 @@ auto Renderer::set_option(GLenum option, bool state) const -> void {
 auto Renderer::get_window_size() const -> ivec2 {
   auto width  = 0;
   auto height = 0;
-  glfwGetFramebufferSize(this->window, &width, &height);
+  glfwGetFramebufferSize(this->window.get(), &width, &height);
 
   return ivec2{width, height};
 }
@@ -170,7 +176,7 @@ auto Renderer::set_viewport(i32 x, i32 y, i32 width, i32 height) const -> void {
 }
 
 auto Renderer::swap_buffers() -> void {
-  glfwSwapBuffers(this->window);
+  glfwSwapBuffers(this->window.get());
 }
 
 auto Renderer::get_model(const path &file_path) -> const ModelHandle & {
@@ -214,28 +220,13 @@ auto Renderer::get_shader_program(const path &file_path) -> const ShaderProgramH
 }
 
 auto Renderer::set_texture_unit(usize unit) const -> void {
-  afk_assert_debug(unit > 0, "Invalid texure ID");
+  afk_assert_debug(unit > 0, "Invalid texture ID");
   glActiveTexture(unit);
 }
 
 auto Renderer::bind_texture(const TextureHandle &texture) const -> void {
   afk_assert_debug(texture.id > 0, "Invalid texture unit");
   glBindTexture(GL_TEXTURE_2D, texture.id);
-}
-
-auto Renderer::draw() -> void {
-  while (!this->draw_queue.empty()) {
-    const auto command  = this->draw_queue.front();
-    const auto &model   = this->get_model(command.model_path);
-    const auto &program = this->get_shader_program(command.shader_program_path);
-
-    this->draw_queue.pop();
-    this->draw_model(model, program, command.transform);
-  }
-}
-
-auto Renderer::queue_draw(DrawCommand command) -> void {
-  this->draw_queue.push(command);
 }
 
 auto Renderer::setup_view(const ShaderProgramHandle &shader_program) const -> void {
@@ -407,14 +398,15 @@ auto Renderer::load_model(const Model &model) -> ModelHandle {
              "Found existing animations");
   this->animations[model.file_path] = model.animations;
 
-  io::log << "Loaded model '" << model.file_path.string() + "'.\n";
+  io::log << "Loaded model "
+          << model.file_path.lexically_relative(afk::io::get_resource_path()) << "\n";
 
   return this->models[model.file_path];
 }
 
 auto Renderer::load_texture(const Texture &texture) -> TextureHandle {
   const auto is_loaded = this->textures.count(texture.file_path) == 1;
-  const auto abs_path  = afk::io::get_absolute_path(texture.file_path);
+  const auto abs_path  = afk::io::get_resource_path(texture.file_path);
 
   afk_assert(!is_loaded, "Texture with path '"s + texture.file_path.string() + "' already loaded"s);
   afk_assert(std::filesystem::exists(abs_path),
@@ -450,8 +442,9 @@ auto Renderer::load_texture(const Texture &texture) -> TextureHandle {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  io::log << "Texture '" << texture.file_path.string() << "' loaded with ID "
-          << texture_handle.id << ".\n";
+  io::log << "Texture "
+          << texture.file_path.lexically_relative(afk::io::get_resource_path())
+          << " loaded with ID " << texture_handle.id << "\n";
   this->textures[texture.file_path] = std::move(texture_handle);
 
   return this->textures[texture.file_path];
@@ -488,8 +481,8 @@ auto Renderer::compile_shader(const Shader &shader) -> ShaderHandle {
                           shader.file_path.string() + ": "s + error_msg.data());
   }
 
-  io::log << "Shader '" << shader.file_path.string() << "' compiled with ID "
-          << shader_handle.id << ".\n";
+  io::log << "Shader " << shader.file_path << " compiled with ID "
+          << shader_handle.id << "\n";
   this->shaders[shader.file_path] = std::move(shader_handle);
 
   return this->shaders[shader.file_path];
@@ -529,8 +522,9 @@ auto Renderer::link_shaders(const ShaderProgram &shader_program) -> ShaderProgra
                           "' linking failed: "s + error_msg.data());
   }
 
-  io::log << "Shader program '" << shader_program.file_path.string()
-          << "' linked with ID " << shader_program_handle.id << ".\n";
+  io::log << "Shader program "
+          << shader_program.file_path.lexically_relative(afk::io::get_resource_path())
+          << " linked with ID " << shader_program_handle.id << "\n";
   this->shader_programs[shader_program.file_path] = std::move(shader_program_handle);
 
   return this->shader_programs[shader_program.file_path];

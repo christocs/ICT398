@@ -3,20 +3,18 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "afk/component/BaseComponent.hpp"
-
 namespace afk {
   namespace physics {
     /**
      * Encapsulates the transformation of an object in 3D space.
      */
     struct Transform {
-      /** The objects translation. */
-      glm::vec3 translation = glm::vec3{1.0f};
-      /** The objects scale. */
+      /** The object's translation. */
+      glm::vec3 translation = glm::vec3{};
+      /** The object's scale. */
       glm::vec3 scale = glm::vec3{1.0f};
-      /** The objects rotation as a quaternion. */
-      glm::quat rotation = glm::quat{1.0f, 0.0f, 0.0f, 0.0f};
+      /** The object's rotation as a quaternion. */
+      glm::quat rotation = glm::quat{};
 
       Transform() = default;
 

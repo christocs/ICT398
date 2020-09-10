@@ -35,9 +35,9 @@ namespace afk {
       /**
        * Initializes this UI manager.
        *
-       * @param _window The window to render to.
+       * @param window_handle The window to render to.
        */
-      auto initialize(render::Renderer::Window _window) -> void;
+      auto initialize(afk::render::Renderer::WindowHandle window_handle) -> void;
 
       /**
        * Prepares the UI manager to render a frame.
@@ -55,8 +55,6 @@ namespace afk {
 
       /** The imgui ini path. */
       std::string ini_path = {};
-      /** The window to draw to. */
-      render::Renderer::Window window = {};
 
       /** Should the stats window be shown? */
       bool show_stats = true;

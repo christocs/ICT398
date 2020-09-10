@@ -97,7 +97,7 @@ static auto to_glm(aiQuaterniont<f32> q) -> quat {
 }
 
 auto ModelLoader::load(const path &file_path) -> Model {
-  const auto abs_path = io::get_absolute_path(file_path);
+  const auto abs_path = io::get_resource_path(file_path);
   auto importer       = Assimp::Importer{};
 
   this->model.file_path = file_path;
@@ -295,8 +295,8 @@ auto ModelLoader::get_animations(const aiScene *scene) -> Model::Animations {
       animation.channels.push_back(std::move(channel));
     }
 
-    io::log << "Loaded animation " << animation.name << " with "
-            << animation.channels.size() << " channels.\n";
+    io::log << "Loaded animation \"" << animation.name << "\" with "
+            << animation.channels.size() << " channels\n";
 
     animations.push_back(std::move(animation));
   }

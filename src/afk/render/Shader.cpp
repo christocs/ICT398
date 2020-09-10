@@ -33,8 +33,10 @@ static auto shader_type_from_extension(const string &extension) -> Shader::Type 
   return types.at(extension);
 }
 
+/// @cond DOXYGEN_IGNORE
+
 Shader::Shader(const path &_file_path) {
-  const auto abs_path = afk::io::get_absolute_path(_file_path);
+  const auto abs_path = afk::io::get_resource_path(_file_path);
 
   auto file = ifstream{abs_path};
 
@@ -45,3 +47,5 @@ Shader::Shader(const path &_file_path) {
   this->type      = shader_type_from_extension(_file_path.extension().string());
   this->file_path = _file_path;
 }
+
+/// @endcond

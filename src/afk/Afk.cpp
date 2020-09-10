@@ -1,5 +1,7 @@
 #include "afk/Afk.hpp"
 
+#include <filesystem>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -9,56 +11,60 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+#include "afk/config/Config.hpp"
 #include "afk/debug/Assert.hpp"
+#include "afk/io/Json.hpp"
+#include "afk/io/JsonSerialization.hpp"
 #include "afk/io/Log.hpp"
+#include "afk/io/Unicode.hpp"
 #include "afk/render/Renderer.hpp"
 
 using namespace std::string_literals;
 
-using glm::vec3;
-using glm::vec4;
-
 using afk::Engine;
+using afk::config::Config;
+using afk::config::ConfigManager;
 using afk::event::Event;
-using afk::physics::Transform;
-using afk::render::Texture;
-using Movement = afk::render::Camera::Movement;
+using afk::io::Json;
+using std::filesystem::path;
 
 auto Engine::get() -> Engine & {
   static auto instance = Engine{};
 
+  if (!instance.is_initialized) {
+    instance.initialize();
+  }
+
   return instance;
 }
+
 auto Engine::initialize() -> void {
   afk_assert(!this->is_initialized, "Engine already initialized");
-
+  this->is_initialized = true;
+  this->config_manager.initialize();
   this->renderer.initialize();
   this->event_manager.initialize(this->renderer.window);
   this->ui_manager.initialize(this->renderer.window);
+  this->prefab_manager.initialize();
+  this->scene_manager.initialize();
 
   this->event_manager.register_event(Event::Type::MouseMove,
                                      event::EventManager::Callback{[this](Event event) {
                                        this->move_mouse(event);
                                      }});
+
   this->event_manager.register_event(
       Event::Type::KeyDown, event::EventManager::Callback{[this](Event event) {
         this->move_keyboard(event);
       }});
 
-  this->is_initialized = true;
+  this->scene_manager.load_scene("default");
 }
 
 auto Engine::render() -> void {
-  auto t        = Transform{};
-  t.scale       = vec3{0.25f};
-  t.translation = vec3{0.0f, -1.0f, 0.0f};
-
-  this->renderer.queue_draw({"res/model/city/city.fbx", "shader/default.prog", t});
-
   this->renderer.clear_screen({135.0f, 206.0f, 235.0f, 1.0f});
+  this->ecs.system_manager.update();
   this->ui_manager.prepare();
-  this->renderer.draw();
-  this->event_manager.pump_render();
   this->ui_manager.draw();
   this->renderer.swap_buffers();
 }
@@ -66,23 +72,27 @@ auto Engine::render() -> void {
 auto Engine::update() -> void {
   this->event_manager.pump_events();
 
-  if (glfwWindowShouldClose(this->renderer.window)) {
+  if (glfwWindowShouldClose(this->renderer.window.get())) {
     this->is_running = false;
   }
 
   if (this->ui_manager.show_menu) {
-    glfwSetInputMode(this->renderer.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetInputMode(this->renderer.window.get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   } else {
-    glfwSetInputMode(this->renderer.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(this->renderer.window.get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   }
-
-  // this->update_camera();
 
   ++this->frame_count;
   this->last_update = afk::Engine::get_time();
 }
 
 auto Engine::exit() -> void {
+  const auto config_path =
+      afk::io::get_resource_path(afk::io::to_cstr(ConfigManager::CONFIG_FILE_PATH));
+  auto json = Json{};
+  json      = this->config_manager.config;
+  afk::io::write_json_to_file(config_path, json);
+
   this->is_running = false;
 }
 

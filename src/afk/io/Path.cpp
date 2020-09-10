@@ -27,7 +27,7 @@ static auto normalise_path(const string &raw_path) -> path {
 
 namespace afk {
   namespace io {
-    auto get_absolute_path(const path &file_path) -> path {
+    auto get_resource_path(const path &file_path) -> path {
       static auto root_dir = path{normalise_path(cpplocate::getModulePath())};
 
       return root_dir / file_path;

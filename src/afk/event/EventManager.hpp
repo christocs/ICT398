@@ -55,7 +55,7 @@ namespace afk {
         /** The callback ID. */
         usize id = {};
         /** The next callback ID. */
-        static usize next_id;
+        inline static usize next_id = {};
       };
 
       EventManager()                     = default;
@@ -67,14 +67,9 @@ namespace afk {
       /**
        * Initializes this event manager.
        *
-       * @param window The window to hook into.
+       * @param window_handle The window to hook into.
        */
-      auto initialize(render::Renderer::Window window) -> void;
-
-      /**
-       * Pumps and calls all render event callbacks.
-       */
-      auto pump_render() -> void;
+      auto initialize(render::Renderer::WindowHandle window_handle) -> void;
 
       /**
        * Pumps and calls all event callbacks.
@@ -107,20 +102,9 @@ namespace afk {
       /**
        * Sets up the underlying GLFW callbacks.
        *
-       * @param window The current window.
+       * @param window_handle The current window.
        */
-      auto setup_callbacks(render::Renderer::Window window) -> void;
-
-      /**
-       * Stores the current key state.
-       * @todo Move to input manager.
-       */
-      std::unordered_map<Event::Action, bool> key_state = {
-          {Event::Action::Forward, false},
-          {Event::Action::Left, false},
-          {Event::Action::Backward, false},
-          {Event::Action::Right, false},
-      };
+      auto setup_callbacks(render::Renderer::WindowHandle window_handle) -> void;
 
     private:
       /**
@@ -189,7 +173,7 @@ namespace afk {
           {Event::Type::MouseDown, {}},   {Event::Type::MouseUp, {}},
           {Event::Type::MouseMove, {}},   {Event::Type::KeyDown, {}},
           {Event::Type::KeyUp, {}},       {Event::Type::TextEnter, {}},
-          {Event::Type::MouseScroll, {}}, {Event::Type::Update, {}},
+          {Event::Type::MouseScroll, {}},
       };
     };
   }

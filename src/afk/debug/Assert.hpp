@@ -2,11 +2,9 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <stdexcept>
 #include <string>
 
 #include "afk/NumericTypes.hpp"
-#include "afk/io/Log.hpp"
 
 #if defined(__GNUC__) || defined(__clang__)
   #define AFK_FUNCTION __PRETTY_FUNCTION__
@@ -44,7 +42,7 @@ namespace afk {
 
   /**
    * Performs a checked runtime assertion which runs on all builds. If the
-   * assertion fails an exception is thrown.
+   * assertion fails std::abort is called.
    *
    * @param condition The assertion condition.
    * @param msg The assertion failure message.
@@ -56,18 +54,21 @@ namespace afk {
   inline auto assertion(bool condition, const std::string &msg,
                         const std::string &expression, const std::string &file_path,
                         usize line_num, const std::string &function_name) -> void {
+    using namespace std::string_literals;
+
     if (!condition) {
-      const auto error = "\nAssertion '" + expression + "' failed: " + msg +
-                         "\n  in " + function_name + "\n  at " + file_path +
-                         ":" + std::to_string(line_num) + "\n  ";
-      afk::io::log << msg << '\n';
-      throw std::runtime_error{error};
+      const auto error = "\nAssertion '"s + expression + "' failed: "s + msg +
+                         "\n  in "s + function_name + "\n  at "s + file_path +
+                         ":"s + std::to_string(line_num) + "\n  "s;
+
+      std::cerr << error;
+      std::abort();
     }
   }
 
   /**
-   * Denotes an unreachable statement. If this statement is hit, an exception
-   * is thrown.
+   * Denotes an unreachable statement. If this statement is hit, std::abort
+   * is called.
    *
    * @param file_path The name of the file containing the assertion.
    * @param line_num The line of the assertion in said file.
@@ -75,11 +76,12 @@ namespace afk {
    */
   inline auto unreachable(const std::string &file_path, usize line_num,
                           const std::string &function_name) -> void {
+    using namespace std::string_literals;
 
-    const auto error = "\nUnreachable statement hit\n  in " + function_name +
-                       "\n  at " + file_path + ":" + std::to_string(line_num) + "\n  ";
+    const auto error = "\nUnreachable statement hit\n  in "s + function_name +
+                       "\n  at "s + file_path + ":"s + std::to_string(line_num) + "\n  "s;
 
-    afk::io::log << error << '\n';
-    throw std::runtime_error{error};
+    std::cerr << error;
+    std::abort();
   }
 }

@@ -17,9 +17,9 @@ using namespace std::string_literals;
 Log::Log() {
   auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto ss = ostringstream{};
-  ss << ".log/" << std::put_time(std::localtime(&t), "%FT%H%M%S") << ".log";
+  ss << "log/" << std::put_time(std::localtime(&t), "%FT%H%M%S") << ".txt";
 
-  this->log_path = afk::io::get_absolute_path(ss.str());
+  this->log_path = afk::io::get_resource_path(ss.str());
   std::filesystem::create_directory(this->log_path.parent_path());
   this->log_file = ofstream{this->log_path};
   afk_assert(this->log_file.is_open(), "Failed to open log file");

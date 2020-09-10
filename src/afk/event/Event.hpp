@@ -70,22 +70,6 @@ namespace afk {
       };
 
       /**
-       * Encapsulates a physics update event.
-       */
-      struct Update {
-        /** The delta time of the last frame. */
-        f32 dt = {};
-      };
-
-      struct Render {};
-
-      /**
-       * Denotes a movement action.
-       * @todo Move to input manager.
-       */
-      enum class Action { Forward, Backward, Left, Right };
-
-      /**
        * Denotes an event type.
        */
       enum class Type {
@@ -97,15 +81,12 @@ namespace afk {
         KeyRepeat,
         TextEnter,
         MouseScroll,
-        Update,
-        Render,
       };
 
       /**
        * Encapsulates all possible event data.
        */
-      using Data =
-          std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render>;
+      using Data = std::variant<MouseMove, MouseButton, Key, Text, MouseScroll>;
 
       /**
        * Returns the data contained in this event.

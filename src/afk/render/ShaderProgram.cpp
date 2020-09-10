@@ -15,8 +15,10 @@ using namespace std::string_literals;
 
 using afk::render::ShaderProgram;
 
+/// @cond DOXYGEN_IGNORE
+
 ShaderProgram::ShaderProgram(const path &_file_path) {
-  const auto abs_path = afk::io::get_absolute_path(_file_path);
+  const auto abs_path = afk::io::get_resource_path(_file_path);
   auto file           = ifstream{abs_path};
 
   afk_assert(file.is_open(),
@@ -29,3 +31,5 @@ ShaderProgram::ShaderProgram(const path &_file_path) {
 
   this->file_path = _file_path;
 }
+
+/// @endcond

@@ -10,7 +10,7 @@ namespace afk {
      *
      * @tparam V The array value.
      * @tparam T The array type.
-     * @param t The array vaue.
+     * @param t The array value.
      * @return A constexpr array from the specified elements.
      */
     template<typename V, typename... T>
