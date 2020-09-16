@@ -59,6 +59,8 @@ namespace afk {
 
       /** Should the stats window be shown? */
       bool show_stats = true;
+      /** Should the version window be shown? */
+      bool show_version = true;
       /** Should the imgui window be shown? */
       bool show_imgui = false;
       /** Should the about window be shown? */
@@ -84,6 +86,11 @@ namespace afk {
        * Draws the stats overlay.
        */
       auto draw_stats() -> void;
+
+      /**
+       * Draws the version overlay.
+       */
+      auto draw_version() -> void;
 
       /**
        * Draws the about window.

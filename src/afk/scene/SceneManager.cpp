@@ -36,13 +36,14 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
 
   auto &afk = afk::Engine::get();
 
-  for (const auto &file_path : directory_iterator{scene_dir}) {
-    auto file  = ifstream{file_path};
-    auto json  = Json{};
-    auto scene = Scene{};
+  for (const auto &entry : directory_iterator{scene_dir}) {
+    const auto path = entry.path();
+    auto file       = ifstream{path};
+    auto json       = Json{};
+    auto scene      = Scene{};
     file >> json;
 
-    afk_assert(file.is_open(), "Unable to open scene file "s + file_path.path().string());
+    afk_assert(file.is_open(), "Unable to open scene file "s + path.string());
 
     scene.name    = json.at("name");
     auto entities = json.at("entities");
@@ -76,8 +77,7 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
     this->scene_map[scene.name] = std::move(scene);
 
     afk::io::log << afk::io::get_date_time() << "Loaded scene "
-                 << file_path.path().lexically_relative(afk::io::get_resource_path())
-                 << "\n";
+                 << path.lexically_relative(afk::io::get_resource_path()) << '\n';
   }
 }
 

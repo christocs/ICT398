@@ -34,12 +34,13 @@ using namespace afk::ecs::component;
 auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
   const auto prefab_dir = afk::io::get_resource_path(dir_path);
 
-  for (const auto &file_path : directory_iterator{prefab_dir}) {
-    auto file   = ifstream{file_path};
-    auto json   = Json{};
-    auto prefab = Prefab{};
+  for (const auto &entry : directory_iterator{prefab_dir}) {
+    const auto path = entry.path();
+    auto file       = ifstream{path};
+    auto json       = Json{};
+    auto prefab     = Prefab{};
 
-    afk_assert(file.is_open(), "Unable to open prefab file "s + file_path.path().string());
+    afk_assert(file.is_open(), "Unable to open prefab file "s + path.string());
 
     file >> json;
 
@@ -68,8 +69,7 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
                "Prefab already exists");
     this->prefab_map[prefab.name] = std::move(prefab);
     afk::io::log << afk::io::get_date_time() << "Loaded prefab "
-                 << file_path.path().lexically_relative(afk::io::get_resource_path())
-                 << "\n";
+                 << path.lexically_relative(afk::io::get_resource_path()) << '\n';
   }
 }
 

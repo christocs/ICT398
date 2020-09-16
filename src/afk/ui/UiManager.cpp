@@ -75,6 +75,7 @@ auto UiManager::prepare() const -> void {
 
 auto UiManager::draw() -> void {
   this->draw_stats();
+  this->draw_version();
 
   if (this->show_menu) {
     this->draw_menu_bar();
@@ -193,6 +194,58 @@ auto UiManager::draw_stats() -> void {
       }
       if (this->show_stats && ImGui::MenuItem("Close")) {
         this->show_stats = false;
+      }
+      ImGui::EndPopup();
+    }
+  }
+
+  ImGui::End();
+}
+
+auto UiManager::draw_version() -> void {
+  const auto offset_x = 10.0f;
+  const auto offset_y = 37.0f;
+  static auto corner  = 0;
+
+  auto &io = ImGui::GetIO();
+
+  if (corner != -1) {
+    const auto window_pos =
+        ImVec2{(corner & 1) ? io.DisplaySize.x - offset_x : offset_x,
+               (corner & 2) ? io.DisplaySize.y - offset_y : offset_y};
+    const auto window_pos_pivot =
+        ImVec2{(corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f};
+    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+  }
+
+  ImGui::SetNextWindowBgAlpha(0.35f);
+  ImGui::SetNextWindowSize({315, 45});
+  if (ImGui::Begin("Version", &this->show_version,
+                   (corner != -1 ? ImGuiWindowFlags_NoMove : 0) | ImGuiWindowFlags_NoDecoration |
+                       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings |
+                       ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav)) {
+
+    ImGui::Text("afk engine version %s build %.6s (%s)", afk::io::to_cstr(AFK_VERSION),
+                afk::io::to_cstr(GIT_HEAD_HASH), GIT_IS_DIRTY ? "dirty" : "clean");
+
+    if (ImGui::BeginPopupContextWindow()) {
+      if (ImGui::MenuItem("Custom", nullptr, corner == -1)) {
+        corner = -1;
+      }
+      if (ImGui::MenuItem("Top left", nullptr, corner == 0)) {
+        corner = 0;
+      }
+      if (ImGui::MenuItem("Top right", nullptr, corner == 1)) {
+        corner = 1;
+      }
+      if (ImGui::MenuItem("Bottom left", nullptr, corner == 2)) {
+        corner = 2;
+      }
+      if (ImGui::MenuItem("Bottom right", nullptr, corner == 3)) {
+        corner = 3;
+      }
+      if (this->show_version && ImGui::MenuItem("Close")) {
+        this->show_version = false;
       }
       ImGui::EndPopup();
     }
