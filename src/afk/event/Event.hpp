@@ -86,7 +86,7 @@ namespace afk {
       /**
        * Encapsulates all possible event data.
        */
-      using Data = std::variant<MouseMove, MouseButton, Key, Text, MouseScroll>;
+      using Data = std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll>;
 
       /**
        * Returns the data contained in this event.

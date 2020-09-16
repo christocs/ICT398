@@ -96,5 +96,5 @@ auto SceneManager::instantiate_scene(const std::string &name) const -> void {
     afk.prefab_manager.instantiate_prefab(prefab);
   }
 
-  afk::io::log << afk::io::get_date_time() << "Instantiated scene " << name << '\n';
+  afk::io::log << afk::io::get_date_time() << "Instantiated scene \"" << name << "\"\n";
 }
