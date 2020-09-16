@@ -7,7 +7,7 @@
 #include <imgui/examples/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
 
-#include "afk/Afk.hpp"
+#include "afk/Engine.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
@@ -31,7 +31,9 @@ UiManager::~UiManager() {
 
 auto UiManager::initialize(WindowHandle window_handle) -> void {
   afk_assert(!this->is_initialized, "UI manager already initialized");
-  this->ini_path = afk::io::get_resource_path(".imgui.ini").string();
+
+  this->ini_path =
+      afk::io::get_resource_path(path{afk::io::to_cstr(this->IMGUI_INI_PATH)});
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -202,7 +204,7 @@ auto UiManager::draw_log() -> void {
     return;
   }
 
-  ImGui::SetNextWindowSize({500, 400}, ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowSize({800, 400}, ImGuiCond_FirstUseEver);
   this->log.draw("Log", &this->show_log);
 }
 

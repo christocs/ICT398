@@ -18,7 +18,8 @@ namespace afk {
     class UiManager {
     public:
       /** The default font size, in pixels. */
-      static constexpr f32 FONT_SIZE = 19.0f;
+      static constexpr f32 FONT_SIZE              = 19.0f;
+      static constexpr const auto *IMGUI_INI_PATH = u8"cfg/imgui.ini";
 
       ~UiManager();
       UiManager()                  = default;
@@ -54,7 +55,7 @@ namespace afk {
       using Fonts = std::unordered_map<std::string, ImFont *>;
 
       /** The imgui ini path. */
-      std::string ini_path = {};
+      std::filesystem::path ini_path = {};
 
       /** Should the stats window be shown? */
       bool show_stats = true;

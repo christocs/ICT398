@@ -1,6 +1,6 @@
 #include "afk/event/EventManager.hpp"
 
-#include "afk/Afk.hpp"
+#include "afk/Engine.hpp"
 #include "afk/NumericTypes.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/event/Event.hpp"

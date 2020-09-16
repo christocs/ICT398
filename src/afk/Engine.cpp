@@ -1,4 +1,4 @@
-#include "afk/Afk.hpp"
+#include "afk/Engine.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -16,6 +16,7 @@
 #include "afk/io/Json.hpp"
 #include "afk/io/JsonSerialization.hpp"
 #include "afk/io/Log.hpp"
+#include "afk/io/Path.hpp"
 #include "afk/io/Unicode.hpp"
 #include "afk/render/Renderer.hpp"
 
@@ -41,6 +42,7 @@ auto Engine::get() -> Engine & {
 auto Engine::initialize() -> void {
   afk_assert(!this->is_initialized, "Engine already initialized");
   this->is_initialized = true;
+  afk::io::create_engine_dirs();
   this->config_manager.initialize();
   this->renderer.initialize();
   this->event_manager.initialize(this->renderer.window);

@@ -19,7 +19,7 @@
 // Must be loaded after GLAD.
 #include <GLFW/glfw3.h>
 
-#include "afk/Afk.hpp"
+#include "afk/Engine.hpp"
 #include "afk/NumericTypes.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"

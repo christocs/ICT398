@@ -40,7 +40,7 @@ Shader::Shader(const path &_file_path) {
 
   auto file = ifstream{abs_path};
 
-  afk_assert(file.is_open(), "Unable to open shader '"s + abs_path.string() + "'"s);
+  afk_assert(file.is_open(), "Unable to open shader file '"s + abs_path.string());
 
   this->code =
       string{(istreambuf_iterator<char>(file)), istreambuf_iterator<char>()} + '\0';

@@ -1,6 +1,6 @@
 #include "afk/ecs/system/RenderSystem.hpp"
 
-#include "afk/Afk.hpp"
+#include "afk/Engine.hpp"
 #include "afk/ecs/component/ModelComponent.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"

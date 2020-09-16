@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "afk/Afk.hpp"
+#include "afk/Engine.hpp"
 
 auto main([[maybe_unused]] i32 argc, [[maybe_unused]] char **argv) -> i32 {
   auto &afk = afk::Engine::get();

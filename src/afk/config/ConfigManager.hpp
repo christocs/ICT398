@@ -9,6 +9,8 @@ namespace afk {
      */
     class ConfigManager {
     public:
+      /** The engine configuration directory. */
+      static constexpr const char8_t *CONFIG_DIR = u8"cfg";
       /** The engine configuration file path. */
       static constexpr const char8_t *CONFIG_FILE_PATH = u8"cfg/engine.json";
 

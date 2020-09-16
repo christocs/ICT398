@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 #include <glm/glm.hpp>
 
@@ -27,16 +28,18 @@ using std::string;
 using std::filesystem::directory_iterator;
 using std::filesystem::path;
 using namespace afk::ecs::component;
+using namespace std::string_literals;
 
 auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
   const auto prefab_dir = afk::io::get_resource_path(dir_path);
-  afk_assert(std::filesystem::exists(prefab_dir),
-             "Prefab directory doesn't exist");
 
   for (const auto &file_path : directory_iterator{prefab_dir}) {
     auto file   = ifstream{file_path};
     auto json   = Json{};
     auto prefab = Prefab{};
+
+    afk_assert(file.is_open(), "Unable to open prefab file "s + file_path.path().string());
+
     file >> json;
 
     prefab.name     = json.at("name");

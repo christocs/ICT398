@@ -2,8 +2,9 @@
 
 #include <filesystem>
 #include <fstream>
+#include <string>
 
-#include "afk/Afk.hpp"
+#include "afk/Engine.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/ecs/component/Component.hpp"
 #include "afk/io/Json.hpp"
@@ -26,11 +27,10 @@ using std::ifstream;
 using std::string;
 using std::filesystem::directory_iterator;
 using std::filesystem::path;
+using namespace std::string_literals;
 
 auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
   const auto scene_dir = afk::io::get_resource_path(dir_path);
-  afk_assert(std::filesystem::exists(scene_dir),
-             "Scene directory doesn't exist");
 
   auto &afk = afk::Engine::get();
 
@@ -39,6 +39,8 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
     auto json  = Json{};
     auto scene = Scene{};
     file >> json;
+
+    afk_assert(file.is_open(), "Unable to open scene file "s + file_path.path().string());
 
     scene.name    = json.at("name");
     auto entities = json.at("entities");

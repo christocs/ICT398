@@ -5,6 +5,9 @@
 
 #include <cpplocate/cpplocate.h>
 
+#include "afk/debug/Assert.hpp"
+#include "afk/io/Unicode.hpp"
+
 using std::string;
 using std::filesystem::path;
 
@@ -31,6 +34,18 @@ namespace afk {
       static auto root_dir = path{normalise_path(cpplocate::getModulePath())};
 
       return root_dir / file_path;
+    }
+
+    auto create_engine_dirs() -> void {
+      for (const auto &dir : afk::io::ENGINE_DIRS) {
+        auto dir_path   = afk::io::get_resource_path(afk::io::to_cstr(dir));
+        auto does_exist = std::filesystem::exists(dir_path);
+
+        if (!does_exist) {
+          auto did_create = std::filesystem::create_directory(dir_path);
+          afk_assert(did_create, "Failed to create engine directory");
+        }
+      }
     }
   }
 }

@@ -18,10 +18,6 @@ auto ConfigManager::load_config_file() -> void {
   const auto config_path =
       afk::io::get_resource_path(afk::io::to_cstr(this->CONFIG_FILE_PATH));
 
-  if (!std::filesystem::exists(config_path.parent_path())) {
-    std::filesystem::create_directory(config_path.parent_path());
-  }
-
   if (!std::filesystem::exists(config_path)) {
     auto json = Json{};
     json      = this->config;
