@@ -44,17 +44,17 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
 
     file >> json;
 
-    prefab.name     = json.at("name");
+    prefab.name     = json.at("name").get<string>();
     auto components = json.at("components");
 
-    for (const auto &[component_name, component_value] : components.items()) {
-      auto component      = this->COMPONENT_MAP.at(component_name);
-      auto component_json = component_value;
+    for (const auto &[component_name, component_json] : components.items()) {
+      const auto &j  = component_json;
+      auto component = this->COMPONENT_MAP.at(component_name);
 
       auto visitor =
-          Visitor{[&component_json](ModelComponent &c) { c = component_json; },
-                  [&component_json](PositionComponent &c) { c = component_json; },
-                  [&component_json](VelocityComponent &c) { c = component_json; },
+          Visitor{[j](ModelComponent &c) { c = j.get<ModelComponent>(); },
+                  [j](PositionComponent &c) { c = j.get<PositionComponent>(); },
+                  [j](VelocityComponent &c) { c = j.get<VelocityComponent>(); },
                   [](auto) { afk_unreachable(); }};
 
       std::visit(visitor, component);
@@ -76,8 +76,8 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
 auto PrefabManager::initialize_component(const Json &json, Component &component) -> void {
   auto visitor = Visitor{[json](ModelComponent &c) {
                            auto &afk = afk::Engine::get();
-                           auto path =
-                               afk::io::get_resource_path(json.at("file_path"));
+                           auto path = afk::io::get_resource_path(
+                               json.at("file_path").get<string>());
                            c.model_handle = afk.renderer.get_model(path);
                          },
                          [](auto) {}};

@@ -45,22 +45,23 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
 
     afk_assert(file.is_open(), "Unable to open scene file "s + path.string());
 
-    scene.name    = json.at("name");
+    scene.name    = json.at("name").get<string>();
     auto entities = json.at("entities");
 
-    for (const auto &[_, entity_value] : entities.items()) {
-      auto prefab = afk.prefab_manager.prefab_map.at(entity_value.at("name"));
+    for (const auto &[_, entity_json] : entities.items()) {
+      auto prefab =
+          afk.prefab_manager.prefab_map.at(entity_json.at("name").get<string>());
 
-      for (const auto &[component_name, component_value] :
-           entity_value.at("components").items()) {
-        auto component      = PrefabManager::COMPONENT_MAP.at(component_name);
-        auto component_json = component_value;
+      for (const auto &[component_name, component_json] :
+           entity_json.at("components").items()) {
+        const auto &j  = component_json;
+        auto component = PrefabManager::COMPONENT_MAP.at(component_name);
 
-        auto visitor = Visitor{
-            [&component_json](ModelComponent &c) { c = component_json; },
-            [&component_json](PositionComponent &c) { c = component_json; },
-            [&component_json](VelocityComponent &c) { c = component_json; },
-            [](auto) { afk_unreachable(); }};
+        auto visitor =
+            Visitor{[j](ModelComponent &c) { c = j.get<ModelComponent>(); },
+                    [j](PositionComponent &c) { c = j.get<PositionComponent>(); },
+                    [j](VelocityComponent &c) { c = j.get<VelocityComponent>(); },
+                    [](auto) { afk_unreachable(); }};
 
         std::visit(visitor, component);
 
