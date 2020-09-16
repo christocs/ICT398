@@ -1,4 +1,5 @@
 /build/*
 /.clangd
-/res
+/res/font
+/res/model
 /doc
