@@ -48,6 +48,7 @@ namespace afk {
       ss << value;
       afk.ui_manager.log.append("%s", ss.str().c_str());
       log.log_file << value;
+      log.log_file.flush();
       std::cout << value;
 
       return log;
