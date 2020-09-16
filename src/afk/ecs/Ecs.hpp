@@ -19,6 +19,11 @@ namespace afk {
        * Updates every registered system.
        */
       auto update() -> void;
+
+      /**
+       * Initializes the ECS subsystem.
+       */
+      auto initialize() -> void;
     };
   }
 }

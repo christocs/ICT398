@@ -5,6 +5,7 @@
 #include "afk/config/Config.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Json.hpp"
+#include "afk/io/Time.hpp"
 #include "afk/io/JsonSerialization.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
@@ -32,4 +33,5 @@ auto ConfigManager::initialize() -> void {
   afk_assert(!this->is_initialized, "Config manager already initialized");
   this->load_config_file();
   this->is_initialized = true;
+  afk::io::log << afk::io::get_date_time() << "Config subsystem initialized\n";
 }

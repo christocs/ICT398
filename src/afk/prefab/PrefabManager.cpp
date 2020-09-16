@@ -12,23 +12,24 @@
 #include "afk/io/JsonSerialization.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/io/Time.hpp"
 #include "afk/io/Unicode.hpp"
 #include "afk/prefab/Prefab.hpp"
 #include "afk/utility/Visitor.hpp"
 
-using afk::prefab::PrefabManager;
+using std::ifstream;
+using std::string;
+using std::filesystem::directory_iterator;
+using std::filesystem::path;
+using namespace std::string_literals;
 
 using afk::ecs::Entity;
 using afk::ecs::component::Component;
 using afk::io::Json;
 using afk::prefab::Prefab;
+using afk::prefab::PrefabManager;
 using afk::utility::Visitor;
-using std::ifstream;
-using std::string;
-using std::filesystem::directory_iterator;
-using std::filesystem::path;
 using namespace afk::ecs::component;
-using namespace std::string_literals;
 
 auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
   const auto prefab_dir = afk::io::get_resource_path(dir_path);
@@ -66,7 +67,7 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
     afk_assert(this->prefab_map.find(prefab.name) == this->prefab_map.end(),
                "Prefab already exists");
     this->prefab_map[prefab.name] = std::move(prefab);
-    afk::io::log << "Loaded prefab "
+    afk::io::log << afk::io::get_date_time() << "Loaded prefab "
                  << file_path.path().lexically_relative(afk::io::get_resource_path())
                  << "\n";
   }
@@ -116,4 +117,5 @@ auto PrefabManager::initialize() -> void {
   afk_assert(!this->is_initialized, "Prefab manager already initialized");
   this->load_prefabs_from_dir();
   this->is_initialized = true;
+  afk::io::log << afk::io::get_date_time() << "Prefab subsystem initialized\n";
 }

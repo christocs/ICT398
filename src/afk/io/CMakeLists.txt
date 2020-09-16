@@ -3,6 +3,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     Path.cpp
     Log.cpp
     Json.cpp
+    Time.cpp
     JsonSerialization.cpp
     Unicode.cpp
 )

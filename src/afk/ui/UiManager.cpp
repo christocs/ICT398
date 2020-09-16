@@ -11,6 +11,7 @@
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/io/Time.hpp"
 #include "afk/io/Unicode.hpp"
 #include "afk/render/Renderer.hpp"
 #include "cmake/Git.hpp"
@@ -63,6 +64,7 @@ auto UiManager::initialize(WindowHandle window_handle) -> void {
   auto &style = ImGui::GetStyle();
   style.ScaleAllSizes(this->scale);
   this->is_initialized = true;
+  afk::io::log << afk::io::get_date_time() << "UI subsystem initialized\n";
 }
 
 auto UiManager::prepare() const -> void {

@@ -6,17 +6,13 @@
 #include <string>
 #include <utility>
 
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/string_cast.hpp>
-
 #include "afk/config/Config.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Json.hpp"
 #include "afk/io/JsonSerialization.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/io/Time.hpp"
 #include "afk/io/Unicode.hpp"
 #include "afk/render/Renderer.hpp"
 
@@ -42,8 +38,10 @@ auto Engine::get() -> Engine & {
 auto Engine::initialize() -> void {
   afk_assert(!this->is_initialized, "Engine already initialized");
   this->is_initialized = true;
+  afk::io::log << afk::io::get_date_time() << "afk engine starting...\n";
   afk::io::create_engine_dirs();
   this->config_manager.initialize();
+  this->ecs.initialize();
   this->renderer.initialize();
   this->event_manager.initialize(this->renderer.window);
   this->ui_manager.initialize(this->renderer.window);
@@ -60,7 +58,7 @@ auto Engine::initialize() -> void {
         this->move_keyboard(event);
       }});
 
-  this->scene_manager.load_scene("default");
+  this->scene_manager.instantiate_scene("default");
 }
 
 auto Engine::render() -> void {
@@ -89,6 +87,7 @@ auto Engine::update() -> void {
 }
 
 auto Engine::exit() -> void {
+  afk::io::log << afk::io::get_date_time() << "afk engine quitting...\n";
   const auto config_path =
       afk::io::get_resource_path(afk::io::to_cstr(ConfigManager::CONFIG_FILE_PATH));
   auto json = Json{};

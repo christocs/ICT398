@@ -21,6 +21,7 @@
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/io/Time.hpp"
 #include "afk/physics/Transform.hpp"
 #include "afk/render/Animation.hpp"
 #include "afk/render/Mesh.hpp"
@@ -46,7 +47,6 @@ using afk::render::Mesh;
 using afk::render::Model;
 using afk::render::Texture;
 using afk::render::Vertex;
-namespace io = afk::io;
 
 /** The assimp importer options to use. */
 constexpr unsigned ASSIMP_OPTIONS =
@@ -295,8 +295,9 @@ auto ModelLoader::get_animations(const aiScene *scene) -> Model::Animations {
       animation.channels.push_back(std::move(channel));
     }
 
-    io::log << "Loaded animation \"" << animation.name << "\" with "
-            << animation.channels.size() << " channels\n";
+    afk::io::log << afk::io::get_date_time() << "Loaded animation \""
+                 << animation.name << "\" with " << animation.channels.size()
+                 << " channels\n";
 
     animations.push_back(std::move(animation));
   }

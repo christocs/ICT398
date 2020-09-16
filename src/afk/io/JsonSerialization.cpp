@@ -8,9 +8,10 @@
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Json.hpp"
 
-using afk::io::Json;
 using glm::quat;
 using glm::vec3;
+
+using afk::io::Json;
 
 namespace glm {
   auto from_json(const afk::io::Json &j, quat &q) -> void {

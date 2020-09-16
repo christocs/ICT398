@@ -24,6 +24,7 @@
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/io/Time.hpp"
 #include "afk/io/Unicode.hpp"
 #include "afk/render/Bone.hpp"
 #include "afk/render/Mesh.hpp"
@@ -137,6 +138,7 @@ auto Renderer::initialize() -> void {
   glfwSetFramebufferSizeCallback(this->window.get(), resize_window_callback);
 
   this->is_initialized = true;
+  afk::io::log << afk::io::get_date_time() << "Renderer subsystem initialized\n";
 }
 
 auto Renderer::set_option(GLenum option, bool state) const -> void {
@@ -398,8 +400,9 @@ auto Renderer::load_model(const Model &model) -> ModelHandle {
              "Found existing animations");
   this->animations[model.file_path] = model.animations;
 
-  io::log << "Loaded model "
-          << model.file_path.lexically_relative(afk::io::get_resource_path()) << "\n";
+  afk::io::log << afk::io::get_date_time() << "Loaded model "
+               << model.file_path.lexically_relative(afk::io::get_resource_path())
+               << "\n";
 
   return this->models[model.file_path];
 }
@@ -442,9 +445,9 @@ auto Renderer::load_texture(const Texture &texture) -> TextureHandle {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  io::log << "Texture "
-          << texture.file_path.lexically_relative(afk::io::get_resource_path())
-          << " loaded with ID " << texture_handle.id << "\n";
+  afk::io::log << afk::io::get_date_time() << "Texture "
+               << texture.file_path.lexically_relative(afk::io::get_resource_path())
+               << " loaded with ID " << texture_handle.id << "\n";
   this->textures[texture.file_path] = std::move(texture_handle);
 
   return this->textures[texture.file_path];
@@ -481,8 +484,8 @@ auto Renderer::compile_shader(const Shader &shader) -> ShaderHandle {
                           shader.file_path.string() + ": "s + error_msg.data());
   }
 
-  io::log << "Shader " << shader.file_path << " compiled with ID "
-          << shader_handle.id << "\n";
+  afk::io::log << afk::io::get_date_time() << "Shader " << shader.file_path
+               << " compiled with ID " << shader_handle.id << "\n";
   this->shaders[shader.file_path] = std::move(shader_handle);
 
   return this->shaders[shader.file_path];
@@ -522,9 +525,9 @@ auto Renderer::link_shaders(const ShaderProgram &shader_program) -> ShaderProgra
                           "' linking failed: "s + error_msg.data());
   }
 
-  io::log << "Shader program "
-          << shader_program.file_path.lexically_relative(afk::io::get_resource_path())
-          << " linked with ID " << shader_program_handle.id << "\n";
+  afk::io::log << afk::io::get_date_time() << "Shader program "
+               << shader_program.file_path.lexically_relative(afk::io::get_resource_path())
+               << " linked with ID " << shader_program_handle.id << "\n";
   this->shader_programs[shader_program.file_path] = std::move(shader_program_handle);
 
   return this->shader_programs[shader_program.file_path];

@@ -5,6 +5,7 @@
 #include "afk/debug/Assert.hpp"
 #include "afk/event/Event.hpp"
 #include "afk/io/Log.hpp"
+#include "afk/io/Time.hpp"
 
 // Must be included after GLAD.
 #include <algorithm>
@@ -15,7 +16,6 @@ using afk::event::Event;
 using afk::event::EventManager;
 using WindowHandle = afk::render::Renderer::WindowHandle;
 using Type         = afk::event::Event::Type;
-namespace io       = afk::io;
 
 EventManager::Callback::Callback(Callback::Function _fn)
   : fn(_fn), id(next_id++) {}
@@ -32,6 +32,7 @@ auto EventManager::initialize(WindowHandle window_handle) -> void {
   afk_assert(!this->is_initialized, "Event manager already initialized");
   this->setup_callbacks(window_handle);
   this->is_initialized = true;
+  afk::io::log << afk::io::get_date_time() << "Event subsystem initialized\n";
 }
 
 auto EventManager::pump_events() -> void {
@@ -152,5 +153,5 @@ auto EventManager::mouse_scroll_callback([[maybe_unused]] GLFWwindow *window,
 }
 
 auto EventManager::error_callback([[maybe_unused]] i32 error, const char *msg) -> void {
-  io::log << "glfw error: " << msg << '\n';
+  afk::io::log << afk::io::get_date_time() << "glfw error: " << msg << '\n';
 }

@@ -11,10 +11,17 @@
 #include "afk/io/JsonSerialization.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/io/Time.hpp"
 #include "afk/io/Unicode.hpp"
 #include "afk/prefab/PrefabManager.hpp"
 #include "afk/scene/Scene.hpp"
 #include "afk/utility/Visitor.hpp"
+
+using std::ifstream;
+using std::string;
+using std::filesystem::directory_iterator;
+using std::filesystem::path;
+using namespace std::string_literals;
 
 using afk::io::Json;
 using afk::prefab::Prefab;
@@ -23,11 +30,6 @@ using afk::scene::Scene;
 using afk::scene::SceneManager;
 using afk::utility::Visitor;
 using namespace afk::ecs::component;
-using std::ifstream;
-using std::string;
-using std::filesystem::directory_iterator;
-using std::filesystem::path;
-using namespace std::string_literals;
 
 auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
   const auto scene_dir = afk::io::get_resource_path(dir_path);
@@ -73,7 +75,7 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
                "Scene already exists");
     this->scene_map[scene.name] = std::move(scene);
 
-    afk::io::log << "Loaded scene "
+    afk::io::log << afk::io::get_date_time() << "Loaded scene "
                  << file_path.path().lexically_relative(afk::io::get_resource_path())
                  << "\n";
   }
@@ -83,13 +85,16 @@ auto SceneManager::initialize() -> void {
   afk_assert(!this->is_initialized, "Scene manager already initialized");
   this->load_scenes_from_dir();
   this->is_initialized = true;
+  afk::io::log << afk::io::get_date_time() << "Scene subsystem initialized\n";
 }
 
-auto SceneManager::load_scene(const std::string &name) const -> void {
+auto SceneManager::instantiate_scene(const std::string &name) const -> void {
   auto &afk         = afk::Engine::get();
   const auto &scene = this->scene_map.at(name);
 
   for (const auto &prefab : scene.prefabs) {
     afk.prefab_manager.instantiate_prefab(prefab);
   }
+
+  afk::io::log << afk::io::get_date_time() << "Instantiated scene " << name << '\n';
 }

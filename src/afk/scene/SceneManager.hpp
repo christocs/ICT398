@@ -22,7 +22,7 @@ namespace afk {
        *
        * @param name The scene name.
        */
-      auto load_scene(const std::string &name) const -> void;
+      auto instantiate_scene(const std::string &name) const -> void;
 
       /**
        * Initializes this config manager.
