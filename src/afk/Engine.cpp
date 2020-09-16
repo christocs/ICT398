@@ -38,8 +38,8 @@ auto Engine::get() -> Engine & {
 auto Engine::initialize() -> void {
   afk_assert(!this->is_initialized, "Engine already initialized");
   this->is_initialized = true;
-  afk::io::log << afk::io::get_date_time() << "afk engine starting...\n";
   afk::io::create_engine_dirs();
+  afk::io::log << afk::io::get_date_time() << "afk engine starting...\n";
   this->config_manager.initialize();
   this->ecs.initialize();
   this->renderer.initialize();
