@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "afk/Engine.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Json.hpp"
 

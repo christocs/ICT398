@@ -18,8 +18,8 @@ option(GLFW_BUILD_EXAMPLES OFF)
 option(GLFW_BUILD_TESTS OFF)
 option(GLFW_BUILD_DOCS OFF)
 option(GLFW_USE_HYBRID_HPG ON)
-# JSON.
-set(JSON_BuildTests OFF CACHE INTERNAL "")
+# JSON
+option(JSON_ImplicitConversions OFF)
 
 # Fixes an entt warning on UNIX systems.
 if (UNIX)
