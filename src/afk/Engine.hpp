@@ -20,7 +20,7 @@ namespace afk {
   class Engine {
   public:
     /** The game name, this is displayed as the window title. */
-    static constexpr const char8_t *GAME_NAME = u8"ICT397";
+    static constexpr const char8_t *GAME_NAME = u8"afk";
 
     /** The config subsystem. */
     config::ConfigManager config_manager = {};
