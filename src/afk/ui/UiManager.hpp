@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
+#include <string>
 
 #include <imgui/imgui.h>
 
@@ -55,7 +55,7 @@ namespace afk {
       using Fonts = std::unordered_map<std::string, ImFont *>;
 
       /** The imgui ini path. */
-      std::filesystem::path ini_path = {};
+      std::string imgui_ini_path = {};
 
       /** Should the stats window be shown? */
       bool show_stats = true;

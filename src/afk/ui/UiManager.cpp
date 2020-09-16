@@ -33,14 +33,14 @@ UiManager::~UiManager() {
 auto UiManager::initialize(WindowHandle window_handle) -> void {
   afk_assert(!this->is_initialized, "UI manager already initialized");
 
-  this->ini_path =
-      afk::io::get_resource_path(path{afk::io::to_cstr(this->IMGUI_INI_PATH)});
+  this->imgui_ini_path =
+      afk::io::get_resource_path(path{afk::io::to_cstr(this->IMGUI_INI_PATH)}).string();
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   auto &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-  io.IniFilename = this->ini_path.c_str();
+  io.IniFilename = this->imgui_ini_path.c_str();
   ImGui::StyleColorsDark();
 
   if (auto window = window_handle.lock()) {
