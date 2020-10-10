@@ -63,13 +63,14 @@ auto Engine::initialize() -> void {
 
 auto Engine::render() -> void {
   this->renderer.clear_screen({135.0f, 206.0f, 235.0f, 1.0f});
-  this->ecs.system_manager.update();
+  this->ecs.system_manager.display_update();
   this->ui_manager.prepare();
   this->ui_manager.draw();
   this->renderer.swap_buffers();
 }
 
 auto Engine::update() -> void {
+  this->ecs.system_manager.update();
   this->event_manager.pump_events();
 
   if (glfwWindowShouldClose(this->renderer.window.get())) {

@@ -33,7 +33,7 @@ namespace afk {
       SceneMap scene_map = {};
 
     private:
-      /** Is the renderer initialized? */
+      /** Is the scene manager initialized? */
       bool is_initialized = false;
 
       /**
