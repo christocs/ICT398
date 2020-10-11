@@ -59,7 +59,7 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
 
         auto visitor =
             Visitor{[j](ModelComponent &c) { c = j.get<ModelComponent>(); },
-                    [j](PositionComponent &c) { c = j.get<PositionComponent>(); },
+                    [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
                     [j](VelocityComponent &c) { c = j.get<VelocityComponent>(); },
                     [](auto) { afk_unreachable(); }};
 

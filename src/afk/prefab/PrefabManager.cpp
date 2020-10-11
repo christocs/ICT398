@@ -53,7 +53,7 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
 
       auto visitor =
           Visitor{[j](ModelComponent &c) { c = j.get<ModelComponent>(); },
-                  [j](PositionComponent &c) { c = j.get<PositionComponent>(); },
+                  [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
                   [j](VelocityComponent &c) { c = j.get<VelocityComponent>(); },
                   [](auto) { afk_unreachable(); }};
 
@@ -94,8 +94,8 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
   auto visitor = Visitor{[&registry, entity](ModelComponent component) {
                            registry.emplace<ModelComponent>(entity, component);
                          },
-                         [&registry, entity](PositionComponent component) {
-                           registry.emplace<PositionComponent>(entity, component);
+                         [&registry, entity](TransformComponent component) {
+                           registry.emplace<TransformComponent>(entity, component);
                          },
                          [&registry, entity](VelocityComponent component) {
                            registry.emplace<VelocityComponent>(entity, component);

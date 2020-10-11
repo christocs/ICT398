@@ -41,9 +41,7 @@ namespace glm {
 namespace afk {
   namespace ecs {
     namespace component {
-      auto from_json(const Json &j, ModelComponent &c) -> void {
-        j.at("transform").get_to(c.transform);
-      }
+      auto from_json(const Json &j, ModelComponent &c) -> void { }
     }
   }
 }

@@ -26,7 +26,7 @@ namespace afk {
       /** The map of known component names to components. */
       static inline const auto COMPONENT_MAP =
           ComponentMap{{"Model", afk::ecs::component::ModelComponent{}},
-                       {"Position", afk::ecs::component::PositionComponent{}},
+                       {"Transform", afk::ecs::component::TransformComponent{}},
                        {"Velocity", afk::ecs::component::VelocityComponent{}},
                        {"Collider", afk::ecs::component::ColliderComponent{}}};
 
