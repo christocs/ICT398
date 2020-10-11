@@ -87,7 +87,9 @@ namespace afk {
        */
       enum class Action { Forward, Backward, Left, Right };
 
-      // todo: better names
+      /**
+       * Stores data about a collision impulse that should be applied between two bodies
+       */
       struct CollisionImpulse {
         struct CollisionImpulseBodyData {
           CollisionImpulseBodyData(entt::entity _id, glm::vec3 _contact_point)

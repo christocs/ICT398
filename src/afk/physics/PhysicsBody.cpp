@@ -11,7 +11,7 @@ PhysicsBody::PhysicsBody(entt::entity e, PhysicsBodySystem *physics_system,
   // store which entt game object PhysicsBody belongs to
   this->owning_entity = e;
 
-  // create collision body
+  // create collision body with reactphysics3d transform
   this->body = physics_system->world->createCollisionBody(rp3d::Transform(
       rp3d::Vector3(transform.translation.x, transform.translation.y,
                     transform.translation.z),
@@ -28,6 +28,8 @@ PhysicsBody::PhysicsBody(entt::entity e, PhysicsBodySystem *physics_system,
   this->type = _type;
 
   // add colliders (NOT collision bodies) to the collision body
+  // note that colliders and collisino bodies are different
+  // collider represents a single shape for a collision body, while a collision body is made of multiple colliders
   for (const auto &collision_body : collision_bodies) {
     // do NOT allocate memory yourself, let reactphysics3d handle it
     rp3d::CollisionShape *rp3d_collision_shape = nullptr;
