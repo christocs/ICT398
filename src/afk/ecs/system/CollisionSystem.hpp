@@ -61,6 +61,14 @@ namespace afk {
       };
 
       /**
+       * Event listener class for when collisions occur in ReactPhysics3D
+       * Will fire on each collision event during an update calll to the rp3d world
+       */
+      class CollisionEventListener : public rp3d::EventListener {
+        virtual void onContact(const rp3d::CollisionCallback::CallbackData &callback_data) override;
+      };
+
+      /**
        * Create a ReactPhysics3D box shape
        *
        * @param shape the box shape
@@ -89,6 +97,9 @@ namespace afk {
        */
       rp3d::CapsuleShape *create_shape_capsule(const afk::physics::shape::Capsule &shape,
                                              const glm::vec3 &scale);
+
+      /** Event listener used for firing collision events that occur in the ReactPhysics3D world */
+      CollisionEventListener event_listener = {};
 
       /** Logger used for displaying ReactPhysics3D events */
       Logger logger = {};

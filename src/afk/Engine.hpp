@@ -12,6 +12,7 @@
 #include "afk/render/Renderer.hpp"
 #include "afk/scene/SceneManager.hpp"
 #include "afk/ui/UiManager.hpp"
+#include "afk/ecs/system/CollisionSystem.hpp"
 
 namespace afk {
   /**
@@ -38,7 +39,8 @@ namespace afk {
     prefab::PrefabManager prefab_manager = {};
     /** The scene subsystem. */
     scene::SceneManager scene_manager = {};
-
+    /** The collision subsystem. */
+    system::CollisionSystem collision_system = {};
   private:
     Engine()  = default;
     ~Engine() = default;

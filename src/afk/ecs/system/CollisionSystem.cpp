@@ -20,6 +20,9 @@ CollisionSystem::CollisionSystem() {
   // @todo remove the need to turn off the sleeping optimisation in ReactPhysics3D
   this->world->enableSleeping(false);
 
+  // Set event listener used for firing collision events that occur in the ReactPhysics3D world
+  this->world->setEventListener(&this->event_listener);
+
   // turn on debug renderer so ReactPhysics3D creates render data
   // @todo turn off debug ReactPhysics3D data to be generated in ReactPhysics3D when debug rendering is not being used
   this->world->setIsDebugRenderingEnabled(true);
@@ -49,8 +52,10 @@ auto CollisionSystem::Update() -> void {
   // update translation and rotation in physics world
   // @todo find how to apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
   for (auto &entity : collider_view) {
-    const auto &collider = collider_view.get<afk::ecs::component::ColliderComponent>(entity);
-    const auto &transform = collider_view.get<afk::ecs::component::TransformComponent>(entity);
+    const auto &collider =
+        collider_view.get<afk::ecs::component::ColliderComponent>(entity);
+    const auto &transform =
+        collider_view.get<afk::ecs::component::TransformComponent>(entity);
     afk_assert(this->ecs_entity_to_rp3d_body_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");
     const auto rp3d_id   = this->ecs_entity_to_rp3d_body_map.at(entity);
@@ -162,6 +167,71 @@ rp3d::CapsuleShape *CollisionSystem::create_shape_capsule(const afk::physics::sh
                                                           const glm::vec3 &scale) {
   return this->physics_common.createCapsuleShape(
       capsule.radius * ((scale.x + scale.y) / 2.0f), capsule.height * scale.y);
+}
+
+void CollisionSystem::CollisionEventListener::onContact(
+    const rp3d::CollisionCallback::CallbackData &callback_data) {
+  // On collision event, there will be two colliders colliding
+  // Iterate over all these pairs
+  for (rp3d::uint p = 0; p < callback_data.getNbContactPairs(); p++) {
+
+    // Get the contact pair
+    const auto contact_pair = callback_data.getContactPair(p);
+
+    auto &engine   = afk::Engine::get();
+    const auto &registry = engine.ecs.registry;
+
+    // get the AFK ECS entities of the colliders
+    const auto body_to_ecs_map = &engine.collision_system.rp3d_body_to_ecs_entity_map;
+    const auto body1IdMapIterator =
+        body_to_ecs_map->find(contact_pair.getBody1()->getEntity().id);
+    afk_assert(body1IdMapIterator != body_to_ecs_map->end(),
+               "Could not find body 1 id in rp3d_body_to_ecs_map");
+    const auto object1 = body1IdMapIterator->second;
+
+    auto body2IdMapIterator =
+        body_to_ecs_map->find(contact_pair.getBody2()->getEntity().id);
+    afk_assert(body2IdMapIterator != body_to_ecs_map->end(),
+               "Could not find body 2 id in rp3d_body_to_ecs_map");
+    auto object2 = body2IdMapIterator->second;
+
+    // check that the colliders do not belong to the same entity in react physics 3d
+    if (object1 != object2) {
+      // get the collider components
+      const auto &body1 = registry.get<afk::ecs::component::ColliderComponent>(object1);
+      const auto &body2 = registry.get<afk::ecs::component::ColliderComponent>(object2);
+      auto &event_manager = engine.event_manager;
+
+      contact_pair.getContactPoint(1);
+
+      // fire collision events
+      // note that if a collision body is "sleeping" in reactphysics3d, a collision event of type ContactStay will not fire
+      // at the moment, "sleeping" is disabled
+      // treat contact enter and contact stay as "impulses"
+      // comments below are from previous implementation
+
+//      if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
+//          contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStay) {
+//        auto data = afk::event::Event::CollisionImpulse{
+//            afk::event::Event::CollisionImpulseBodyData{body1.type, object1, glm::vec3{1.0}},
+//            afk::event::Event::CollisionImpulseBodyData{body2.type, object2, glm::vec3{1.0}},
+//            {}};
+//
+//        afk_assert(contact_pair.getNbContactPoints() > 0,
+//                   "No contact points found on collision");
+//
+//        data.collision_normals.reserve(contact_pair.getNbContactPoints());
+//        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
+//          auto contact_normal = contact_pair.getContactPoint(i).getWorldNormal();
+//          data.collision_normals.emplace_back(contact_normal.x, contact_normal.y,
+//                                              contact_normal.z);
+//        }
+//
+//        event_manager->push_event(
+//            afk::event::Event{data, afk::event::Event::Type::CollisionImpulse});
+//      }
+    }
+  }
 }
 
 void CollisionSystem::Logger::log(rp3d::Logger::Level level, const std::string &physicsWorldName,
