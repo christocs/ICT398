@@ -17,7 +17,6 @@ auto RenderSystem::update() -> void {
   for (const auto entity : view) {
     auto &model     = registry.get<ModelComponent>(entity);
     auto &transform = registry.get<TransformComponent>(entity);
-    auto newT = transform;
 
     auto shader = afk.renderer.get_shader_program(
         afk::io::get_resource_path("res/shader/default.prog"));

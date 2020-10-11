@@ -42,6 +42,32 @@ CollisionSystem::CollisionSystem() {
 }
 
 auto CollisionSystem::Update() -> void {
+  auto registry = &afk::Engine::get().ecs.registry;
+  auto collider_view =
+      registry->view<afk::ecs::component::ColliderComponent, afk::ecs::component::TransformComponent>();
+
+  // update translation and rotation in physics world
+  // @todo find how to apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
+  for (auto &entity : collider_view) {
+    const auto &collider = collider_view.get<afk::ecs::component::ColliderComponent>(entity);
+    const auto &transform = collider_view.get<afk::ecs::component::TransformComponent>(entity);
+    afk_assert(this->ecs_entity_to_rp3d_body_map.count(entity) == 1,
+               "ECS entity is not mapped to a rp3d body");
+    const auto rp3d_id   = this->ecs_entity_to_rp3d_body_map.at(entity);
+    const auto rp3d_body = this->world->getCollisionBody(rp3d_id);
+
+    const auto rp3d_transform = rp3d::Transform(
+        rp3d::Vector3(transform.translation.x, transform.translation.y,
+                      transform.translation.z),
+        rp3d::Quaternion(transform.rotation.x, transform.rotation.y,
+                         transform.rotation.z, transform.rotation.w));
+
+    rp3d_body->setTransform(rp3d_transform);
+  }
+
+  // update React3DPhysics world
+  // this method calls to update the debug render data
+  // this method fires collision events
   this->world->update(afk::Engine::get().get_delta_time());
 }
 

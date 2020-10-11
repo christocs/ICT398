@@ -13,6 +13,7 @@ namespace afk {
       /**
        * Constructor
        *
+       * @todo test this works
        * @todo remove the need to turn off the sleeping optimisation in ReactPhysics3D
        * @todo turn off debug ReactPhysics3D data to be generated in ReactPhysics3D when debug rendering is not being used
        * @todo set which debug items to generate display data for in GUI
