@@ -6,6 +6,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     Texture.cpp
     Bone.cpp
     Mesh.cpp
+    GlfwContext.cpp
 
     opengl/Renderer.cpp
 )

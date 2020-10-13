@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
+#include <string>
 
 #include <imgui/imgui.h>
 
@@ -18,7 +18,8 @@ namespace afk {
     class UiManager {
     public:
       /** The default font size, in pixels. */
-      static constexpr f32 FONT_SIZE = 19.0f;
+      static constexpr f32 FONT_SIZE              = 19.0f;
+      static constexpr const auto *IMGUI_INI_PATH = u8"cfg/imgui.ini";
 
       ~UiManager();
       UiManager()                  = default;
@@ -35,9 +36,9 @@ namespace afk {
       /**
        * Initializes this UI manager.
        *
-       * @param _window The window to render to.
+       * @param window_handle The window to render to.
        */
-      auto initialize(render::Renderer::Window _window) -> void;
+      auto initialize(afk::render::Renderer::WindowHandle window_handle) -> void;
 
       /**
        * Prepares the UI manager to render a frame.
@@ -54,12 +55,12 @@ namespace afk {
       using Fonts = std::unordered_map<std::string, ImFont *>;
 
       /** The imgui ini path. */
-      std::string ini_path = {};
-      /** The window to draw to. */
-      render::Renderer::Window window = {};
+      std::string imgui_ini_path = {};
 
       /** Should the stats window be shown? */
       bool show_stats = true;
+      /** Should the version window be shown? */
+      bool show_version = true;
       /** Should the imgui window be shown? */
       bool show_imgui = false;
       /** Should the about window be shown? */
@@ -85,6 +86,11 @@ namespace afk {
        * Draws the stats overlay.
        */
       auto draw_stats() -> void;
+
+      /**
+       * Draws the version overlay.
+       */
+      auto draw_version() -> void;
 
       /**
        * Draws the about window.

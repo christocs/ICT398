@@ -5,7 +5,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "afk/Afk.hpp"
+#include "afk/Engine.hpp"
 #include "afk/io/Path.hpp"
 #include "afk/ui/Log.hpp"
 
@@ -16,12 +16,17 @@ namespace afk {
      * the log file, printed to standard out, and printed to the in game log.
      */
     struct Log {
+      static constexpr const auto *LOG_DIR = u8"log";
+
       /** The path to the current log file. */
       std::filesystem::path log_path = {};
       /** The log file handle. */
       std::ofstream log_file = {};
 
-      Log();
+      /**
+       * Opens the log file.
+       */
+      auto open_log_file() -> void;
     };
 
     /**
@@ -36,9 +41,14 @@ namespace afk {
       auto &afk = Engine::get();
       auto ss   = ostringstream{};
 
+      if (!log.log_file.is_open()) {
+        log.open_log_file();
+      }
+
       ss << value;
       afk.ui_manager.log.append("%s", ss.str().c_str());
       log.log_file << value;
+      log.log_file.flush();
       std::cout << value;
 
       return log;

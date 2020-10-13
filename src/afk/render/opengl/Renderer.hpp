@@ -4,7 +4,6 @@
 #include <functional>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -17,6 +16,7 @@
 
 #include "afk/NumericTypes.hpp"
 #include "afk/render/Animation.hpp"
+#include "afk/render/GlfwContext.hpp"
 #include "afk/render/Model.hpp"
 #include "afk/render/Shader.hpp"
 #include "afk/render/opengl/MeshHandle.hpp"
@@ -105,20 +105,23 @@ namespace afk {
         /** A map of shader program paths to loaded shader program handles. */
         using ShaderPrograms =
             std::unordered_map<std::filesystem::path, ShaderProgramHandle, PathHash, PathEquals>;
-        /** The draw queue. */
-        using DrawQueue = std::queue<DrawCommand>;
         /** A map of animation paths to loaded animation handles. */
         using Animations =
             std::unordered_map<std::filesystem::path, Model::Animations, PathHash, PathEquals>;
 
         /** The underlying GLFW window type. */
-        using Window = std::add_pointer<GLFWwindow>::type;
+        using Window       = std::shared_ptr<GLFWwindow>;
+        using WindowHandle = Window::weak_type;
 
+      private:
+        /** The GLFW context. */
+        GlfwContext glfw_context = {};
+
+      public:
         /** The window being drawn to. */
         Window window = nullptr;
 
         Renderer();
-        ~Renderer();
         Renderer(Renderer &&)      = delete;
         Renderer(const Renderer &) = delete;
         auto operator=(const Renderer &) -> Renderer & = delete;
@@ -166,16 +169,6 @@ namespace afk {
          * @param height The viewport height.
          */
         auto set_viewport(i32 x, i32 y, i32 width, i32 height) const -> void;
-
-        /**
-         * Executes all draw commands in the draw queue.
-         */
-        auto draw() -> void;
-
-        /**
-         * Queue a model to be drawn on the next frame.
-         */
-        auto queue_draw(DrawCommand command) -> void;
 
         /**
          * Draws the specified model with the specified shader
@@ -354,8 +347,6 @@ namespace afk {
         static constexpr i32 opengl_major_version = 4;
         /** The OpenGL minor version being used. */
         static constexpr i32 opengl_minor_version = 1;
-        /** Indicates if vertical sync should be enabled. */
-        static constexpr bool enable_vsync = true;
 
         /** Is the renderer initialized? */
         bool is_initialized = false;
@@ -370,8 +361,6 @@ namespace afk {
         Shaders shaders = {};
         /** The shader program cache. */
         ShaderPrograms shader_programs = {};
-        /** The draw queue. */
-        DrawQueue draw_queue = {};
         /** The animation cache. */
         Animations animations = {};
       };
