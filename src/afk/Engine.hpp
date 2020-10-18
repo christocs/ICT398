@@ -117,6 +117,8 @@ namespace afk {
      */
     auto move_keyboard(event::Event event) -> void;
 
+    bool display_debug_physics_mesh = false;
+
   private:
     /** Is the engine initialized? */
     bool is_initialized = false;

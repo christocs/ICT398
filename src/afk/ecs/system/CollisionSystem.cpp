@@ -44,7 +44,7 @@ CollisionSystem::CollisionSystem() {
   this->physics_common.setLogger(&(this->logger));
 }
 
-auto CollisionSystem::Update() -> void {
+auto CollisionSystem::update() -> void {
   auto registry = &afk::Engine::get().ecs.registry;
   auto collider_view =
       registry->view<afk::ecs::component::ColliderComponent, afk::ecs::component::TransformComponent>();
@@ -149,6 +149,40 @@ auto CollisionSystem::instantiate_collider(const afk::ecs::Entity &entity,
 
     std::visit(visitor, collision_body.shape);
   }
+}
+
+auto CollisionSystem::get_debug_mesh() -> afk::render::Mesh {
+  afk::render::Mesh mesh     = {};
+  mesh.transform.translation = glm::vec3{0.0f};
+
+  auto debug_renderer = &this->world->getDebugRenderer();
+  auto triangles      = debug_renderer->getTriangles();
+
+  // note: some points may be duplicated
+  auto no_vertices = usize{0};
+  for (auto i = usize{0}; i < triangles.size(); ++i) {
+    auto vertex1     = afk::render::Vertex{};
+    vertex1.position = glm::vec3{triangles[i].point1.x, triangles[i].point1.y,
+                                 triangles[i].point1.z};
+    mesh.vertices.push_back(vertex1);
+    auto vertex2     = afk::render::Vertex{};
+    vertex2.position = glm::vec3{triangles[i].point2.x, triangles[i].point2.y,
+                                 triangles[i].point2.z};
+    mesh.vertices.push_back(vertex2);
+    auto vertex3     = afk::render::Vertex{};
+    vertex3.position = glm::vec3{triangles[i].point3.x, triangles[i].point3.y,
+                                 triangles[i].point3.z};
+    mesh.vertices.push_back(vertex3);
+
+    mesh.indices.emplace_back(no_vertices);
+    ++no_vertices;
+    mesh.indices.emplace_back(no_vertices);
+    ++no_vertices;
+    mesh.indices.emplace_back(no_vertices);
+    ++no_vertices;
+  }
+
+  return mesh;
 }
 
 rp3d::BoxShape *CollisionSystem::create_shape_box(const afk::physics::shape::Box &box,

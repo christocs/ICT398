@@ -119,6 +119,12 @@ auto UiManager::draw_menu_bar() -> void {
       if (ImGui::MenuItem("Model viewer")) {
         this->show_model_viewer = true;
       }
+      if (ImGui::MenuItem("Toggle Wireframe")) {
+        afk::Engine::get().renderer.set_wireframe(!afk::Engine::get().renderer.get_wireframe());
+      }
+      if (ImGui::MenuItem("Toggle Debug Physics Mesh")) {
+        afk::Engine::get().display_debug_physics_mesh = !afk::Engine::get().display_debug_physics_mesh;
+      }
       ImGui::EndMenu();
     }
 

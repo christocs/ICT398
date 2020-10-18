@@ -6,6 +6,7 @@
 
 #include "afk/ecs/Entity.hpp"
 #include "afk/ecs/component/ColliderComponent.hpp"
+#include "afk/render/Mesh.hpp"
 
 namespace afk {
   namespace ecs {
@@ -36,7 +37,7 @@ namespace afk {
         auto operator=(CollisionSystem &&) -> CollisionSystem & = delete;
 
         /** Update collisions */
-        auto Update() -> void;
+        auto update() -> void;
 
         /**
          * Load a collision component associated to an entity
@@ -47,6 +48,15 @@ namespace afk {
         auto instantiate_collider(const afk::ecs::Entity &entity,
                            const afk::ecs::component::ColliderComponent &collider_component)
             -> void;
+
+        /**
+         * Hack to get debug collision data out of reactphysics3d
+         *
+         * @return
+         *
+         * @todo remove this
+         */
+        auto get_debug_mesh() -> afk::render::Mesh;
 
       private:
         /** alias to ReactPhysics3D ids for their internal rp3d ECS */
