@@ -128,18 +128,14 @@ auto CollisionSystem::instantiate_collider(
     collision_transform.scale.z *= transform_component.scale.z;
 
     // create transform for collider (this does NOT include scale as reactphysics does not have scale in its transform, to get around this the scale is manually added to the collision shapes)
-    // todo apply parent rotation
     const auto rp3d_transform =
-        rp3d::Transform(rp3d_parent_transform.getPosition() +
-                            rp3d::Vector3(collision_transform.translation.x,
+        rp3d::Transform(rp3d::Vector3(collision_transform.translation.x,
                                           collision_transform.translation.y,
                                           collision_transform.translation.z),
                         rp3d::Quaternion(collision_transform.rotation.x,
                                          collision_transform.rotation.y,
                                          collision_transform.rotation.z,
                                          collision_transform.rotation.w));
-
-    // todo check transform is correct
 
     // add collider based on collider type
     auto visitor = afk::utility::Visitor{
