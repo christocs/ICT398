@@ -41,7 +41,32 @@ namespace glm {
 namespace afk {
   namespace ecs {
     namespace component {
-      auto from_json(const Json &j, ModelComponent &c) -> void { }
+      auto from_json(const Json &j, ModelComponent &c) -> void {}
+
+      auto from_json(const Json &j, ColliderComponent::Collider &c) -> void {
+        c.transform = j.at("Transform").get<TransformComponent>();
+
+        const auto json_shape = j.at("Shape");
+        const auto shape_type = json_shape.at("type").get<std::string>();
+
+        if (shape_type == "sphere") {
+          c.shape = physics::shape::Sphere{json_shape.at("radius").get<float>()};
+        } else if (shape_type == "box") {
+          c.shape = physics::shape::Box{json_shape.at("x").get<float>(),
+                                        json_shape.at("y").get<float>(),
+                                        json_shape.at("z").get<float>()};
+        } else if (shape_type == "capsule") {
+          c.shape = physics::shape::Capsule{json_shape.at("radius").get<float>(),
+                                            json_shape.at("height").get<float>()};
+        } else {
+          afk_assert(false, "Invalid shape type " + shape_type + " provided");
+        }
+      }
+
+      auto from_json(const Json &j, ColliderComponent &c) -> void {
+        c.transform = j.at("Transform").get<TransformComponent>();
+        c.colliders = j.at("Colliders").get<std::vector<ColliderComponent::Collider>>();
+      }
     }
   }
 }

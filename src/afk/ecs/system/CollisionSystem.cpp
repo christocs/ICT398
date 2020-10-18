@@ -147,7 +147,7 @@ auto CollisionSystem::LoadComponent(const afk::ecs::Entity &entity,
         },
         [](auto) { afk_unreachable(); }};
 
-    std::visit(visitor, collision_body.body);
+    std::visit(visitor, collision_body.shape);
   }
 }
 

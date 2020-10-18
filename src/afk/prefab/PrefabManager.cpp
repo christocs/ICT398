@@ -55,6 +55,7 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
           Visitor{[j](ModelComponent &c) { c = j.get<ModelComponent>(); },
                   [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
                   [j](VelocityComponent &c) { c = j.get<VelocityComponent>(); },
+                  [j](ColliderComponent &c) { c = j.get<ColliderComponent>(); },
                   [](auto) { afk_unreachable(); }};
 
       std::visit(visitor, component);
@@ -99,6 +100,10 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
                          },
                          [&registry, entity](VelocityComponent component) {
                            registry.emplace<VelocityComponent>(entity, component);
+                         },
+                         [&registry, entity](ColliderComponent component) {
+                           registry.emplace<ColliderComponent>(entity, component);
+                           // todo: instantiate collider
                          },
                          [](auto) { afk_unreachable(); }};
 

@@ -28,7 +28,7 @@ namespace afk {
 
         /** A collider body is made up of a collision body as well as a transform local to the entity */
         struct Collider {
-          ColliderShape body                = {};
+          ColliderShape shape                = {};
           /** Transform relative to parent */
           afk::physics::Transform transform = {};
         };
