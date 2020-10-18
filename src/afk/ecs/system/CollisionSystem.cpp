@@ -56,10 +56,10 @@ auto CollisionSystem::update() -> void {
         collider_view.get<afk::ecs::component::ColliderComponent>(entity);
     const auto &transform =
         collider_view.get<afk::ecs::component::TransformComponent>(entity);
-    afk_assert(this->ecs_entity_to_rp3d_body_map.count(entity) == 1,
+    afk_assert(this->ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");
-    const auto rp3d_id   = this->ecs_entity_to_rp3d_body_map.at(entity);
-    const auto rp3d_body = this->world->getCollisionBody(rp3d_id);
+    const auto rp3d_body_index   = this->ecs_entity_to_rp3d_body_index_map.at(entity);
+    const auto rp3d_body = this->world->getCollisionBody(rp3d_body_index);
 
     const auto rp3d_transform = rp3d::Transform(
         rp3d::Vector3(transform.translation.x, transform.translation.y,
@@ -81,7 +81,7 @@ auto CollisionSystem::instantiate_collider(const afk::ecs::Entity &entity,
     -> void {
   // check if entity has already had a collider component loaded
   afk_assert(
-      this->ecs_entity_to_rp3d_body_map.count(entity) == 0,
+      this->ecs_entity_to_rp3d_body_index_map.count(entity) == 0,
       "Collider component has already being loaded for the given entity");
 
   const auto &t = collider_component.transform;
@@ -93,15 +93,23 @@ auto CollisionSystem::instantiate_collider(const afk::ecs::Entity &entity,
       rp3d::Quaternion(collider_component.transform.rotation.x, t.rotation.y,
                        t.rotation.z, t.rotation.w)));
 
-  const auto rp3d_body_id = body->getEntity().id;
-  // check that the rp3d body has not already been mapped to a afk ecs entity
-  afk_assert(
-      this->rp3d_body_to_ecs_entity_map.count(rp3d_body_id) == 0,
-      "ReactPhysics3D body has already being mapped to an AFK ECS entity");
 
-  // add associations between rp3d body id and afk ecs entity
-  this->ecs_entity_to_rp3d_body_map.insert({entity, rp3d_body_id});
-  this->rp3d_body_to_ecs_entity_map.insert({rp3d_body_id, entity});
+  // find the index of the collision body
+  const auto no_collision_bodies = this->world->getNbCollisionBodies();
+  for (auto i = size_t{0}; i < no_collision_bodies; ++i) {
+    if (this->world->getCollisionBody(i) == body) {
+      // check that the rp3d body has not already been mapped to a afk ecs entity
+      afk_assert(
+          this->rp3d_body_index_to_ecs_entity_map.count(i) == 0,
+          "ReactPhysics3D body has already being mapped to an AFK ECS entity");
+
+      // add associations between rp3d body id and afk ecs entity
+      this->ecs_entity_to_rp3d_body_index_map.insert({entity, i});
+      this->rp3d_body_index_to_ecs_entity_map.insert({i, entity});
+
+      break;
+    }
+  }
 
   // add all colliders to rp3d collision body
   for (const auto &collision_body : collider_component.colliders) {
@@ -129,19 +137,16 @@ auto CollisionSystem::instantiate_collider(const afk::ecs::Entity &entity,
     auto visitor = afk::utility::Visitor{
         [this, &collision_transform, &rp3d_transform, &body](afk::physics::shape::Box shape) {
           // add rp3d shape and rp3d transform to collider
-          // @todo create shapes when creating prefabs
           body->addCollider(this->create_shape_box(shape, collision_transform.scale),
                             rp3d_transform);
         },
         [this, &collision_transform, &rp3d_transform, &body](afk::physics::shape::Sphere shape) {
           // add rp3d shape and rp3d transform to collider
-          // @todo create shapes when creating prefabs
           body->addCollider(this->create_shape_sphere(shape, collision_transform.scale),
                             rp3d_transform);
         },
         [this, &collision_transform, &rp3d_transform, &body](afk::physics::shape::Capsule shape) {
           // add rp3d shape and rp3d transform to collider
-          // @todo create shapes when creating prefabs
           body->addCollider(
               this->create_shape_capsule(shape, collision_transform.scale), rp3d_transform);
         },
@@ -216,7 +221,7 @@ void CollisionSystem::CollisionEventListener::onContact(
     const auto &registry = engine.ecs.registry;
 
     // get the AFK ECS entities of the colliders
-    const auto body_to_ecs_map = &engine.collision_system.rp3d_body_to_ecs_entity_map;
+    const auto body_to_ecs_map = &engine.collision_system.rp3d_body_index_to_ecs_entity_map;
     const auto body1IdMapIterator =
         body_to_ecs_map->find(contact_pair.getBody1()->getEntity().id);
     afk_assert(body1IdMapIterator != body_to_ecs_map->end(),
