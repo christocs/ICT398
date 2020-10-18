@@ -124,11 +124,14 @@ namespace afk {
         /** ReactPhysics3D representation of the world */
         rp3d::PhysicsWorld *world = nullptr;
 
-        /** Map to point the AFK ECS entity to the ReactPhysics3D collision body identifier */
-        std::unordered_map<ecs::Entity, rp3d_id> ecs_entity_to_rp3d_body_index_map = {};
+        /** Map to point the AFK ECS entity to the ReactPhysics3D collision body index */
+        std::unordered_map<ecs::Entity, u32> ecs_entity_to_rp3d_body_index_map = {};
+
+        /** Map to point the ReactPhysics3D collision body index to an AFK ECS entity */
+        std::unordered_map<u32, ecs::Entity> rp3d_body_index_to_ecs_entity_map = {};
 
         /** Map to point the ReactPhysics3D collision body identifier an AFK ECS entity */
-        std::unordered_map<rp3d_id, ecs::Entity> rp3d_body_index_to_ecs_entity_map = {};
+        std::unordered_map<rp3d_id, ecs::Entity> rp3d_body_id_to_ecs_entity_map = {};
       };
     }
   }
