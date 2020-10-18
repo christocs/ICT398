@@ -7,6 +7,7 @@
 #include "afk/ecs/Entity.hpp"
 #include "afk/ecs/component/ColliderComponent.hpp"
 #include "afk/render/Mesh.hpp"
+#include "afk/ecs/component/TransformComponent.hpp"
 
 namespace afk {
   namespace ecs {
@@ -46,7 +47,8 @@ namespace afk {
          * @todo apply parent transformation to each collider
          */
         auto instantiate_collider(const afk::ecs::Entity &entity,
-                           const afk::ecs::component::ColliderComponent &collider_component)
+                           const afk::ecs::component::ColliderComponent &collider_component,
+                                  const afk::ecs::component::TransformComponent &transform_component)
             -> void;
 
         /**

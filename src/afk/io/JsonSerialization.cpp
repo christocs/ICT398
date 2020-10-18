@@ -64,7 +64,6 @@ namespace afk {
       }
 
       auto from_json(const Json &j, ColliderComponent &c) -> void {
-        c.transform = j.at("Transform").get<TransformComponent>();
         c.colliders = j.at("Colliders").get<std::vector<ColliderComponent::Collider>>();
       }
     }

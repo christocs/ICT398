@@ -39,12 +39,6 @@ namespace afk {
         /** Collecition of colliders for the entity */
         ColliderCollection colliders = {};
 
-        /** Transform of the component relative to global coordinates
-         * @todo Transform component on entities and use that Transform instead, instead of using this duplicate
-         * will require prefabs to be loaded in multi-pass or force the Transform to be loaded first
-         */
-        physics::Transform transform = {};
-
         // todo: consider importing mass, centre of mass, elasticity, etc., though that may be more appropriate in a separate component
       };
     }

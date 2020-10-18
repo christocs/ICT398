@@ -58,8 +58,8 @@ auto CollisionSystem::update() -> void {
         collider_view.get<afk::ecs::component::TransformComponent>(entity);
     afk_assert(this->ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");
-    const auto rp3d_body_index   = this->ecs_entity_to_rp3d_body_index_map.at(entity);
-    const auto rp3d_body = this->world->getCollisionBody(rp3d_body_index);
+    const auto rp3d_body_index = this->ecs_entity_to_rp3d_body_index_map.at(entity);
+    const auto rp3d_body       = this->world->getCollisionBody(rp3d_body_index);
 
     const auto rp3d_transform = rp3d::Transform(
         rp3d::Vector3(transform.translation.x, transform.translation.y,
@@ -76,23 +76,27 @@ auto CollisionSystem::update() -> void {
   this->world->update(afk::Engine::get().get_delta_time());
 }
 
-auto CollisionSystem::instantiate_collider(const afk::ecs::Entity &entity,
-                                    const afk::ecs::component::ColliderComponent &collider_component)
-    -> void {
+auto CollisionSystem::instantiate_collider(
+    const afk::ecs::Entity &entity,
+    const afk::ecs::component::ColliderComponent &collider_component,
+    const afk::ecs::component::TransformComponent &transform_component) -> void {
   // check if entity has already had a collider component loaded
   afk_assert(
       this->ecs_entity_to_rp3d_body_index_map.count(entity) == 0,
       "Collider component has already being loaded for the given entity");
 
-  const auto &t = collider_component.transform;
+  const auto rp3d_parent_transform =
+      rp3d::Transform(rp3d::Vector3(transform_component.translation.x,
+                                    transform_component.translation.y,
+                                    transform_component.translation.z),
+                      rp3d::Quaternion(transform_component.rotation.x,
+                                       transform_component.rotation.y,
+                                       transform_component.rotation.z,
+                                       transform_component.rotation.w));
 
   // instantiate rp3d body, applying the appropriate translation and rotation
   // note that the scale is not included in rp3d transform, so collision bodies will be manually scaled later
-  auto body = this->world->createCollisionBody(rp3d::Transform(
-      rp3d::Vector3(t.translation.x, t.translation.y, t.translation.z),
-      rp3d::Quaternion(collider_component.transform.rotation.x, t.rotation.y,
-                       t.rotation.z, t.rotation.w)));
-
+  auto body = this->world->createCollisionBody(rp3d_parent_transform);
 
   // find the index of the collision body
   const auto no_collision_bodies = this->world->getNbCollisionBodies();
@@ -116,16 +120,17 @@ auto CollisionSystem::instantiate_collider(const afk::ecs::Entity &entity,
     // combine collider transform scale with parent transform
     // need to apply parent scale at the shape level, as scale cannot be applied to the parent body level
     auto collision_transform = collision_body.transform;
-    collision_transform.scale.x *= t.scale.x;
-    collision_transform.scale.y *= t.scale.y;
-    collision_transform.scale.z *= t.scale.z;
+    collision_transform.scale.x *= transform_component.scale.x;
+    collision_transform.scale.y *= transform_component.scale.y;
+    collision_transform.scale.z *= transform_component.scale.z;
 
     // create transform for collider (this does NOT include scale as reactphysics does not have scale in its transform, to get around this the scale is manually added to the collision shapes)
-    // todo apply parent transforms
+    // todo apply parent rotation
     const auto rp3d_transform =
-        rp3d::Transform(rp3d::Vector3(collision_transform.translation.x,
-                                      collision_transform.translation.y,
-                                      collision_transform.translation.z),
+        rp3d::Transform(rp3d_parent_transform.getPosition() +
+                            rp3d::Vector3(collision_transform.translation.x,
+                                          collision_transform.translation.y,
+                                          collision_transform.translation.z),
                         rp3d::Quaternion(collision_transform.rotation.x,
                                          collision_transform.rotation.y,
                                          collision_transform.rotation.z,
@@ -217,7 +222,7 @@ void CollisionSystem::CollisionEventListener::onContact(
     // Get the contact pair
     const auto contact_pair = callback_data.getContactPair(p);
 
-    auto &engine   = afk::Engine::get();
+    auto &engine         = afk::Engine::get();
     const auto &registry = engine.ecs.registry;
 
     // get the AFK ECS entities of the colliders
@@ -244,31 +249,31 @@ void CollisionSystem::CollisionEventListener::onContact(
       contact_pair.getContactPoint(1);
 
       // fire collision events
-      // note that if a collision body is "sleeping" in reactphysics3d, a collision event of type ContactStay will not fire
-      // at the moment, "sleeping" is disabled
-      // treat contact enter and contact stay as "impulses"
-      // comments below are from previous implementation
+      // note that if a collision body is "sleeping" in reactphysics3d, a
+      // collision event of type ContactStay will not fire at the moment,
+      // "sleeping" is disabled treat contact enter and contact stay as
+      // "impulses" comments below are from previous implementation
 
-//      if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
-//          contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStay) {
-//        auto data = afk::event::Event::CollisionImpulse{
-//            afk::event::Event::CollisionImpulseBodyData{body1.type, object1, glm::vec3{1.0}},
-//            afk::event::Event::CollisionImpulseBodyData{body2.type, object2, glm::vec3{1.0}},
-//            {}};
-//
-//        afk_assert(contact_pair.getNbContactPoints() > 0,
-//                   "No contact points found on collision");
-//
-//        data.collision_normals.reserve(contact_pair.getNbContactPoints());
-//        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
-//          auto contact_normal = contact_pair.getContactPoint(i).getWorldNormal();
-//          data.collision_normals.emplace_back(contact_normal.x, contact_normal.y,
-//                                              contact_normal.z);
-//        }
-//
-//        event_manager->push_event(
-//            afk::event::Event{data, afk::event::Event::Type::CollisionImpulse});
-//      }
+      //      if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
+      //          contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStay) {
+      //        auto data = afk::event::Event::CollisionImpulse{
+      //            afk::event::Event::CollisionImpulseBodyData{body1.type, object1, glm::vec3{1.0}},
+      //            afk::event::Event::CollisionImpulseBodyData{body2.type, object2, glm::vec3{1.0}},
+      //            {}};
+      //
+      //        afk_assert(contact_pair.getNbContactPoints() > 0,
+      //                   "No contact points found on collision");
+      //
+      //        data.collision_normals.reserve(contact_pair.getNbContactPoints());
+      //        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
+      //          auto contact_normal = contact_pair.getContactPoint(i).getWorldNormal();
+      //          data.collision_normals.emplace_back(contact_normal.x, contact_normal.y,
+      //                                              contact_normal.z);
+      //        }
+      //
+      //        event_manager->push_event(
+      //            afk::event::Event{data, afk::event::Event::Type::CollisionImpulse});
+      //      }
     }
   }
 }

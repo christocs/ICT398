@@ -101,9 +101,19 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
                          [&registry, entity](VelocityComponent component) {
                            registry.emplace<VelocityComponent>(entity, component);
                          },
-                         [&registry, entity, &afk](ColliderComponent component) {
+                         [&registry, entity, &prefab, &afk](ColliderComponent component) {
+                           afk_assert(prefab.components.count("Transform") == 1, "prefab must have a Transform component to instantiate a collider component");
                            registry.emplace<ColliderComponent>(entity, component);
-                           afk.collision_system.instantiate_collider(entity, component);
+
+                           // check that the "Transform" component is a transform component, then use it when instantiating the collider
+                           auto transform_visitor =
+                               Visitor{[entity, &afk, component](TransformComponent transform) {
+                                         afk.collision_system.instantiate_collider(
+                                             entity, component, transform);
+                                       },
+                                       [](auto) { afk_unreachable(); }};
+
+                           std::visit(transform_visitor, prefab.components.at("Transform"));
                          },
                          [](auto) { afk_unreachable(); }};
 
