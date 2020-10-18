@@ -3,6 +3,7 @@
 #include <functional>
 #include <vector>
 
+#include "afk/ecs/system/CollisionSystem.hpp"
 #include "afk/ecs/system/RenderSystem.hpp"
 
 namespace afk {
@@ -20,14 +21,14 @@ namespace afk {
        *
        * @param update The update function to be called.
        */
-      auto register_display_update_system(const Update& update) -> void;
+      auto register_display_update_system(const Update &update) -> void;
 
       /**
        * Registers a system to be called on each update.
        *
        * @param update The update function to be called.
        */
-      auto register_update_system(const Update& update) -> void;
+      auto register_update_system(const Update &update) -> void;
 
       /**
        * Updates every registered system that should be tied to the render update cycle.

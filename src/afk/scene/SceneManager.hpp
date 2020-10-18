@@ -21,6 +21,8 @@ namespace afk {
        * Instantiates all prefabs contained the specified scene.
        *
        * @param name The scene name.
+       *
+       * @todo destroy previous scene before instantiating scene
        */
       auto instantiate_scene(const std::string &name) const -> void;
 

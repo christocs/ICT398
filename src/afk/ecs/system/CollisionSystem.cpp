@@ -5,7 +5,7 @@
 #include "afk/io/Log.hpp"
 #include "afk/utility/Visitor.hpp"
 
-using afk::system::CollisionSystem;
+using afk::ecs::system::CollisionSystem;
 
 CollisionSystem::CollisionSystem() {
   // Instantiate the world
@@ -76,12 +76,12 @@ auto CollisionSystem::Update() -> void {
   this->world->update(afk::Engine::get().get_delta_time());
 }
 
-auto CollisionSystem::LoadComponent(const afk::ecs::Entity &entity,
+auto CollisionSystem::instantiate_collider(const afk::ecs::Entity &entity,
                                     const afk::ecs::component::ColliderComponent &collider_component)
     -> void {
   // check if entity has already had a collider component loaded
   afk_assert(
-      this->ecs_entity_to_rp3d_body_map.count(entity) < 1,
+      this->ecs_entity_to_rp3d_body_map.count(entity) == 0,
       "Collider component has already being loaded for the given entity");
 
   const auto &t = collider_component.transform;
@@ -96,7 +96,7 @@ auto CollisionSystem::LoadComponent(const afk::ecs::Entity &entity,
   const auto rp3d_body_id = body->getEntity().id;
   // check that the rp3d body has not already been mapped to a afk ecs entity
   afk_assert(
-      this->rp3d_body_to_ecs_entity_map.count(rp3d_body_id),
+      this->rp3d_body_to_ecs_entity_map.count(rp3d_body_id) == 0,
       "ReactPhysics3D body has already being mapped to an AFK ECS entity");
 
   // add associations between rp3d body id and afk ecs entity

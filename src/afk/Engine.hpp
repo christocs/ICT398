@@ -40,7 +40,7 @@ namespace afk {
     /** The scene subsystem. */
     scene::SceneManager scene_manager = {};
     /** The collision subsystem. */
-    system::CollisionSystem collision_system = {};
+    ecs::system::CollisionSystem collision_system = {};
   private:
     Engine()  = default;
     ~Engine() = default;

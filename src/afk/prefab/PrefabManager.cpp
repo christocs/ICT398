@@ -101,9 +101,9 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
                          [&registry, entity](VelocityComponent component) {
                            registry.emplace<VelocityComponent>(entity, component);
                          },
-                         [&registry, entity](ColliderComponent component) {
+                         [&registry, entity, &afk](ColliderComponent component) {
                            registry.emplace<ColliderComponent>(entity, component);
-                           // todo: instantiate collider
+                           afk.collision_system.instantiate_collider(entity, component);
                          },
                          [](auto) { afk_unreachable(); }};
 

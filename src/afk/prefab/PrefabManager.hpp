@@ -33,6 +33,8 @@ namespace afk {
       /**
        * Instantiates a prefab by name and returns the created entity.
        *
+       * Assumes prefab is not already instantiated
+       *
        * @param name The prefab name.
        * @return The created entity.
        */
