@@ -61,6 +61,15 @@ namespace afk {
         } else {
           afk_assert(false, "Invalid shape type " + shape_type + " provided");
         }
+
+        // if center of mass is provided, use it, else calculate it
+        if (j.find("center_of_mass") != j.end()) {
+          c.center_of_mass = j.at("center_of_mass").get<glm::vec3>();
+        } else {
+          // order of applying transforms is scale, then rotation, then translation
+          // in this order, only the last will have an effect on the center of mass for the simple objects being, so just use the translate
+          c.center_of_mass = c.transform.translation;
+        }
       }
 
       auto from_json(const Json &j, ColliderComponent &c) -> void {

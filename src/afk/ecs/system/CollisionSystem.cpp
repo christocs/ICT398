@@ -7,8 +7,8 @@
 #include "afk/utility/Visitor.hpp"
 
 using afk::ecs::component::ColliderComponent;
-using afk::ecs::component::TransformComponent;
 using afk::ecs::component::PhysicsComponent;
+using afk::ecs::component::TransformComponent;
 using afk::ecs::system::CollisionSystem;
 
 CollisionSystem::CollisionSystem() {
@@ -58,10 +58,8 @@ auto CollisionSystem::update() -> void {
   // update translation and rotation in physics world
   // @todo find how to apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
   for (auto &entity : collider_view) {
-    const auto &collider =
-        collider_view.get<ColliderComponent>(entity);
-    const auto &transform =
-        collider_view.get<TransformComponent>(entity);
+    const auto &collider  = collider_view.get<ColliderComponent>(entity);
+    const auto &transform = collider_view.get<TransformComponent>(entity);
     afk_assert(this->ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");
     const auto rp3d_body_index = this->ecs_entity_to_rp3d_body_index_map.at(entity);
@@ -84,8 +82,7 @@ auto CollisionSystem::update() -> void {
 }
 
 auto CollisionSystem::instantiate_collider(
-    const afk::ecs::Entity &entity,
-    const afk::ecs::component::ColliderComponent &collider_component,
+    const afk::ecs::Entity &entity, afk::ecs::component::ColliderComponent &collider_component,
     const afk::ecs::component::TransformComponent &transform_component) -> void {
   // check if entity has already had a collider component loaded
   afk_assert(
@@ -127,8 +124,12 @@ auto CollisionSystem::instantiate_collider(
       "ReactPhysics body id has already being mapped to an AFK ECS Entity");
   this->rp3d_body_id_to_ecs_entity_map.insert({body->getEntity().id, entity});
 
-  // add all colliders to rp3d collision body
+  // add all colliders to rp3d collision body and start calculating the average center of mass
+  collider_component.center_of_mass = glm::vec3{0.0f};
   for (const auto &collision_body : collider_component.colliders) {
+    // accumulate center of mass
+    collider_component.center_of_mass += collision_body.center_of_mass;
+
     // combine collider transform scale with parent transform
     // need to apply parent scale at the shape level, as scale cannot be applied to the parent body level
     auto collision_transform = collision_body.transform;
@@ -166,6 +167,12 @@ auto CollisionSystem::instantiate_collider(
         [](auto) { afk_unreachable(); }};
 
     std::visit(visitor, collision_body.shape);
+  }
+
+  // calculate average center of mass after all the individual colliders' centers of mass have been accumulated
+  // no point in dividing by 0 or 1
+  if (collider_component.colliders.size() > 1) {
+    collider_component.center_of_mass /= collider_component.colliders.size();
   }
 }
 

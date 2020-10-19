@@ -21,11 +21,11 @@ namespace afk {
             glm::vec3 force = glm::vec3{0.0f};
           };
 
-          // primary values
+          // primary values, can remain constant over time
           glm::vec3 position = glm::vec3{0.0f};
           glm::vec3 momentum = glm::vec3{0.0f};
 
-          // secondary values (derived from primary and constant values)
+          // secondary values, derrived values and may not remain constant over time
           glm::vec3 velocity = glm::vec3{0.0f};
 
           // constant values
@@ -45,11 +45,11 @@ namespace afk {
             glm::vec3 torque;
           };
 
-          // primary values
+          // primary values, can remain constant over time
           glm::quat orientation;
           glm::vec3 angular_momentum;
 
-          // secondary values (derived from primary and constant values)
+          // secondary values, derrived values and may not remain constant over time
           glm::quat spin;
           glm::vec3 angular_velocity;
 

@@ -2,6 +2,7 @@
 
 #include <variant>
 
+#include <glm/glm.hpp>
 #include "afk/physics/shape/Box.hpp"
 #include "afk/physics/shape/Capsule.hpp"
 #include "afk/physics/shape/Sphere.hpp"
@@ -20,9 +21,12 @@ namespace afk {
 
         /** A collider body is made up of a collision body as well as a transform local to the entity */
         struct Collider {
+          /** Shape of the collider */
           ColliderShape shape                = {};
-          /** Transform relative to parent */
+          /** Transform within local space of the entity */
           afk::physics::Transform transform = {};
+          /** center of mass of the collider within the local space of the entity */
+          glm::vec3 center_of_mass = glm::vec3{0.0f};
         };
 
         /** Defining a collection of colliders */
@@ -30,6 +34,13 @@ namespace afk {
 
         /** Collecition of colliders for the entity */
         ColliderCollection colliders = {};
+
+        /**
+         * Average center of mass derrived from each collider's center of mass
+         * 
+         * @todo consider moving this to the PhysicsComponent, as this value is unused for static rigid bodies
+         */
+        glm::vec3 center_of_mass = glm::vec3{0.0f};
       };
     }
   }

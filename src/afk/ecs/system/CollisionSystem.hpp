@@ -47,7 +47,7 @@ namespace afk {
          * @todo apply parent transformation to each collider
          */
         auto instantiate_collider(const afk::ecs::Entity &entity,
-                           const afk::ecs::component::ColliderComponent &collider_component,
+                           afk::ecs::component::ColliderComponent &collider_component,
                                   const afk::ecs::component::TransformComponent &transform_component)
             -> void;
 
@@ -77,6 +77,9 @@ namespace afk {
         /**
          * Event listener class for when collisions occur in ReactPhysics3D
          * Will fire on each collision event during an update calll to the rp3d world
+         * 
+         * @todo optimise data sent to the event manager, don't have the event manager store anything unnecessary
+         * @todo process collision information and send the processed data rather than the more raw data
          */
         class CollisionEventListener : public rp3d::EventListener {
           virtual void onContact(const rp3d::CollisionCallback::CallbackData &callback_data) override;
