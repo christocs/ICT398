@@ -36,8 +36,8 @@ auto PhysicsSystem::update() -> void {
     // integrate velocity
     physics.linear_velocity += dt * physics.inverse_mass * physics.external_forces;
     // add gravity to linear velocity
-    if (afk.gravity_enabled && false) {
-      physics.linear_velocity += dt * afk.gravity;
+    if (afk.gravity_enabled) {
+      physics.linear_velocity += dt * physics.inverse_mass * afk.gravity;
     }
 
     // apply dampening
