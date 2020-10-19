@@ -6,6 +6,7 @@
 #include "afk/ecs/component/PhysicsComponent.hpp"
 #include "afk/ecs/component/TransformComponent.hpp"
 #include "afk/io/Log.hpp"
+#include "afk/utility/Visitor.hpp"
 
 using afk::ecs::component::ColliderComponent;
 using afk::ecs::component::PhysicsComponent;
@@ -16,6 +17,7 @@ using afk::physics::Transform;
 using afk::physics::shape::Box;
 using afk::physics::shape::Capsule;
 using afk::physics::shape::Sphere;
+using afk::utility::Visitor;
 
 auto PhysicsSystem::update() -> void {
   auto &afk           = afk::Engine::get();
@@ -54,9 +56,28 @@ auto PhysicsSystem::update() -> void {
 
 auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
   // this method should only be processing Collision events and will assume the event is a collision event
-  afk_assert(event.type == afk::event::Event::Type::Collision,
+  afk_assert(event.type == Event::Type::Collision,
              "event type was not 'Collision'");
 
   auto &afk     = afk::Engine::get();
   const auto dt = afk.get_delta_time();
+
+  auto visitor = Visitor{
+      [dt, &afk](Event::Collision &c) {
+        afk::io::log << "collision points:\n";
+        for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
+          afk::io::log
+              << "\t1: local - x:" +
+                     std::to_string(c.contacts[i].collider1_local_point.x) + ", y: " +
+                     std::to_string(c.contacts[i].collider1_local_point.x) +
+                     ", z:" + std::to_string(c.contacts[i].collider1_local_point.x) +
+                     "\n" + "\t2: local - x:" +
+                     std::to_string(c.contacts[i].collider2_local_point.x) + ", y: " +
+                     std::to_string(c.contacts[i].collider2_local_point.x) +
+                     ", z:" + std::to_string(c.contacts[i].collider2_local_point.x) + "\n";
+        }
+      },
+      [](auto) { afk_assert(false, "Event data must be of type Collision"); }};
+
+  std::visit(visitor, event.data);
 }
