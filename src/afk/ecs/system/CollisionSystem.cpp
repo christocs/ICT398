@@ -258,7 +258,7 @@ void CollisionSystem::CollisionEventListener::onContact(
     if (object1 != object2) {
       // entities without physics components are considered to be static
       // if both objects are static, don't bother to fire an event
-      if (registry.has<PhysicsComponent>(object1) && registry.has<PhysicsComponent>(object2)) {
+      if (registry.has<PhysicsComponent>(object1) || registry.has<PhysicsComponent>(object2)) {
 
         auto &event_manager = engine.event_manager;
 
