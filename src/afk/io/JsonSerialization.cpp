@@ -66,6 +66,31 @@ namespace afk {
       auto from_json(const Json &j, ColliderComponent &c) -> void {
         c.colliders = j.at("Colliders").get<std::vector<ColliderComponent::Collider>>();
       }
+
+      auto from_json(const Json &j, PhysicsComponent::LinearState &c) -> void {
+        // get mass then calculate the inverse
+        c.mass         = j.at("mass").get<f32>();
+        c.inverse_mass = 1 / c.mass;
+
+        c.momentum = j.at("momentum").get<glm::vec3>();
+        // don't grab position here, set it when instantiating the physics component as it should be synced with the TransformComponent
+
+        // update calculated secondary values
+        c.recalculate();
+      }
+
+      auto from_json(const Json &j, PhysicsComponent::AngularState &c) -> void {
+        // get initial primary values
+        c.angular_momentum = j.at("angular_momentum").get<glm::vec3>();
+        // don't grab orientation here, this should be grabbed from the transform component and shouhld be synced with the TransformComponent
+
+        // grab constant values
+        c.inertia = j.at("inertia").get<f32>();
+        c.inverse_inertia = 1 / c.inertia;
+
+        // update calculated secondary values
+        //c.recalculate(); // this will not work without an orientation present
+      }
     }
   }
 }

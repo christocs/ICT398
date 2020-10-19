@@ -5,6 +5,7 @@
 
 #include "afk/ecs/system/CollisionSystem.hpp"
 #include "afk/ecs/system/RenderSystem.hpp"
+#include "afk/ecs/system/PhysicsSystem.hpp"
 
 namespace afk {
   namespace ecs {
@@ -45,7 +46,7 @@ namespace afk {
       std::vector<Update> display_update_systems = {afk::ecs::system::RenderSystem::update};
 
       /** The container of system update functions to run on each update cycle. */
-      std::vector<Update> update_systems = {};
+      std::vector<Update> update_systems = {afk::ecs::system::PhysicsSystem::update};
     };
   }
 }

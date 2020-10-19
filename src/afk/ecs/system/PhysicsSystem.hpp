@@ -2,8 +2,6 @@
 
 #include "afk/event/Event.hpp"
 
-using afk::event::Event;
-
 namespace afk {
   namespace ecs {
     namespace system {
@@ -16,7 +14,7 @@ namespace afk {
          */
         static auto update() -> void;
 
-        static auto collision_resolution_callback(Event event) -> void;
+        static auto collision_resolution_callback(afk::event::Event event) -> void;
       };
     }
   }

@@ -2,9 +2,13 @@
 
 #include "afk/Engine.hpp"
 #include "afk/debug/Assert.hpp"
+#include "afk/ecs/component/PhysicsComponent.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/utility/Visitor.hpp"
 
+using afk::ecs::component::ColliderComponent;
+using afk::ecs::component::TransformComponent;
+using afk::ecs::component::PhysicsComponent;
 using afk::ecs::system::CollisionSystem;
 
 CollisionSystem::CollisionSystem() {
@@ -46,16 +50,18 @@ CollisionSystem::CollisionSystem() {
 
 auto CollisionSystem::update() -> void {
   auto registry = &afk::Engine::get().ecs.registry;
+  // not having a PhysicsComponent means the entity is 'static', so ones with a PhysicsComponent are 'dynamic'
+  // so here we are only updating rigid bodies that are dynamic
   auto collider_view =
-      registry->view<afk::ecs::component::ColliderComponent, afk::ecs::component::TransformComponent>();
+      registry->view<ColliderComponent, TransformComponent, PhysicsComponent>();
 
   // update translation and rotation in physics world
   // @todo find how to apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
   for (auto &entity : collider_view) {
     const auto &collider =
-        collider_view.get<afk::ecs::component::ColliderComponent>(entity);
+        collider_view.get<ColliderComponent>(entity);
     const auto &transform =
-        collider_view.get<afk::ecs::component::TransformComponent>(entity);
+        collider_view.get<TransformComponent>(entity);
     afk_assert(this->ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");
     const auto rp3d_body_index = this->ecs_entity_to_rp3d_body_index_map.at(entity);
@@ -243,44 +249,47 @@ void CollisionSystem::CollisionEventListener::onContact(
 
     // check that the colliders do not belong to the same entity in react physics 3d
     if (object1 != object2) {
-      // get the collider components
-      const auto &body1 = registry.get<afk::ecs::component::ColliderComponent>(object1);
-      const auto &body2 = registry.get<afk::ecs::component::ColliderComponent>(object2);
-      auto &event_manager = engine.event_manager;
+      // entities without physics components are considered to be static
+      // if both objects are static, don't bother to fire an event
+      if (registry.has<PhysicsComponent>(object1) && registry.has<PhysicsComponent>(object2)) {
 
-      // fire collision events
-      // note that if a collision body is "sleeping" in reactphysics3d, a
-      // collision event of type ContactStay will not fire at the moment,
-      // "sleeping" is disabled treat contact enter and contact stay as "impulses"
+        auto &event_manager = engine.event_manager;
 
-      if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
-          contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStay) {
-        auto data = afk::event::Event::Collision{object1, object2, {}};
+        // fire collision events
+        // note that if a collision body is "sleeping" in reactphysics3d, a
+        // collision event of type ContactStay will not fire at the moment,
+        // "sleeping" is disabled treat contact enter and contact stay as "impulses"
 
-        afk_assert(contact_pair.getNbContactPoints() > 0,
-                   "No contact points found on collision");
+        if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
+            contact_pair.getEventType() ==
+                CollisionCallback::ContactPair::EventType::ContactStay) {
+          auto data = afk::event::Event::Collision{object1, object2, {}};
 
-        data.contacts.reserve(contact_pair.getNbContactPoints());
-        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
-          const auto &contact_point = contact_pair.getContactPoint(i);
-          const auto collider1_local_point =
-              glm::vec3{contact_point.getLocalPointOnCollider1().x,
-                        contact_point.getLocalPointOnCollider1().y,
-                        contact_point.getLocalPointOnCollider1().z};
-          const auto collider2_local_point =
-              glm::vec3{contact_point.getLocalPointOnCollider2().x,
-                        contact_point.getLocalPointOnCollider2().y,
-                        contact_point.getLocalPointOnCollider2().z};
-          const auto contact_normal = glm::vec3{contact_point.getWorldNormal().x,
-                                                contact_point.getWorldNormal().y,
-                                                contact_point.getWorldNormal().z};
+          afk_assert(contact_pair.getNbContactPoints() > 0,
+                     "No contact points found on collision");
 
-          data.contacts.push_back(afk::event::Event::Collision::Contact{
-              collider1_local_point, collider2_local_point, contact_normal,
-              contact_point.getPenetrationDepth()});
+          data.contacts.reserve(contact_pair.getNbContactPoints());
+          for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
+            const auto &contact_point = contact_pair.getContactPoint(i);
+            const auto collider1_local_point =
+                glm::vec3{contact_point.getLocalPointOnCollider1().x,
+                          contact_point.getLocalPointOnCollider1().y,
+                          contact_point.getLocalPointOnCollider1().z};
+            const auto collider2_local_point =
+                glm::vec3{contact_point.getLocalPointOnCollider2().x,
+                          contact_point.getLocalPointOnCollider2().y,
+                          contact_point.getLocalPointOnCollider2().z};
+            const auto contact_normal = glm::vec3{contact_point.getWorldNormal().x,
+                                                  contact_point.getWorldNormal().y,
+                                                  contact_point.getWorldNormal().z};
+
+            data.contacts.push_back(afk::event::Event::Collision::Contact{
+                collider1_local_point, collider2_local_point, contact_normal,
+                contact_point.getPenetrationDepth()});
+          }
+
+          event_manager.push_event(afk::event::Event{data, afk::event::Event::Type::Collision});
         }
-
-        event_manager.push_event(afk::event::Event{data, afk::event::Event::Type::Collision});
       }
     }
   }
