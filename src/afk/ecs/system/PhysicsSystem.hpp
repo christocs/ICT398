@@ -7,6 +7,8 @@
 #include "afk/physics/shape/Box.hpp"
 #include "afk/physics/shape/Capsule.hpp"
 #include "afk/physics/shape/Sphere.hpp"
+#include "afk/ecs/component/PhysicsComponent.hpp"
+#include "afk/ecs/component/TransformComponent.hpp";
 
 namespace afk {
   namespace ecs {
@@ -15,6 +17,7 @@ namespace afk {
        * Handles physics resolution for entities with PhysicsComponent
        */
       struct PhysicsSystem {
+      public:
         /**
          * Update physics resolution
          */

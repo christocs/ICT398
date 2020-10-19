@@ -57,11 +57,12 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
         const auto &j  = component_json;
         auto component = PrefabManager::COMPONENT_MAP.at(component_name);
 
-        auto visitor =
-            Visitor{[j](ModelComponent &c) { c = j.get<ModelComponent>(); },
-                    [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
-                    [j](VelocityComponent &c) { c = j.get<VelocityComponent>(); },
-                    [](auto) { afk_unreachable(); }};
+        auto visitor = Visitor{
+            [j](ModelComponent &c) { c = j.get<ModelComponent>(); },
+            [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
+            [j](ColliderComponent &c) { c = j.get<ColliderComponent>(); },
+            [j](PhysicsComponent &c) { c = j.get<PhysicsComponent>(); },
+            [](auto) { afk_unreachable(); }};
 
         std::visit(visitor, component);
 

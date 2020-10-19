@@ -3,6 +3,7 @@
 #include <variant>
 
 #include <glm/glm.hpp>
+
 #include "afk/NumericTypes.hpp"
 
 namespace afk {
@@ -10,71 +11,41 @@ namespace afk {
     namespace component {
       /**
        * Encapsulates a physics component.
-       * 
+       *
        * Any entity with a ColliderComponent but without a PhysicsComponent is assumed to be a static rigid body
        * Any entity with a ColliderComponent and a PhysicsComponent is assumed to be a dynamic rigid body
        */
       struct PhysicsComponent {
-        struct LinearState {
-          struct Derivative {
-            glm::vec3 velocity = glm::vec3{0.0f};
-            glm::vec3 force = glm::vec3{0.0f};
-          };
+        /** --- more general data --- */
 
-          // primary values, can remain constant over time
-          glm::vec3 position = glm::vec3{0.0f};
-          glm::vec3 momentum = glm::vec3{0.0f};
+        /** center of mass local to the entity */
+        glm::vec3 center_of_mass = glm::vec3{};
+        /** mass in kilograms */
+        f32 mass;
+        /** inverse of mass */
+        f32 inverse_mass;
 
-          // secondary values, derrived values and may not remain constant over time
-          glm::vec3 velocity = glm::vec3{0.0f};
+        /** --- linear data --- */
 
-          // constant values
-          f32 mass;
-          f32 inverse_mass;
+        /** linear velocity */
+        glm::vec3 linear_velocity = glm::vec3{};
+        /** external force to be applied then reset on the next update */
+        glm::vec3 external_forces = glm::vec3{};
+        /** linear dampening */
+        f32 linear_dampening = 0.0f;
 
-          // todo move this out of component, components should strictly contain data and no methods
-          // should be called whenever any of the primary values change
-          void recalculate() {
-            velocity = momentum * inverse_mass;
-          }
-        };
+        /** --- angular data --- */
 
-        struct AngularState {
-          struct Derivative {
-            glm::quat spin;
-            glm::vec3 torque;
-          };
-
-          // primary values, can remain constant over time
-          glm::quat orientation;
-          glm::vec3 angular_momentum;
-
-          // secondary values, derrived values and may not remain constant over time
-          glm::quat spin;
-          glm::vec3 angular_velocity;
-
-          // constant values
-          f32 inertia;
-          f32 inverse_inertia;
-
-          // todo move this out of component, components should strictly contain data and no methods
-          // should be called whenever any of the primary values change
-          void recalculate() {
-            angular_velocity = angular_momentum * inverse_inertia;
-
-            // normalisation isn't required for every update cycle, if cpu cycles are tight, this just keeps orientation from drifting
-            // doing it on every update cycle should be more accurate
-            orientation = glm::normalize(orientation);
-
-            const auto q = glm::quat{0, angular_velocity.x, angular_velocity.y, angular_velocity.z};
-
-            spin = 0.5f * q * orientation;
-          }
-        };
-
-        LinearState linear_state;
-        AngularState angular_state;
-        glm::vec3 center_of_mass;
+        /** angular velocity */
+        glm::vec3 angular_velocity = glm::vec3{};
+        /** external torque to be applied then reset on the next update */
+        glm::vec3 external_torques = glm::vec3{};
+        /** inertial tensor */
+        glm::mat3x3 inertial_tensor = glm::mat3x3{};
+        /** inverse inertial tensor */
+        glm::mat3x3 inverse_inertial_tensor = glm::mat3x3{};
+        /** angular dampening */
+        f32 angular_dampening = 0.0f;
       };
     }
   }

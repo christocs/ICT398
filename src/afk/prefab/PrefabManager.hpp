@@ -27,8 +27,8 @@ namespace afk {
       static inline const auto COMPONENT_MAP =
           ComponentMap{{"Model", afk::ecs::component::ModelComponent{}},
                        {"Transform", afk::ecs::component::TransformComponent{}},
-                       {"Velocity", afk::ecs::component::VelocityComponent{}},
-                       {"Collider", afk::ecs::component::ColliderComponent{}}};
+                       {"Collider", afk::ecs::component::ColliderComponent{}},
+                       {"Physics", afk::ecs::component::PhysicsComponent{}}};
 
       /**
        * Instantiates a prefab by name and returns the created entity.

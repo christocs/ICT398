@@ -9,6 +9,7 @@
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Json.hpp"
 
+using glm::mat3x3;
 using glm::quat;
 using glm::vec3;
 
@@ -35,6 +36,20 @@ namespace glm {
   auto to_json(afk::io::Json &j, const quat &q) -> void {
     auto euler_angles = glm::eulerAngles(q);
     j = Json{{"x", euler_angles.x}, {"y", euler_angles.y}, {"z", euler_angles.z}};
+  }
+
+  auto from_json(const afk::io::Json &j, mat3x3 &m) -> void {
+    j.at("x1").get_to(m[0][0]);
+    j.at("y1").get_to(m[0][1]);
+    j.at("z1").get_to(m[0][2]);
+
+    j.at("x2").get_to(m[1][0]);
+    j.at("y2").get_to(m[1][1]);
+    j.at("z2").get_to(m[1][2]);
+
+    j.at("x3").get_to(m[2][0]);
+    j.at("y3").get_to(m[2][1]);
+    j.at("z3").get_to(m[2][2]);
   }
 }
 
@@ -76,29 +91,21 @@ namespace afk {
         c.colliders = j.at("Colliders").get<std::vector<ColliderComponent::Collider>>();
       }
 
-      auto from_json(const Json &j, PhysicsComponent::LinearState &c) -> void {
-        // get mass then calculate the inverse
+      auto from_json(const Json &j, PhysicsComponent &c) -> void {
+        // no need to parse center of mass, as it is calculated with the collider data
         c.mass         = j.at("mass").get<f32>();
-        c.inverse_mass = 1 / c.mass;
+        c.inverse_mass = 1 / c.mass; // calculate inverse mass for later
 
-        c.momentum = j.at("momentum").get<glm::vec3>();
-        // don't grab position here, set it when instantiating the physics component as it should be synced with the TransformComponent
+        // get dampening
+        c.linear_dampening  = j.at("linear_dampening").get<f32>();
+        c.angular_dampening = j.at("angular_dampening").get<f32>();
 
-        // update calculated secondary values
-        c.recalculate();
-      }
-
-      auto from_json(const Json &j, PhysicsComponent::AngularState &c) -> void {
-        // get initial primary values
-        c.angular_momentum = j.at("angular_momentum").get<glm::vec3>();
-        // don't grab orientation here, this should be grabbed from the transform component and shouhld be synced with the TransformComponent
-
-        // grab constant values
-        c.inertia = j.at("inertia").get<f32>();
-        c.inverse_inertia = 1 / c.inertia;
-
-        // update calculated secondary values
-        //c.recalculate(); // this will not work without an orientation present
+        // get linear velocity if defined, else set it to 0
+        if (j.find("linear_velocity") != j.end()) {
+          c.linear_velocity = j.at("linear_velocity").get<glm::vec3>();
+        } else {
+          c.linear_velocity = glm::vec3{0.0f};
+        }
       }
     }
   }
