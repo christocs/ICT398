@@ -8,14 +8,15 @@
 
 #include "afk/config/Config.hpp"
 #include "afk/debug/Assert.hpp"
+#include "afk/ecs/system/PhysicsSystem.hpp"
 #include "afk/io/Json.hpp"
 #include "afk/io/JsonSerialization.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
 #include "afk/io/Time.hpp"
 #include "afk/io/Unicode.hpp"
-#include "afk/render/Renderer.hpp"
 #include "afk/render/Model.hpp"
+#include "afk/render/Renderer.hpp"
 
 using namespace std::string_literals;
 
@@ -59,6 +60,10 @@ auto Engine::initialize() -> void {
         this->move_keyboard(event);
       }});
 
+  this->event_manager.register_event(
+      Event::Type::Collision,
+      event::EventManager::Callback{ecs::system::PhysicsSystem::collision_resolution_callback});
+
   this->scene_manager.instantiate_scene("physicstest01");
 }
 
@@ -66,9 +71,9 @@ auto Engine::render() -> void {
   this->renderer.clear_screen({135.0f, 206.0f, 235.0f, 1.0f});
   this->ecs.system_manager.display_update();
 
-  auto mesh_model_transform = physics::Transform{};
+  auto mesh_model_transform        = physics::Transform{};
   mesh_model_transform.translation = glm::vec3{0.0f, 0.0f, 0.0f};
-  mesh_model_transform.rotation = glm::identity<glm::quat>();
+  mesh_model_transform.rotation    = glm::identity<glm::quat>();
 
   if (this->display_debug_physics_mesh) {
     auto debug_mesh = this->collision_system.get_debug_mesh();
