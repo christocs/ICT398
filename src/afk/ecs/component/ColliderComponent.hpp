@@ -18,14 +18,6 @@ namespace afk {
         using ColliderShape =
             std::variant<afk::physics::shape::Box, afk::physics::shape::Sphere, afk::physics::shape::Capsule>;
 
-        /**
-         * Collider type
-         *
-         * A dynamic collider has physics applied to it and interacts with static and dynamic objects.
-         * Astatic object will never move unless manually moved.
-         */
-        enum class ColliderType { Static, Dynamic };
-
         /** A collider body is made up of a collision body as well as a transform local to the entity */
         struct Collider {
           ColliderShape shape                = {};
@@ -38,8 +30,6 @@ namespace afk {
 
         /** Collecition of colliders for the entity */
         ColliderCollection colliders = {};
-
-        // todo: consider importing mass, centre of mass, elasticity, etc., though that may be more appropriate in a separate component
       };
     }
   }
