@@ -47,6 +47,16 @@
           }
         }
       ]
+    },
+    "Physics": {
+      "mass": 30.0,
+      "linear_dampening": 0.0,
+      "angular_dampening": 0.0,
+      "linear_velocity": {
+        "x": 0.2,
+        "y": 0.0,
+        "z": 0.0
+      }
     }
   }
 }
