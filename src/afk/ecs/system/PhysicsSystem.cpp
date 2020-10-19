@@ -44,6 +44,11 @@ auto PhysicsSystem::update() -> void {
 
     // apply velocity to translation AFTER it has been calculated for semi-implicit euler integration
     transform.translation += physics.linear_velocity * dt;
+
+    // reset external forces and torque for the next update cycle
+    // these only represent "moments" in acceleration
+    physics.external_forces  = glm::vec3{0.0f};
+    physics.external_torques = glm::vec3{0.0f};
   }
 }
 
