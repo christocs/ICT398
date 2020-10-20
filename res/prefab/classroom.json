@@ -1,0 +1,71 @@
+{
+  "name": "classroom",
+  "components": {
+    "Transform": {
+      "translation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "Model": {
+      "file_path": "res/model/classroom/room7.obj"
+    },
+    "Collider": {
+      "Transform": {
+        "translation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "Colliders": [
+        {
+          "Shape": {
+            "type": "box",
+            "x": 20,
+            "y": 1,
+            "z": 20
+          },
+          "Transform": {
+            "translation": {
+              "x": 0.0,
+              "y": -2.0,
+              "z": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          }
+        }
+      ]
+    }
+  }
+}
