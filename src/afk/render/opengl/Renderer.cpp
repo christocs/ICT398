@@ -32,6 +32,7 @@
 #include "afk/render/Shader.hpp"
 #include "afk/render/ShaderProgram.hpp"
 #include "afk/render/Texture.hpp"
+#include "afk/render/WireframeMesh.hpp"
 #include "afk/render/opengl/ModelHandle.hpp"
 #include "afk/render/opengl/ShaderHandle.hpp"
 #include "afk/render/opengl/ShaderProgramHandle.hpp"
@@ -57,11 +58,13 @@ using afk::render::Bone;
 using afk::render::Shader;
 using afk::render::ShaderProgram;
 using afk::render::Texture;
+using afk::render::WireframeMesh;
 using afk::render::opengl::ModelHandle;
 using afk::render::opengl::Renderer;
 using afk::render::opengl::ShaderHandle;
 using afk::render::opengl::ShaderProgramHandle;
 using afk::render::opengl::TextureHandle;
+using Color  = afk::render::WireframeMesh::Color;
 using Buffer = afk::render::opengl::MeshHandle::Buffer;
 namespace io = afk::io;
 
@@ -287,6 +290,61 @@ auto Renderer::draw_model(const ModelHandle &model, const ShaderProgramHandle &s
 
     this->set_texture_unit(GL_TEXTURE0);
   }
+}
+
+auto Renderer::draw_wireframe_mesh(const WireframeMesh &mesh,
+                                   const ShaderProgramHandle &shader_program) const -> void {
+  afk_assert(mesh.vertices.size() > 0, "Mesh missing vertices");
+  afk_assert(mesh.indices.size() > 0, "Mesh missing indices");
+  afk_assert(mesh.indices.size() < std::numeric_limits<afk::render::Index>::max(),
+             "Mesh contains too many indices; "s +
+                 std::to_string(mesh.indices.size()) + " requested, max "s +
+                 std::to_string(std::numeric_limits<afk::render::Index>::max()));
+
+  auto mesh_handle        = MeshHandle{};
+  mesh_handle.num_indices = mesh.indices.size();
+  mesh_handle.transform   = std::move(mesh.transform);
+
+  // Create new buffers.
+  glGenVertexArrays(1, &mesh_handle.vao);
+  glGenBuffers(1, &mesh_handle.vbo);
+  glGenBuffers(1, &mesh_handle.ibo);
+
+  afk_assert(mesh_handle.vao > 0, "Mesh VAO creation failed");
+  afk_assert(mesh_handle.vbo > 0, "Mesh VBO creation failed");
+  afk_assert(mesh_handle.ibo > 0, "Mesh IBO creation failed");
+
+  // Load data into the vertex buffer.
+  glBindVertexArray(mesh_handle.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, mesh_handle.vbo);
+  glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(Vertex),
+               mesh.vertices.data(), GL_STATIC_DRAW);
+
+  // Load index data into the index buffer.
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_handle.ibo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(afk::render::Index),
+               mesh.indices.data(), GL_STATIC_DRAW);
+
+  // Set the vertex attribute pointers.
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Vertex));
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Vertex), 3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex), nullptr);
+
+  // Vertex colors
+  glEnableVertexAttribArray(static_cast<GLuint>(Buffer::Vertex) + 1);
+  glVertexAttribPointer(static_cast<GLuint>(Buffer::Vertex) + 1, 4, GL_FLOAT,
+                        GL_FALSE, sizeof(Color),
+                        reinterpret_cast<void *>(offsetof(Vertex, normal)));
+
+  glBindVertexArray(0);
+
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  this->use_shader(shader_program);
+  this->setup_view(shader_program);
+
+  glBindVertexArray(mesh_handle.vao);
+  glDrawElements(GL_TRIANGLES, mesh_handle.num_indices, MeshHandle::INDEX, nullptr);
+  glBindVertexArray(0);
 }
 
 auto Renderer::use_shader(const ShaderProgramHandle &shader) const -> void {
