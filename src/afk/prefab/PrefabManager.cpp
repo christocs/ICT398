@@ -56,6 +56,9 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
                   [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
                   [j](ColliderComponent &c) { c = j.get<ColliderComponent>(); },
                   [j](PhysicsComponent &c) { c = j.get<PhysicsComponent>(); },
+                  [j](RocketLauncherComponent &c) {
+                    c = j.get<RocketLauncherComponent>();
+                  },
                   [](auto) { afk_unreachable(); }};
 
       std::visit(visitor, component);
@@ -117,6 +120,46 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
                            afk_assert(prefab.components.count("Collider") == 1, "prefab must have a collider component to instantiate a collider component");
 
                            registry.emplace<PhysicsComponent>(entity, component);
+                         },
+                         [&registry, entity, &prefab, &afk, this](RocketLauncherComponent component) {
+                           afk_assert(prefab.components.count("Transform") == 1, "prefab must have a Transform component to instantiate a rocket launcher component");
+                           afk_assert(this->prefab_map.count(component.prefab_projectile) == 1,
+                                      "prefab projectile does not exist");
+
+                           registry.emplace<RocketLauncherComponent>(entity, component);
+
+                           afk.event_manager.register_event(
+                               afk::event::Event::Type::KeyDown,
+                               event::EventManager::Callback{[this, &component,
+                                                              &registry](afk::event::Event event) {
+                                 auto event_visitor = Visitor{
+                                     [&registry, &component,
+                                      this](afk::event::Event::Key event_data) {
+                                       if (event_data.key == GLFW_KEY_SPACE) {
+
+                                         auto fired_entity = this->instantiate_prefab(
+                                             component.prefab_projectile);
+
+                                         afk_assert(registry.has<PhysicsComponent>(fired_entity), "prefab projectile must have a physics component");
+
+                                         auto &physics =
+                                             registry.get<PhysicsComponent>(fired_entity);
+                                         physics.linear_velocity = component.fire_speed;
+
+                                         auto &transform =
+                                             registry.get<TransformComponent>(fired_entity);
+                                         // todo allow custom translation or pull from parent
+                                         transform.translation = glm::vec3{0.0f};
+                                       }
+                                     },
+                                     [](auto) {
+                                       afk_assert(
+                                           false,
+                                           "event data must be key event data");
+                                     }};
+
+                                 std::visit(event_visitor, event.data);
+                               }});
                          },
                          [](auto) { afk_unreachable(); }};
 

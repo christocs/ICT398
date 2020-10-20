@@ -117,6 +117,11 @@ namespace afk {
           c.linear_velocity = glm::vec3{0.0f};
         }
       }
+
+      auto from_json(const Json &j, RocketLauncherComponent &c) -> void {
+        c.fire_speed = j.at("fire_speed").get<glm::vec3>();
+        c.prefab_projectile = j.at("prefab_projectile").get<std::string>();
+      }
     }
   }
 }

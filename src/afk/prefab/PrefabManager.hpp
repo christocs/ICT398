@@ -24,11 +24,12 @@ namespace afk {
       /** The path to load prefabs from. */
       static constexpr const auto *PREFAB_PATH = u8"res/prefab";
       /** The map of known component names to components. */
-      static inline const auto COMPONENT_MAP =
-          ComponentMap{{"Model", afk::ecs::component::ModelComponent{}},
-                       {"Transform", afk::ecs::component::TransformComponent{}},
-                       {"Collider", afk::ecs::component::ColliderComponent{}},
-                       {"Physics", afk::ecs::component::PhysicsComponent{}}};
+      static inline const auto COMPONENT_MAP = ComponentMap{
+          {"Model", afk::ecs::component::ModelComponent{}},
+          {"Transform", afk::ecs::component::TransformComponent{}},
+          {"Collider", afk::ecs::component::ColliderComponent{}},
+          {"Physics", afk::ecs::component::PhysicsComponent{}},
+          {"RocketLauncher", afk::ecs::component::RocketLauncherComponent{}}};
 
       /**
        * Instantiates a prefab by name and returns the created entity.

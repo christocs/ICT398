@@ -49,6 +49,7 @@ namespace afk {
       auto from_json(const afk::io::Json &j, ColliderComponent::Collider &c) -> void;
       auto from_json(const afk::io::Json &j, ColliderComponent &c) -> void;
       auto from_json(const afk::io::Json &j, PhysicsComponent &c) -> void;
+      auto from_json(const afk::io::Json &j, RocketLauncherComponent &c) -> void;
     }
   }
 }
