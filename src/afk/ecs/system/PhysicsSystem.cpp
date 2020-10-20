@@ -33,16 +33,25 @@ auto PhysicsSystem::update() -> void {
   for (const auto entity : view) {
     auto &physics   = registry.get<PhysicsComponent>(entity);
     auto &transform = registry.get<TransformComponent>(entity);
-    // integrate velocity
-    physics.linear_velocity += dt * physics.inverse_mass * physics.external_forces;
-    // add gravity to linear velocity
+
+    // add gravity as an external linear force
     if (afk.gravity_enabled) {
-      physics.linear_velocity += dt * physics.inverse_mass * afk.gravity;
+      physics.external_forces += afk.gravity;
     }
 
-    // apply dampening
+    // integrate linear velocity
+    physics.linear_velocity += dt * physics.inverse_mass * physics.external_forces;
+
+    // integrate angular velocity
+    physics.angular_velocity += dt * physics.external_torques;
+
+    // apply linear dampening
     const auto linear_dampening = std::pow(1.0f - physics.linear_dampening, dt);
-    physics.linear_dampening *= linear_dampening;
+    physics.linear_velocity *= linear_dampening;
+
+    // apply angular dampening
+    const auto angular_dampening = std::pow(1.0f - physics.angular_dampening, dt);
+    physics.angular_velocity *= angular_dampening;
 
     // apply velocity to translation AFTER it has been calculated for semi-implicit euler integration
     transform.translation += physics.linear_velocity * dt;
@@ -59,25 +68,139 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
   afk_assert(event.type == Event::Type::Collision,
              "event type was not 'Collision'");
 
-  auto &afk     = afk::Engine::get();
-  const auto dt = afk.get_delta_time();
+  auto &afk      = afk::Engine::get();
+  const auto dt  = afk.get_delta_time();
+  auto &registry = afk.ecs.registry;
 
   auto visitor = Visitor{
-      [dt, &afk](Event::Collision &c) {
+      [dt, &afk, &registry](Event::Collision &c) {
         afk::io::log << "collision points:\n";
         for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
-          afk::io::log
-              << "\t1: local - x:" +
-                     std::to_string(c.contacts[i].collider1_local_point.x) + ", y: " +
-                     std::to_string(c.contacts[i].collider1_local_point.x) +
-                     ", z:" + std::to_string(c.contacts[i].collider1_local_point.x) +
-                     "\n" + "\t2: local - x:" +
-                     std::to_string(c.contacts[i].collider2_local_point.x) + ", y: " +
-                     std::to_string(c.contacts[i].collider2_local_point.x) +
-                     ", z:" + std::to_string(c.contacts[i].collider2_local_point.x) + "\n";
+          auto transform1 = registry.get<TransformComponent>(c.entity1);
+          auto transform2 = registry.get<TransformComponent>(c.entity2);
+
+          // @todo add more than just the translate
+          const auto world_space1 = transform1.translation + c.contacts[i].collider1_local_point;
+          const auto world_space2 = transform2.translation + c.contacts[i].collider2_local_point;
+          afk::io::log << "\t1: local - x:" + std::to_string(world_space1.x) +
+                              ", y: " + std::to_string(world_space1.x) +
+                              ", z:" + std::to_string(world_space1.x) + "\n" +
+                              "\t2: local - x:" + std::to_string(world_space2.x) +
+                              ", y: " + std::to_string(world_space2.x) +
+                              ", z:" + std::to_string(world_space2.x) + "\n";
+        }
+
+        const auto epsilon = 0.000000000001f;
+
+        auto collider1 = registry.get<ColliderComponent>(c.entity1);
+        auto collider2 = registry.get<ColliderComponent>(c.entity2);
+
+        const auto collider1_has_physics = registry.has<PhysicsComponent>(c.entity1);
+        const auto collider2_has_physics = registry.has<PhysicsComponent>(c.entity2);
+
+        auto avg_normal = glm::vec3{0.0f};
+        for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
+          avg_normal += c.contacts[i].normal;
+        }
+
+        // normal from item one to item two
+        avg_normal /= c.contacts.size();
+
+        const auto impulse_coefficient = PhysicsSystem::get_impulse_coefficient(c, avg_normal);
+
+        const auto impulse = impulse_coefficient * avg_normal;
+
+        // update forces and torque for collider 1
+        // @todo update angular torque
+        if (collider1_has_physics) {
+          auto &physics1           = registry.get<PhysicsComponent>(c.entity1);
+          physics1.external_forces = impulse; // inverse mass is handled in a different function
+        }
+        // update forces and torque for collider 2
+        // @todo update angular torque
+        if (collider2_has_physics) {
+          auto &physics2           = registry.get<PhysicsComponent>(c.entity2);
+          physics2.external_forces = impulse; // inverse mass is handled in a different function
         }
       },
       [](auto) { afk_assert(false, "Event data must be of type Collision"); }};
 
   std::visit(visitor, event.data);
+}
+
+auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
+                                            const glm::vec3 &contact_normal) -> f32 {
+  // @todo move this to a better place
+  // 1 for fully elastic, 0 for no elastiscity at all
+  const auto restitution_coefficient = 1.0f;
+
+  auto &registry = afk::Engine::get().ecs.registry;
+  auto collider1 = registry.get<ColliderComponent>(data.entity1);
+  auto collider2 = registry.get<ColliderComponent>(data.entity2);
+
+  const auto collider1_has_physics = registry.has<PhysicsComponent>(data.entity1);
+  const auto collider2_has_physics = registry.has<PhysicsComponent>(data.entity2);
+
+  // average points of collision relative to each rigid body's own local space
+  auto avg_local_collision_point1 = glm::vec3{0.0f};
+  auto avg_local_collision_point2 = glm::vec3{0.0f};
+  for (auto i = size_t{0}; i < data.contacts.size(); ++i) {
+    avg_local_collision_point1 += data.contacts[i].collider1_local_point;
+    avg_local_collision_point2 += data.contacts[i].collider2_local_point;
+  }
+  avg_local_collision_point1 /= data.contacts.size();
+  avg_local_collision_point2 /= data.contacts.size();
+
+  // vectors from center of mass to collision points in local space
+  const auto r1 = avg_local_collision_point1 - collider1.center_of_mass;
+  const auto r2 = avg_local_collision_point1 - collider2.center_of_mass;
+
+  // velocity before collision
+  const auto v1 = collider1_has_physics
+                      ? registry.get<PhysicsComponent>(data.entity1).linear_velocity
+                      : glm::vec3{0.0f};
+  const auto v2 = collider2_has_physics
+                      ? registry.get<PhysicsComponent>(data.entity2).linear_velocity
+                      : glm::vec3{0.0f};
+
+  // rotational speed before collision
+  const auto omega1 = collider1_has_physics
+                          ? registry.get<PhysicsComponent>(data.entity1).angular_velocity
+                          : glm::vec3{0.0f};
+  const auto omega2 = collider2_has_physics
+                          ? registry.get<PhysicsComponent>(data.entity2).angular_velocity
+                          : glm::vec3{0.0f};
+
+  // 1/(inertial tensor)
+  const auto &j1 = collider1.inverse_inertial_tensor;
+  const auto &j2 = collider2.inverse_inertial_tensor;
+
+  // inverse mass
+  // make the number as low as possible for static entities to make it appear like they're very heavy
+  const auto &inverse_mass1 = collider1_has_physics
+                                  ? registry.get<PhysicsComponent>(data.entity1).inverse_mass
+                                  : 0.000000000001f;
+  const auto &inverse_mass2 = collider2_has_physics
+                                  ? registry.get<PhysicsComponent>(data.entity2).inverse_mass
+                                  : 0.000000000001f;
+
+  f32 numerator = glm::dot(contact_normal, v1 - v2) +
+                  glm::dot(omega1, glm::cross(r1, contact_normal)) -
+                  glm::dot(r2, contact_normal);
+  numerator *= -(1 + restitution_coefficient);
+
+  // @todo calculate using inverse of inertial tensor once the data is actually populated
+  //f32 denominator =
+  //    glm::dot(glm::cross(r1, contact_normal), j1 * glm::cross(r1, contact_normal));
+  //denominator +=
+  //    glm::dot(glm::cross(r2, contact_normal), j1 * glm::cross(r2, contact_normal));
+  //denominator += inverse_mass1 + inverse_mass2;
+
+    f32 denominator =
+      glm::dot(glm::cross(r1, contact_normal), glm::cross(r1, contact_normal));
+  denominator +=
+      glm::dot(glm::cross(r2, contact_normal), glm::cross(r2, contact_normal));
+  denominator += inverse_mass1 + inverse_mass2;
+
+  return numerator / denominator;
 }

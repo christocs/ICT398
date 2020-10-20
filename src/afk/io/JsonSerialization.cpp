@@ -89,6 +89,16 @@ namespace afk {
 
       auto from_json(const Json &j, ColliderComponent &c) -> void {
         c.colliders = j.at("Colliders").get<std::vector<ColliderComponent::Collider>>();
+
+        // get inertia, else set it to an identity
+        // @todo don't set the inertial tensor as an identity, actually calculate it
+        if (j.find("inertial_tensor") != j.end()) {
+          c.inertial_tensor = j.at("inertial_tensor").get<glm::mat3x3>();
+        } else {
+          c.inertial_tensor = glm::mat3x3{1.0f};
+        }
+        // calc inverse inertial tensor
+        c.inverse_inertial_tensor = 1.0f / c.inertial_tensor;
       }
 
       auto from_json(const Json &j, PhysicsComponent &c) -> void {

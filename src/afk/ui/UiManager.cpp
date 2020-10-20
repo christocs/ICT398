@@ -119,6 +119,9 @@ auto UiManager::draw_menu_bar() -> void {
       if (ImGui::MenuItem("Model viewer")) {
         this->show_model_viewer = true;
       }
+      if (ImGui::MenuItem("Toggle Gravity")) {
+        afk::Engine::get().gravity_enabled = !afk::Engine::get().gravity_enabled;
+      }
       if (ImGui::MenuItem("Toggle Wireframe")) {
         afk::Engine::get().renderer.set_wireframe(!afk::Engine::get().renderer.get_wireframe());
       }

@@ -21,29 +21,25 @@ namespace afk {
         /** center of mass local to the entity */
         glm::vec3 center_of_mass = glm::vec3{};
         /** mass in kilograms */
-        f32 mass;
+        f32 mass = 0.0f;
         /** inverse of mass */
-        f32 inverse_mass;
+        f32 inverse_mass = 0.0f;
 
         /** --- linear data --- */
 
         /** linear velocity */
-        glm::vec3 linear_velocity = glm::vec3{};
+        glm::vec3 linear_velocity = glm::vec3{0.0f};
         /** external force to be applied then reset on the next update */
-        glm::vec3 external_forces = glm::vec3{};
+        glm::vec3 external_forces = glm::vec3{0.0f};
         /** linear dampening */
         f32 linear_dampening = 0.0f;
 
         /** --- angular data --- */
 
         /** angular velocity */
-        glm::vec3 angular_velocity = glm::vec3{};
+        glm::vec3 angular_velocity = glm::vec3{0.0f};
         /** external torque to be applied then reset on the next update */
-        glm::vec3 external_torques = glm::vec3{};
-        /** inertial tensor */
-        glm::mat3x3 inertial_tensor = glm::mat3x3{};
-        /** inverse inertial tensor */
-        glm::mat3x3 inverse_inertial_tensor = glm::mat3x3{};
+        glm::vec3 external_torques = glm::vec3{0.0f};
         /** angular dampening */
         f32 angular_dampening = 0.0f;
       };

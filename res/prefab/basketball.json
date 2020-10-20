@@ -53,7 +53,7 @@
       "linear_dampening": 0.0,
       "angular_dampening": 0.0,
       "linear_velocity": {
-        "x": 0.2,
+        "x": 0.0,
         "y": 0.0,
         "z": 0.0
       }

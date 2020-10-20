@@ -133,9 +133,7 @@ auto CollisionSystem::instantiate_collider(
     // combine collider transform scale with parent transform
     // need to apply parent scale at the shape level, as scale cannot be applied to the parent body level
     auto collision_transform = collision_body.transform;
-    collision_transform.scale.x *= transform_component.scale.x;
-    collision_transform.scale.y *= transform_component.scale.y;
-    collision_transform.scale.z *= transform_component.scale.z;
+    collision_transform.scale *= transform_component.scale;
 
     // create transform for collider (this does NOT include scale as reactphysics does not have scale in its transform, to get around this the scale is manually added to the collision shapes)
     const auto rp3d_transform =
