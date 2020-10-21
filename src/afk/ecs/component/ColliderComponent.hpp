@@ -1,6 +1,7 @@
 #pragma once
 
 #include <variant>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include "afk/physics/shape/Box.hpp"
@@ -34,18 +35,6 @@ namespace afk {
 
         /** Collecition of colliders for the entity */
         ColliderCollection colliders = {};
-
-        /**
-         * Average center of mass derrived from each collider's center of mass
-         * 
-         * @todo consider moving this to the PhysicsComponent, as this value is unused for static rigid bodies
-         */
-        glm::vec3 center_of_mass = glm::vec3{0.0f};
-
-        /** inertial tensor */
-        glm::mat3x3 inertial_tensor = glm::mat3x3{1.0f};
-        /** inverse inertial tensor */
-        glm::mat3x3 inverse_inertial_tensor = glm::mat3x3{1.0f};
       };
     }
   }

@@ -49,6 +49,7 @@
       ]
     },
     "Physics": {
+      "is_static": false,
       "mass": 30.0,
       "linear_dampening": 0.0,
       "angular_dampening": 0.0,

@@ -1,6 +1,7 @@
 #include "afk/io/JsonSerialization.hpp"
 
 #include <iostream>
+#include <limits>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -89,32 +90,61 @@ namespace afk {
 
       auto from_json(const Json &j, ColliderComponent &c) -> void {
         c.colliders = j.at("Colliders").get<std::vector<ColliderComponent::Collider>>();
-
-        // get inertia, else set it to an identity
-        // @todo don't set the inertial tensor as an identity, actually calculate it
-        if (j.find("inertial_tensor") != j.end()) {
-          c.inertial_tensor = j.at("inertial_tensor").get<glm::mat3x3>();
-        } else {
-          c.inertial_tensor = glm::mat3x3{1.0f};
-        }
-        // calc inverse inertial tensor
-        c.inverse_inertial_tensor = 1.0f / c.inertial_tensor;
       }
 
       auto from_json(const Json &j, PhysicsComponent &c) -> void {
-        // no need to parse center of mass, as it is calculated with the collider data
-        c.mass         = j.at("mass").get<f32>();
-        c.inverse_mass = 1 / c.mass; // calculate inverse mass for later
+        // if static is true, set values to be as stationary as possible
+        if (j.find("is_static") != j.end() && j.at("is_static").get<bool>()) {
+          c.is_static = true;
 
-        // get dampening
-        c.linear_dampening  = j.at("linear_dampening").get<f32>();
-        c.angular_dampening = j.at("angular_dampening").get<f32>();
+          // set mass to largest value, set inverse to smallest value
+          // set maximum values to make the object not effectively move
+          c.mass         = std::numeric_limits<f32>::max();
+          c.inverse_mass = std::numeric_limits<f32>::min();
 
-        // get linear velocity if defined, else set it to 0
-        if (j.find("linear_velocity") != j.end()) {
-          c.linear_velocity = j.at("linear_velocity").get<glm::vec3>();
+          // set dampening to max so object will efectively not move
+          c.linear_dampening  = 1.0f;
+          c.angular_dampening = 1.0f;
+
+          // initialise velocities to 0
+          c.linear_velocity  = glm::vec3{0.0f};
+          c.angular_velocity = glm::vec3{0.0f};
+
+          // initialise external forces/torque to 0
+          c.external_forces  = glm::vec3{0.0f};
+          c.external_torques = glm::vec3{0.0f};
         } else {
-          c.linear_velocity = glm::vec3{0.0f};
+          c.is_static = false;
+
+          // no need to parse center of mass, as it is calculated with the collider data
+          c.mass         = j.at("mass").get<f32>();
+          c.inverse_mass = 1 / c.mass; // calculate inverse mass for later
+
+          // get dampening
+          c.linear_dampening  = j.at("linear_dampening").get<f32>();
+          c.angular_dampening = j.at("angular_dampening").get<f32>();
+
+          // get linear velocity if defined, else set it to 0
+          if (j.find("linear_velocity") != j.end()) {
+            c.linear_velocity = j.at("linear_velocity").get<glm::vec3>();
+          } else {
+            c.linear_velocity = glm::vec3{0.0f};
+          }
+
+          // get angular velocity if defined, else set it to 0
+          if (j.find("angular_velocity") != j.end()) {
+            c.angular_velocity = j.at("angular_velocity").get<glm::vec3>();
+          } else {
+            c.angular_velocity = glm::vec3{0.0f};
+          }
+
+          // initialise velocities to 0
+          c.linear_velocity  = glm::vec3{0.0f};
+          c.angular_velocity = glm::vec3{0.0f};
+
+          // initialise external forces/torque to 0
+          c.external_forces  = glm::vec3{0.0f};
+          c.external_torques = glm::vec3{0.0f};
         }
       }
     }

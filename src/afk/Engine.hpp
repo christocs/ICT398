@@ -13,6 +13,7 @@
 #include "afk/scene/SceneManager.hpp"
 #include "afk/ui/UiManager.hpp"
 #include "afk/ecs/system/CollisionSystem.hpp"
+#include "afk/ecs/system/PhysicsSystem.hpp"
 
 namespace afk {
   /**
@@ -41,6 +42,8 @@ namespace afk {
     scene::SceneManager scene_manager = {};
     /** The collision subsystem. */
     ecs::system::CollisionSystem collision_system = {};
+    /** The physics subsystem. */
+    ecs::system::PhysicsSystem physics_system = {};
   private:
     Engine()  = default;
     ~Engine() = default;

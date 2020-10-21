@@ -101,12 +101,12 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
                          [&registry, entity, &prefab, &afk](ColliderComponent component) {
                            afk_assert(prefab.components.count("Transform") == 1, "prefab must have a Transform component to instantiate a collider component");
                            // check that the "Transform" component is a transform component, then use it when instantiating the collider
-                           auto transform_visitor =
-                               Visitor{[entity, &afk, &component](TransformComponent transform) {
-                                         afk.collision_system.instantiate_collider(
-                                             entity, component, transform);
-                                       },
-                                       [](auto) { afk_unreachable(); }};
+                           auto transform_visitor = Visitor{
+                               [entity, &afk, &component](TransformComponent transform) {
+                                 afk.collision_system.instantiate_collider_component(
+                                     entity, component, transform);
+                               },
+                               [](auto) { afk_unreachable(); }};
 
                            std::visit(transform_visitor, prefab.components.at("Transform"));
 
@@ -115,6 +115,16 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
                          [&registry, entity, &prefab, &afk](PhysicsComponent component) {
                            afk_assert(prefab.components.count("Transform") == 1, "prefab must have a Transform component to instantiate a physics component");
                            afk_assert(prefab.components.count("Collider") == 1, "prefab must have a collider component to instantiate a collider component");
+
+                           // check that the "Collider" component is a collider component, then use it when instantiating the physics component
+                           auto collider_visitor = Visitor{
+                               [entity, &afk, &component](ColliderComponent collider) {
+                                 afk.physics_system.instantiate_physics_component(
+                                     entity, component, collider);
+                               },
+                               [](auto) { afk_unreachable(); }};
+
+                           std::visit(collider_visitor, prefab.components.at("Collider"));
 
                            registry.emplace<PhysicsComponent>(entity, component);
                          },

@@ -109,7 +109,7 @@ auto CollisionSystem::update() -> void {
   this->world->update(afk::Engine::get().get_delta_time());
 }
 
-auto CollisionSystem::instantiate_collider(
+auto CollisionSystem::instantiate_collider_component(
     const afk::ecs::Entity &entity, afk::ecs::component::ColliderComponent &collider_component,
     const afk::ecs::component::TransformComponent &transform_component) -> void {
   // check if entity has already had a collider component loaded
@@ -152,12 +152,7 @@ auto CollisionSystem::instantiate_collider(
       "ReactPhysics body id has already being mapped to an AFK ECS Entity");
   this->rp3d_body_id_to_ecs_entity_map.insert({body->getEntity().id, entity});
 
-  // add all colliders to rp3d collision body and start calculating the average center of mass
-  collider_component.center_of_mass = glm::vec3{0.0f};
   for (const auto &collision_body : collider_component.colliders) {
-    // accumulate center of mass
-    collider_component.center_of_mass += collision_body.center_of_mass;
-
     // combine collider transform scale with parent transform
     // need to apply parent scale at the shape level, as scale cannot be applied to the parent body level
     auto collision_transform = collision_body.transform;
@@ -193,12 +188,6 @@ auto CollisionSystem::instantiate_collider(
         [](auto) { afk_unreachable(); }};
 
     std::visit(visitor, collision_body.shape);
-  }
-
-  // calculate average center of mass after all the individual colliders'
-  // centers of mass have been accumulated no point in dividing by 0 or 1
-  if (collider_component.colliders.size() > 1) {
-    collider_component.center_of_mass /= collider_component.colliders.size();
   }
 }
 
@@ -318,48 +307,42 @@ void CollisionSystem::CollisionEventListener::onContact(
 
     // check that the colliders do not belong to the same entity in react physics 3d
     if (object1 != object2) {
-      // entities without physics components are considered to be static
-      // if both objects are static, don't bother to fire an event
-      if (registry.has<PhysicsComponent>(object1) ||
-          registry.has<PhysicsComponent>(object2)) {
 
-        auto &event_manager = engine.event_manager;
+      auto &event_manager = engine.event_manager;
 
-        // fire collision events
-        // note that if a collision body is "sleeping" in reactphysics3d, a
-        // collision event of type ContactStay will not fire at the moment,
-        // "sleeping" is disabled treat contact enter and contact stay as "impulses"
+      // fire collision events
+      // note that if a collision body is "sleeping" in reactphysics3d, a
+      // collision event of type ContactStay will not fire at the moment,
+      // "sleeping" is disabled treat contact enter and contact stay as "impulses"
 
-        if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
-            contact_pair.getEventType() ==
-                CollisionCallback::ContactPair::EventType::ContactStay) {
-          auto data = afk::event::Event::Collision{object1, object2, {}};
+      if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
+          contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStay) {
+        auto data = afk::event::Event::Collision{object1, object2, {}};
 
-          afk_assert(contact_pair.getNbContactPoints() > 0,
-                     "No contact points found on collision");
+        afk_assert(contact_pair.getNbContactPoints() > 0,
+                   "No contact points found on collision");
 
-          data.contacts.reserve(contact_pair.getNbContactPoints());
-          for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
-            const auto &contact_point = contact_pair.getContactPoint(i);
-            const auto collider1_local_point =
-                glm::vec3{contact_point.getLocalPointOnCollider1().x,
-                          contact_point.getLocalPointOnCollider1().y,
-                          contact_point.getLocalPointOnCollider1().z};
-            const auto collider2_local_point =
-                glm::vec3{contact_point.getLocalPointOnCollider2().x,
-                          contact_point.getLocalPointOnCollider2().y,
-                          contact_point.getLocalPointOnCollider2().z};
-            const auto contact_normal = glm::vec3{contact_point.getWorldNormal().x,
-                                                  contact_point.getWorldNormal().y,
-                                                  contact_point.getWorldNormal().z};
+        data.contacts.reserve(contact_pair.getNbContactPoints());
+        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
+          const auto &contact_point = contact_pair.getContactPoint(i);
+          const auto collider1_local_point =
+              glm::vec3{contact_point.getLocalPointOnCollider1().x,
+                        contact_point.getLocalPointOnCollider1().y,
+                        contact_point.getLocalPointOnCollider1().z};
+          const auto collider2_local_point =
+              glm::vec3{contact_point.getLocalPointOnCollider2().x,
+                        contact_point.getLocalPointOnCollider2().y,
+                        contact_point.getLocalPointOnCollider2().z};
+          const auto contact_normal = glm::vec3{contact_point.getWorldNormal().x,
+                                                contact_point.getWorldNormal().y,
+                                                contact_point.getWorldNormal().z};
 
-            data.contacts.push_back(afk::event::Event::Collision::Contact{
-                collider1_local_point, collider2_local_point, contact_normal,
-                contact_point.getPenetrationDepth()});
-          }
-
-          event_manager.push_event(afk::event::Event{data, afk::event::Event::Type::Collision});
+          data.contacts.push_back(afk::event::Event::Collision::Contact{
+              collider1_local_point, collider2_local_point, contact_normal,
+              contact_point.getPenetrationDepth()});
         }
+
+        event_manager.push_event(afk::event::Event{data, afk::event::Event::Type::Collision});
       }
     }
   }

@@ -48,6 +48,7 @@ auto Engine::initialize() -> void {
   this->event_manager.initialize(this->renderer.window);
   this->ui_manager.initialize(this->renderer.window);
   this->collision_system.initialize();
+  this->physics_system.initialize();
   this->prefab_manager.initialize();
   this->scene_manager.initialize();
 
@@ -60,10 +61,6 @@ auto Engine::initialize() -> void {
       Event::Type::KeyDown, event::EventManager::Callback{[this](Event event) {
         this->move_keyboard(event);
       }});
-
-  this->event_manager.register_event(
-      Event::Type::Collision,
-      event::EventManager::Callback{ecs::system::PhysicsSystem::collision_resolution_callback});
 
   this->scene_manager.instantiate_scene("default");
 }
@@ -112,6 +109,7 @@ auto Engine::render() -> void {
 
 auto Engine::update() -> void {
   this->collision_system.update();
+  this->physics_system.update();
   this->ecs.system_manager.update();
   this->event_manager.pump_events();
 

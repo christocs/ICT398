@@ -47,6 +47,9 @@
           }
         }
       ]
+    },
+    "Physics": {
+      "is_static": true
     }
   }
 }

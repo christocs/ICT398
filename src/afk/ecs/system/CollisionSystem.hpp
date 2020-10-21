@@ -46,16 +46,17 @@ namespace afk {
         static auto on_collider_destroy(afk::ecs::Registry &registry,
                                         afk::ecs::Entity entity) -> void;
 
-        /** Update collisions */
+        /**
+         * Update collisions for firing events and generating physics debug mesh, and sync ReactPhysics3D world with the TransformComponent
+         */
         auto update() -> void;
 
         /**
          * Load a collision component associated to an entity
          *
          * @todo instead of creating new shapes for each entity, check if the prefab has already been instantiated and use shapes from the previous instantiation
-         * @todo apply parent transformation to each collider
          */
-        auto instantiate_collider(const afk::ecs::Entity &entity,
+        auto instantiate_collider_component(const afk::ecs::Entity &entity,
                                   afk::ecs::component::ColliderComponent &collider_component,
                                   const afk::ecs::component::TransformComponent &transform_component)
             -> void;
