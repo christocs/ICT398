@@ -93,6 +93,10 @@ auto SceneManager::initialize() -> void {
 auto SceneManager::instantiate_scene(const std::string &name) const -> void {
   auto &afk         = afk::Engine::get();
   const auto &scene = this->scene_map.at(name);
+  auto &registry    = afk.ecs.registry;
+
+  // destroy all entities before loading the scene
+  registry.clear();
 
   for (const auto &prefab : scene.prefabs) {
     afk.prefab_manager.instantiate_prefab(prefab);

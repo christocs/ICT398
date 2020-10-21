@@ -18,18 +18,16 @@ namespace afk {
       static constexpr const auto *SCENE_DIR = u8"res/scene";
 
       /**
-       * Instantiates all prefabs contained the specified scene.
-       *
-       * @param name The scene name.
-       *
-       * @todo destroy previous scene before instantiating scene
-       */
-      auto instantiate_scene(const std::string &name) const -> void;
-
-      /**
-       * Initializes this config manager.
+       * Initializes this scene manager.
        */
       auto initialize() -> void;
+
+      /**
+       * Instantiates all prefabs contained the specified scene and destroys all current entities.
+       *
+       * @param name The scene name.
+       */
+      auto instantiate_scene(const std::string &name) const -> void;
 
       /** The map of loaded scenes. */
       SceneMap scene_map = {};
