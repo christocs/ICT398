@@ -112,6 +112,20 @@ auto UiManager::draw_menu_bar() -> void {
   auto &afk = Engine::get();
 
   if (ImGui::BeginMainMenuBar()) {
+    // show available scenes and allow the user to instantiate one
+    // instantiating a scene will clear all current entities and replace them with ones from the scene
+    auto &scene_manager   = afk.scene_manager;
+    const auto &scene_map = scene_manager.scene_map;
+    if (ImGui::BeginMenu("Load Scene")) {
+      for (auto it = scene_map.begin(); it != scene_map.end(); ++it) {
+        const auto &key = it->first;
+        if (ImGui::MenuItem(key.c_str())) {
+          scene_manager.instantiate_scene(key);
+        }
+      }
+      ImGui::EndMenu();
+    }
+
     if (ImGui::BeginMenu("Tools")) {
       if (ImGui::MenuItem("Log")) {
         this->show_log = true;
@@ -128,20 +142,6 @@ auto UiManager::draw_menu_bar() -> void {
       if (ImGui::MenuItem("Toggle Debug Physics Mesh")) {
         afk::Engine::get().display_debug_physics_mesh =
             !afk::Engine::get().display_debug_physics_mesh;
-      }
-      ImGui::EndMenu();
-    }
-
-    // show available scenes and allow the user to instantiate one
-    // instantiating a scene will clear all current entities and replace them with ones from the scene
-    auto &scene_manager = afk.scene_manager;
-    const auto &scene_map = scene_manager.scene_map;
-    if (ImGui::BeginMenu("Load Scene")) {
-      for (auto it = scene_map.begin(); it != scene_map.end(); ++it) {
-        const auto &key = it->first;
-        if (ImGui::MenuItem(key.c_str())) {
-          scene_manager.instantiate_scene(key);
-        }
       }
       ImGui::EndMenu();
     }
