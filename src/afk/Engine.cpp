@@ -65,7 +65,7 @@ auto Engine::initialize() -> void {
       Event::Type::Collision,
       event::EventManager::Callback{ecs::system::PhysicsSystem::collision_resolution_callback});
 
-  this->scene_manager.instantiate_scene("physicstest01");
+  this->scene_manager.instantiate_scene("default");
 }
 
 auto Engine::render() -> void {
