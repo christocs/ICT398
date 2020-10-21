@@ -4,6 +4,7 @@
 #include "afk/debug/Assert.hpp"
 #include "afk/ecs/component/PhysicsComponent.hpp"
 #include "afk/io/Log.hpp"
+#include "afk/io/Time.hpp";
 #include "afk/utility/Visitor.hpp"
 
 using afk::ecs::component::ColliderComponent;
@@ -12,48 +13,75 @@ using afk::ecs::component::TransformComponent;
 using afk::ecs::system::CollisionSystem;
 
 CollisionSystem::CollisionSystem() {
-  // Instantiate the world
-  this->world = this->physics_common.createPhysicsWorld();
-  // Disable gravity; ReactPhysics3D will only be used for collision detection, not applying physics
-  this->world->setIsGravityEnabled(false);
-
-  // Turn off sleeping of collisions.
-  // Then bodies are colliding but aren't really changing their state for a while, they will be put to 'sleep' to stop testing collisions.
-  // Putting a body to sleep will make it no longer appear to be colliding externally.
-  // Temporarily, we will be disabling this optimisation for simplicity's sake, so we can process every collision
-  // @todo remove the need to turn off the sleeping optimisation in ReactPhysics3D
-  this->world->enableSleeping(false);
-
-  // Set event listener used for firing collision events that occur in the ReactPhysics3D world
-  this->world->setEventListener(&this->event_listener);
-
-  // turn on debug renderer so ReactPhysics3D creates render data
-  // @todo turn off debug ReactPhysics3D data to be generated in ReactPhysics3D when debug rendering is not being used
-  this->world->setIsDebugRenderingEnabled(true);
-
-  // Set all debug items to be displayed
-  // @todo set which debug items to generate display data for in GUI
-  this->world->getDebugRenderer().setIsDebugItemDisplayed(
-      rp3d::DebugRenderer::DebugItem::COLLIDER_AABB, true);
-  this->world->getDebugRenderer().setIsDebugItemDisplayed(
-      rp3d::DebugRenderer::DebugItem::COLLIDER_BROADPHASE_AABB, true);
-  this->world->getDebugRenderer().setIsDebugItemDisplayed(
-      rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
-  this->world->getDebugRenderer().setIsDebugItemDisplayed(
-      rp3d::DebugRenderer::DebugItem::CONTACT_POINT, true);
-  this->world->getDebugRenderer().setIsDebugItemDisplayed(
-      rp3d::DebugRenderer::DebugItem::CONTACT_NORMAL, true);
 
   // Set the debug logger for events in ReactPhysics3D
   this->physics_common.setLogger(&(this->logger));
 }
 
+auto CollisionSystem::initialize() -> void {
+  afk_assert(!this->is_initialized, "Collision System already initialized");
+  afk::io::log << afk::io::get_date_time() << "Collision System initialized\n";
+
+  // setup callback for when a ColliderComponent is destroyed so it can cleanup data related to the component
+  auto &registry = afk::Engine::get().ecs.registry;
+  registry.on_destroy<ColliderComponent>().connect<&CollisionSystem::on_collider_destroy>();
+
+  // instantiate the reactphysics3d world
+  this->world = this->create_rp3d_physics_world();
+
+  this->is_initialized = true;
+}
+
+auto CollisionSystem::on_collider_destroy(afk::ecs::Registry &registry,
+                                          afk::ecs::Entity entity) -> void {
+  auto &engine           = afk::Engine::get();
+  auto &collision_system = engine.collision_system;
+
+  afk_assert(collision_system.ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
+             "rp3d body index not mapped to ecs entity");
+  const auto collider_index =
+      collision_system.ecs_entity_to_rp3d_body_index_map.at(entity);
+  auto collider = collision_system.world->getCollisionBody(collider_index);
+
+  // grab the reactphysics3d internal entity for later when we want to delete the mappings
+  auto rp3d_id_entity = collider->getEntity().id;
+
+  // destroy the body in reactphysics3d
+  collision_system.world->destroyCollisionBody(collider);
+
+  // destroy the mappings of reactphysics3d objects
+  collision_system.ecs_entity_to_rp3d_body_index_map.erase(
+      entity); // already guarenteed to be present earlier in the method, so no need to check if it exists again
+
+  // while the program *may* run fine if these mappings are not deleted, it may run into undefined behaviour and possibly fail elsewhere, hence the use of assertions
+  // if the mappings are not deleted, only chuck a fuss in debug mode, but still log it as an error as it is concerning
+  if (collision_system.rp3d_body_index_to_ecs_entity_map.count(collider_index) == 1) {
+    collision_system.rp3d_body_index_to_ecs_entity_map.erase(collider_index);
+  } else {
+    afk::io::log << "Warning: Failed to find rp3d body index in "
+                    "rp3d_boxy_index_to_ecs_entity_map\n";
+    afk_assert_debug(false, "Warning: Failed to find rp3d body index in "
+                            "rp3d_boxy_index_to_ecs_entity_map\n");
+  }
+  if (collision_system.rp3d_body_id_to_ecs_entity_map.count(rp3d_id_entity) == 1) {
+    collision_system.rp3d_body_id_to_ecs_entity_map.erase(rp3d_id_entity);
+  } else {
+    afk::io::log << "Warning: Failed to find rp3d id in "
+                    "rp3d_body_id_to_ecs_entity_map\n";
+    afk_assert_debug(false, "Warning: Failed to find rp3d id in "
+                            "rp3d_body_id_to_ecs_entity_map\n");
+  }
+
+  // if the entity also has a PhysicsComponent, also delete that component as the PhysicsComponent should always have a ColliderComponent
+  registry.remove_if_exists<PhysicsComponent>(entity);
+}
+
 auto CollisionSystem::update() -> void {
-  auto registry = &afk::Engine::get().ecs.registry;
+  auto &registry = afk::Engine::get().ecs.registry;
   // not having a PhysicsComponent means the entity is 'static', so ones with a PhysicsComponent are 'dynamic'
   // so here we are only updating rigid bodies that are dynamic
   auto collider_view =
-      registry->view<ColliderComponent, TransformComponent, PhysicsComponent>();
+      registry.view<ColliderComponent, TransformComponent, PhysicsComponent>();
 
   // update translation and rotation in physics world
   // @todo find how to apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
@@ -167,8 +195,8 @@ auto CollisionSystem::instantiate_collider(
     std::visit(visitor, collision_body.shape);
   }
 
-  // calculate average center of mass after all the individual colliders' centers of mass have been accumulated
-  // no point in dividing by 0 or 1
+  // calculate average center of mass after all the individual colliders'
+  // centers of mass have been accumulated no point in dividing by 0 or 1
   if (collider_component.colliders.size() > 1) {
     collider_component.center_of_mass /= collider_component.colliders.size();
   }
@@ -206,6 +234,42 @@ auto CollisionSystem::get_debug_mesh() -> afk::render::Mesh {
   }
 
   return mesh;
+}
+
+rp3d::PhysicsWorld *CollisionSystem::create_rp3d_physics_world() {
+  // Instantiate the world
+  auto physics_world = this->physics_common.createPhysicsWorld();
+  // Disable gravity; ReactPhysics3D will only be used for collision detection, so gravity physics should not be applied
+  physics_world->setIsGravityEnabled(false);
+
+  // Turn off sleeping of collisions.
+  // Then bodies are colliding but aren't really changing their state for a while, they will be put to 'sleep' to stop testing collisions.
+  // Putting a body to sleep will make it no longer appear to be colliding externally.
+  // Temporarily, we will be disabling this optimisation for simplicity's sake, so we can process every collision
+  // @todo remove the need to turn off the sleeping optimisation in ReactPhysics3D
+  physics_world->enableSleeping(false);
+
+  // Set event listener used for firing collision events that occur in the ReactPhysics3D world
+  physics_world->setEventListener(&this->event_listener);
+
+  // turn on debug renderer so ReactPhysics3D creates render data
+  // @todo turn off debug ReactPhysics3D data to be generated in ReactPhysics3D when debug rendering is not being used
+  physics_world->setIsDebugRenderingEnabled(true);
+
+  // Set all debug items to be displayed
+  // @todo set which debug items to generate display data for in GUI
+  physics_world->getDebugRenderer().setIsDebugItemDisplayed(
+      rp3d::DebugRenderer::DebugItem::COLLIDER_AABB, true);
+  physics_world->getDebugRenderer().setIsDebugItemDisplayed(
+      rp3d::DebugRenderer::DebugItem::COLLIDER_BROADPHASE_AABB, true);
+  physics_world->getDebugRenderer().setIsDebugItemDisplayed(
+      rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
+  physics_world->getDebugRenderer().setIsDebugItemDisplayed(
+      rp3d::DebugRenderer::DebugItem::CONTACT_POINT, true);
+  physics_world->getDebugRenderer().setIsDebugItemDisplayed(
+      rp3d::DebugRenderer::DebugItem::CONTACT_NORMAL, true);
+
+  return physics_world;
 }
 
 rp3d::BoxShape *CollisionSystem::create_shape_box(const afk::physics::shape::Box &box,
@@ -256,7 +320,8 @@ void CollisionSystem::CollisionEventListener::onContact(
     if (object1 != object2) {
       // entities without physics components are considered to be static
       // if both objects are static, don't bother to fire an event
-      if (registry.has<PhysicsComponent>(object1) || registry.has<PhysicsComponent>(object2)) {
+      if (registry.has<PhysicsComponent>(object1) ||
+          registry.has<PhysicsComponent>(object2)) {
 
         auto &event_manager = engine.event_manager;
 

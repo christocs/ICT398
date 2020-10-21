@@ -47,6 +47,7 @@ auto Engine::initialize() -> void {
   this->renderer.initialize();
   this->event_manager.initialize(this->renderer.window);
   this->ui_manager.initialize(this->renderer.window);
+  this->collision_system.initialize();
   this->prefab_manager.initialize();
   this->scene_manager.initialize();
 

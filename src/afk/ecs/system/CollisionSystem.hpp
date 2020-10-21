@@ -5,9 +5,10 @@
 #include <reactphysics3d/reactphysics3d.h>
 
 #include "afk/ecs/Entity.hpp"
+#include "afk/ecs/Registry.hpp"
 #include "afk/ecs/component/ColliderComponent.hpp"
-#include "afk/render/Mesh.hpp"
 #include "afk/ecs/component/TransformComponent.hpp"
+#include "afk/render/Mesh.hpp"
 
 namespace afk {
   namespace ecs {
@@ -17,10 +18,6 @@ namespace afk {
         /**
          * Constructor
          *
-         * @todo test this works
-         * @todo remove the need to turn off the sleeping optimisation in ReactPhysics3D
-         * @todo turn off debug ReactPhysics3D data to be generated in ReactPhysics3D when debug rendering is not being used
-         * @todo set which debug items to generate display data for in GUI
          */
         CollisionSystem();
 
@@ -32,10 +29,22 @@ namespace afk {
          */
         ~CollisionSystem() = default;
 
+        /**
+         * Initializes the collision system.
+         */
+        auto initialize() -> void;
+
+        // Creating copies of CollisionSystem is dangerous and should be avoided
         CollisionSystem(CollisionSystem &&)      = delete;
         CollisionSystem(const CollisionSystem &) = delete;
         auto operator=(const CollisionSystem &) -> CollisionSystem & = delete;
         auto operator=(CollisionSystem &&) -> CollisionSystem & = delete;
+
+        /**
+         * Function to be run when a ColliderComponent is destroyed
+         */
+        static auto on_collider_destroy(afk::ecs::Registry &registry,
+                                        afk::ecs::Entity entity) -> void;
 
         /** Update collisions */
         auto update() -> void;
@@ -47,7 +56,7 @@ namespace afk {
          * @todo apply parent transformation to each collider
          */
         auto instantiate_collider(const afk::ecs::Entity &entity,
-                           afk::ecs::component::ColliderComponent &collider_component,
+                                  afk::ecs::component::ColliderComponent &collider_component,
                                   const afk::ecs::component::TransformComponent &transform_component)
             -> void;
 
@@ -61,6 +70,17 @@ namespace afk {
         auto get_debug_mesh() -> afk::render::Mesh;
 
       private:
+        /** Is the CollisionSystem initialized? */
+        bool is_initialized = false;
+
+        /**
+         * Create and return the pointer of the reactphysics3d physics world
+         *
+         * @todo turn off debug ReactPhysics3D data to be generated in ReactPhysics3D when debug rendering is not being used
+         * @todo set which debug items to generate display data for in GUI
+         */
+        rp3d::PhysicsWorld *create_rp3d_physics_world();
+
         /** alias to ReactPhysics3D ids for their internal rp3d ECS */
         using rp3d_id = rp3d::uint;
 
@@ -77,7 +97,7 @@ namespace afk {
         /**
          * Event listener class for when collisions occur in ReactPhysics3D
          * Will fire on each collision event during an update calll to the rp3d world
-         * 
+         *
          * @todo optimise data sent to the event manager, don't have the event manager store anything unnecessary
          * @todo process collision information and send the processed data rather than the more raw data
          */
