@@ -71,9 +71,6 @@ namespace afk {
           c.shape = physics::shape::Box{json_shape.at("x").get<float>(),
                                         json_shape.at("y").get<float>(),
                                         json_shape.at("z").get<float>()};
-        } else if (shape_type == "capsule") {
-          c.shape = physics::shape::Capsule{json_shape.at("radius").get<float>(),
-                                            json_shape.at("height").get<float>()};
         } else {
           afk_assert(false, "Invalid shape type " + shape_type + " provided");
         }

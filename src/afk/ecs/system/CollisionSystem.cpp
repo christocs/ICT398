@@ -77,7 +77,8 @@ auto CollisionSystem::on_collider_destroy(afk::ecs::Registry &registry,
 }
 
 auto CollisionSystem::update() -> void {
-  auto &registry = afk::Engine::get().ecs.registry;
+  auto &afk      = afk::Engine::get();
+  auto &registry = afk.ecs.registry;
   // not having a PhysicsComponent means the entity is 'static', so ones with a PhysicsComponent are 'dynamic'
   // so here we are only updating rigid bodies that are dynamic
   auto collider_view =
@@ -106,7 +107,7 @@ auto CollisionSystem::update() -> void {
   // this method calls to update the debug render data
   // this method fires collision events
   // this method also unnecessarily does physics calculations for any rigid bodies, though none should be created in the game engine
-  this->world->update(afk::Engine::get().get_delta_time());
+  this->world->update(afk.get_delta_time());
 }
 
 auto CollisionSystem::instantiate_collider_component(
@@ -179,11 +180,6 @@ auto CollisionSystem::instantiate_collider_component(
           // add rp3d shape and rp3d transform to collider
           body->addCollider(this->create_shape_sphere(shape, collision_transform.scale),
                             rp3d_transform);
-        },
-        [this, &collision_transform, &rp3d_transform, &body](afk::physics::shape::Capsule shape) {
-          // add rp3d shape and rp3d transform to collider
-          body->addCollider(
-              this->create_shape_capsule(shape, collision_transform.scale), rp3d_transform);
         },
         [](auto) { afk_unreachable(); }};
 
@@ -271,12 +267,6 @@ rp3d::SphereShape *CollisionSystem::create_shape_sphere(const afk::physics::shap
                                                         const glm::vec3 &scale) {
   const auto scale_factor = (scale.x + scale.y + scale.z) / 3.0f;
   return this->physics_common.createSphereShape(sphere * scale_factor);
-}
-
-rp3d::CapsuleShape *CollisionSystem::create_shape_capsule(const afk::physics::shape::Capsule &capsule,
-                                                          const glm::vec3 &scale) {
-  return this->physics_common.createCapsuleShape(
-      capsule.radius * ((scale.x + scale.y) / 2.0f), capsule.height * scale.y);
 }
 
 void CollisionSystem::CollisionEventListener::onContact(

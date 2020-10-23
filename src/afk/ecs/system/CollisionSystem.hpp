@@ -127,15 +127,6 @@ namespace afk {
         rp3d::SphereShape *create_shape_sphere(const afk::physics::shape::Sphere &shape,
                                                const glm::vec3 &scale);
 
-        /**
-         * Create a ReactPhysics3D capsule shape
-         *
-         * @param shape the capsule shape
-         * @param scale scale of the shape
-         */
-        rp3d::CapsuleShape *create_shape_capsule(const afk::physics::shape::Capsule &shape,
-                                                 const glm::vec3 &scale);
-
         /** Event listener used for firing collision events that occur in the ReactPhysics3D world */
         CollisionEventListener event_listener = {};
 

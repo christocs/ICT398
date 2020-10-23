@@ -16,7 +16,6 @@ using afk::ecs::system::PhysicsSystem;
 using afk::event::Event;
 using afk::physics::Transform;
 using afk::physics::shape::Box;
-using afk::physics::shape::Capsule;
 using afk::physics::shape::Sphere;
 using afk::utility::Visitor;
 
