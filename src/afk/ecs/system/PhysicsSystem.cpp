@@ -115,16 +115,16 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
         if (registry.has<PhysicsComponent>(c.entity1) &&
             registry.has<PhysicsComponent>(c.entity2)) {
 
-          auto physics1 = registry.get<PhysicsComponent>(c.entity1);
-          auto physics2 = registry.get<PhysicsComponent>(c.entity2);
+          auto &physics1 = registry.get<PhysicsComponent>(c.entity1);
+          auto &physics2 = registry.get<PhysicsComponent>(c.entity2);
 
           // only do resolution if at least one of the entities has a non-static physics component
           if (!physics1.is_static || !physics2.is_static) {
 
             afk::io::log << "collision points:\n";
             for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
-              auto transform1 = registry.get<TransformComponent>(c.entity1);
-              auto transform2 = registry.get<TransformComponent>(c.entity2);
+              const auto &transform1 = registry.get<TransformComponent>(c.entity1);
+              const auto &transform2 = registry.get<TransformComponent>(c.entity2);
 
               // @todo add more than just the translate
               const auto world_space1 =
@@ -140,10 +140,8 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
                                   ", z:" + std::to_string(world_space2.x) + "\n";
             }
 
-            const auto epsilon = 0.000000000001f;
-
-            auto collider1 = registry.get<ColliderComponent>(c.entity1);
-            auto collider2 = registry.get<ColliderComponent>(c.entity2);
+            const auto &collider1 = registry.get<ColliderComponent>(c.entity1);
+            const auto &collider2 = registry.get<ColliderComponent>(c.entity2);
 
             auto avg_normal = glm::vec3{0.0f};
             for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
@@ -162,14 +160,14 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
             // @todo update angular torque
             if (!physics1.is_static) {
               afk::io::log << "collision applied external forces 1\n";
-              physics1.external_forces =
+              physics1.external_forces +=
                   impulse; // applying inverse mass is handled in a different function
             }
             // update forces and torque for collider 2 if it is not static
             // @todo update angular torque
             if (!physics2.is_static) {
               afk::io::log << "collision applied external forces 2\n";
-              physics2.external_forces =
+              physics2.external_forces +=
                   impulse; // applying inverse mass is handled in a different function
             }
           }
