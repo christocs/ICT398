@@ -108,8 +108,9 @@ auto Engine::render() -> void {
 }
 
 auto Engine::update() -> void {
-  this->collision_system.update();
+  // Update physics before running collisions
   this->physics_system.update();
+  this->collision_system.update();
   this->ecs.system_manager.update();
   this->event_manager.pump_events();
 
