@@ -62,7 +62,8 @@ auto Engine::initialize() -> void {
         this->move_keyboard(event);
       }});
 
-  this->scene_manager.instantiate_scene("default");
+
+  this->last_update = afk::Engine::get_time();
 }
 
 auto Engine::render() -> void {
