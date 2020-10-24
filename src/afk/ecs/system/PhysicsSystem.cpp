@@ -85,9 +85,12 @@ auto PhysicsSystem::instantiate_physics_component(const afk::ecs::Entity &entity
                                                   const ColliderComponent &collider_component)
     -> void {
 
-  //// add all colliders to rp3d collision body and start calculating the average center of mass
-  physics_component.center_of_mass = glm::vec3{0.0f};
-  physics_component.total_mass     = 0.0f;
+  // set values to zero before iterating through each collider for calculations
+  // assumes each collider's center of mass is always at the center of the
+  // collider assume each collider has an even distribution of mass
+  physics_component.center_of_mass  = glm::vec3{0.0f};
+  physics_component.total_mass      = 0.0f;
+  auto temp_inertia_tensor = glm::zero<glm::mat3>();
   for (const auto &collision_body : collider_component.colliders) {
     physics_component.total_mass += collision_body.mass;
 
@@ -99,30 +102,57 @@ auto PhysicsSystem::instantiate_physics_component(const afk::ecs::Entity &entity
     f32 collider_volume          = 0.0f;
 
     auto visitor = Visitor{
-        [&collider_inertia_tensor, &collider_volume, &collision_body](const afk::physics::shape::Sphere &shape) {
-          collider_inertia_tensor =
-              PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
-          collider_volume =
-              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
-          
-        },
-        [&collider_inertia_tensor, &collider_volume, &collision_body](const afk::physics::shape::Box &shape) {
+        [&collider_inertia_tensor, &collider_volume,
+         &collision_body](const afk::physics::shape::Sphere &shape) {
           collider_inertia_tensor =
               PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
           collider_volume =
               PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
         },
-        [](auto &what) {
-            afk_assert(false, "Collider shape type is invalid");
-        }};
+        [&collider_inertia_tensor, &collider_volume,
+         &collision_body](const afk::physics::shape::Box &shape) {
+          collider_inertia_tensor =
+              PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
+          collider_volume =
+              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
+        },
+        [](auto &what) { afk_assert(false, "Collider shape type is invalid"); }};
     std::visit(visitor, collision_body.shape);
-    //std::visit(visitor, test);
-    // todo get mass of a collider using the total mass / volume
-    // todo get mass inertia tensor of collider, using the mass of the collider
 
-    // todo change center of mass equation to account for volume
+    // Convert the collider inertia tensor into the local-space of the body
+    // do not need to worry about scale, as we are assuming that the center of mass is at the center of each collider and each collider has an even distribution of mass
+    const auto collider_rotation = glm::mat3_cast(collision_body.transform.rotation);
+    auto collider_rotation_transpose = glm::transpose(collider_rotation);
+    collider_rotation_transpose[0] *= collider_inertia_tensor.x;
+    collider_rotation_transpose[1] *= collider_inertia_tensor.y;
+    collider_rotation_transpose[2] *= collider_inertia_tensor.z;
+    const auto collider_inertia_tensor_in_body_space = collider_rotation * collider_rotation_transpose;
+
+    // Use the parallel axis theorem to convert the inertia tensor w.r.t the
+    // collider center into a inertia tensor w.r.t to the body origin.
+    // assume center of mass is the center of the collider
+    // @todo convert from row-major to column-major (rp3d vs glm)
+    const auto offset = collision_body.transform.translation;
+    const auto radius_from_center_squared = glm::pow(glm::length(offset), 2);
+    auto offset_matrix =
+        glm::mat3{glm::vec3{radius_from_center_squared, 0.0f, 0.0f},
+                  glm::vec3{0.0f, radius_from_center_squared, 0.0f},
+                  glm::vec3{0.0f, 0.0f, radius_from_center_squared}};
+    offset_matrix[0] += offset * (-offset.x);
+    offset_matrix[1] += offset * (-offset.y);
+    offset_matrix[2] += offset * (-offset.z);
+    offset_matrix *= collision_body.mass;
+
+    temp_inertia_tensor += collider_inertia_tensor_in_body_space + offset_matrix;
   }
   physics_component.center_of_mass /= physics_component.total_mass;
+
+  physics_component.inertial_tensor = glm::mat3{glm::vec3{temp_inertia_tensor[0][0], 0.0f, 0.0f},
+                glm::vec3{0.0f, temp_inertia_tensor[1][1], 0.0f},
+                glm::vec3{0.0f, 0.0f, temp_inertia_tensor[2][2]}
+  };
+  physics_component.inverse_inertial_tensor =
+      glm::inverse(physics_component.inertial_tensor);
 
   // change mass in static objects to have maximum values
   if (!physics_component.is_static) {
@@ -305,7 +335,7 @@ auto PhysicsSystem::get_shape_volume(const Sphere &shape, const glm::vec3 &scale
   return (4.0f / 3.0f) * glm::pi<f32>() * glm::pow(avg_radius, 3);
 }
 
-auto PhysicsSystem::get_shape_volume(const Box &shape, const glm::vec3 &scale) -> f32{
+auto PhysicsSystem::get_shape_volume(const Box &shape, const glm::vec3 &scale) -> f32 {
   // box shape is defined by half extents, so they need to be converted to full extents
   return (shape.x * 2.0f * scale.x) * (shape.y * 2.0f * scale.y) *
          (shape.z * 2.0f * scale.z);
