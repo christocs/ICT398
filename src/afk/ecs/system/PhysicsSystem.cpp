@@ -56,6 +56,7 @@ auto PhysicsSystem::update() -> void {
       }
 
       // integrate linear velocity
+      // a = F/m
       physics.linear_velocity += dt * physics.total_inverse_mass * physics.external_forces;
 
       // integrate angular velocity
