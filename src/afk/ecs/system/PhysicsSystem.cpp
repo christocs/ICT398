@@ -261,19 +261,18 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   const auto collider_2_physics = registry.get<PhysicsComponent>(data.entity2);
 
   // average points of collision in world space
-  auto avg_local_collision_point1 = glm::vec3{0.0f};
-  auto avg_local_collision_point2 = glm::vec3{0.0f};
+  auto avg_collision_point1 = glm::vec3{0.0f};
+  auto avg_collision_point2 = glm::vec3{0.0f};
   for (auto i = size_t{0}; i < data.contacts.size(); ++i) {
-    avg_local_collision_point1 += data.contacts[i].collider1_point;
-    avg_local_collision_point2 += data.contacts[i].collider2_point;
+    avg_collision_point1 += data.contacts[i].collider1_point;
+    avg_collision_point2 += data.contacts[i].collider2_point;
   }
-  avg_local_collision_point1 /= data.contacts.size();
-  avg_local_collision_point2 /= data.contacts.size();
+  avg_collision_point1 /= data.contacts.size();
+  avg_collision_point2 /= data.contacts.size();
 
-  // vectors from center of mass to collision points in local space
-  // @todo check if this is meant to be using world space or local space, at the moment it is using local space
-  const auto r1 = avg_local_collision_point1 - collider_1_physics.center_of_mass;
-  const auto r2 = avg_local_collision_point1 - collider_2_physics.center_of_mass;
+  // vectors from center of mass to collision points
+  const auto r1 = avg_collision_point1 - collider_1_physics.center_of_mass;
+  const auto r2 = avg_collision_point1 - collider_2_physics.center_of_mass;
 
   // velocity before collision
   const auto v1 = collider_1_physics.linear_velocity;
