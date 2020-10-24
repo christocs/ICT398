@@ -46,19 +46,22 @@ namespace afk {
         static auto collision_resolution_callback(afk::event::Event event) -> void;
 
         static auto get_impulse_coefficient(const afk::event::Event::Collision &data,
-                                            const glm::vec3 &contact_normal) -> f32;
+                                            const glm::vec3 &contact_normal,
+                                            const glm::vec3 &r1,
+                                            const glm::vec3 &r2) -> f32;
 
       private:
         /**
          * Get inertia tensor of a sphere shape in its own local space
-         * 
+         *
          * @param shape
-         * 
+         *
          * @return inertia tensor in local space
-         * 
+         *
          * @todo reference source of equation
          */
-        static auto get_shape_inertia_tensor(const afk::physics::shape::Sphere &shape, f32 mass) -> glm::vec3;
+        static auto get_shape_inertia_tensor(const afk::physics::shape::Sphere &shape,
+                                             f32 mass) -> glm::vec3;
 
         /**
          * Get inertia tensor of a box shape in its own local space
@@ -66,18 +69,18 @@ namespace afk {
          * @param shape
          *
          * @return inertia tensor in local space
-         * 
+         *
          * @todo reference source of equation
          */
-        static auto get_shape_inertia_tensor(const afk::physics::shape::Box &shape, f32 mass)
-            -> glm::vec3;
+        static auto get_shape_inertia_tensor(const afk::physics::shape::Box &shape,
+                                             f32 mass) -> glm::vec3;
 
         /**
          * Get volume of sphere shape within the rigid body's local space
-         * 
+         *
          * @param shape
          * @param scale
-         * 
+         *
          * @return volume
          */
         static auto get_shape_volume(const afk::physics::shape::Sphere &shape,

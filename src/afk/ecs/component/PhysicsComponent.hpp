@@ -44,10 +44,12 @@ namespace afk {
         glm::vec3 external_torques = glm::vec3{0.0f};
         /** angular dampening */
         f32 angular_dampening = 1.0f;
+        /** inertial tensor in world rotation */
+        glm::mat3 inverse_inertial_tensor = glm::zero<glm::mat3>();
         /** inertial tensor local to the rigid body */
-        glm::mat3x3 inertial_tensor = glm::mat3x3{1.0f};
+        glm::mat3 local_inertial_tensor = glm::zero<glm::mat3>();
         /** inverse inertial tensor local to the rigid body */
-        glm::mat3x3 inverse_inertial_tensor = glm::mat3x3{1.0f};
+        glm::mat3 local_inverse_inertial_tensor = glm::mat3x3{1.0f};
       };
     }
   }

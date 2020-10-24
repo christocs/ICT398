@@ -89,9 +89,9 @@ auto PhysicsSystem::instantiate_physics_component(const afk::ecs::Entity &entity
   // set values to zero before iterating through each collider for calculations
   // assumes each collider's center of mass is always at the center of the
   // collider assume each collider has an even distribution of mass
-  physics_component.center_of_mass  = glm::vec3{0.0f};
-  physics_component.total_mass      = 0.0f;
-  auto temp_inertia_tensor = glm::zero<glm::mat3>();
+  physics_component.center_of_mass = glm::vec3{0.0f};
+  physics_component.total_mass     = 0.0f;
+  auto temp_inertia_tensor         = glm::zero<glm::mat3>();
   for (const auto &collision_body : collider_component.colliders) {
     physics_component.total_mass += collision_body.mass;
 
@@ -124,10 +124,18 @@ auto PhysicsSystem::instantiate_physics_component(const afk::ecs::Entity &entity
     // do not need to worry about scale, as we are assuming that the center of mass is at the center of each collider and each collider has an even distribution of mass
     const auto collider_rotation = glm::mat3_cast(collision_body.transform.rotation);
     auto collider_rotation_transpose = glm::transpose(collider_rotation);
-    collider_rotation_transpose[0] *= collider_inertia_tensor.x;
-    collider_rotation_transpose[1] *= collider_inertia_tensor.y;
-    collider_rotation_transpose[2] *= collider_inertia_tensor.z;
-    const auto collider_inertia_tensor_in_body_space = collider_rotation * collider_rotation_transpose;
+    // row multiplication (glm by default hhas column access)
+    collider_rotation_transpose[0][0] *= collider_inertia_tensor.x;
+    collider_rotation_transpose[1][0] *= collider_inertia_tensor.x;
+    collider_rotation_transpose[2][0] *= collider_inertia_tensor.x;
+    collider_rotation_transpose[0][1] *= collider_inertia_tensor.y;
+    collider_rotation_transpose[1][1] *= collider_inertia_tensor.y;
+    collider_rotation_transpose[2][1] *= collider_inertia_tensor.y;
+    collider_rotation_transpose[0][2] *= collider_inertia_tensor.z;
+    collider_rotation_transpose[1][2] *= collider_inertia_tensor.z;
+    collider_rotation_transpose[2][2] *= collider_inertia_tensor.z;
+    const auto collider_inertia_tensor_in_body_space =
+        collider_rotation * collider_rotation_transpose;
 
     // Use the parallel axis theorem to convert the inertia tensor w.r.t the
     // collider center into a inertia tensor w.r.t to the body origin.
@@ -139,21 +147,30 @@ auto PhysicsSystem::instantiate_physics_component(const afk::ecs::Entity &entity
         glm::mat3{glm::vec3{radius_from_center_squared, 0.0f, 0.0f},
                   glm::vec3{0.0f, radius_from_center_squared, 0.0f},
                   glm::vec3{0.0f, 0.0f, radius_from_center_squared}};
-    offset_matrix[0] += offset * (-offset.x);
-    offset_matrix[1] += offset * (-offset.y);
-    offset_matrix[2] += offset * (-offset.z);
+    const auto offset_x = offset * (-offset.x);
+    const auto offset_y = offset * (-offset.y);
+    const auto offset_z = offset * (-offset.z);
+    offset_matrix[0][0] *= offset_x.x;
+    offset_matrix[1][0] *= offset_x.y;
+    offset_matrix[2][0] *= offset_x.z;
+    offset_matrix[0][1] *= offset_y.x;
+    offset_matrix[1][1] *= offset_y.y;
+    offset_matrix[2][1] *= offset_y.z;
+    offset_matrix[0][2] *= offset_z.x;
+    offset_matrix[1][2] *= offset_z.y;
+    offset_matrix[2][2] *= offset_z.z;
     offset_matrix *= collision_body.mass;
 
     temp_inertia_tensor += collider_inertia_tensor_in_body_space + offset_matrix;
   }
   physics_component.center_of_mass /= physics_component.total_mass;
 
-  physics_component.inertial_tensor = glm::mat3{glm::vec3{temp_inertia_tensor[0][0], 0.0f, 0.0f},
+  physics_component.local_inertial_tensor =
+      glm::mat3{glm::vec3{temp_inertia_tensor[0][0], 0.0f, 0.0f},
                 glm::vec3{0.0f, temp_inertia_tensor[1][1], 0.0f},
-                glm::vec3{0.0f, 0.0f, temp_inertia_tensor[2][2]}
-  };
-  physics_component.inverse_inertial_tensor =
-      glm::inverse(physics_component.inertial_tensor);
+                glm::vec3{0.0f, 0.0f, temp_inertia_tensor[2][2]}};
+  physics_component.local_inverse_inertial_tensor =
+      glm::inverse(physics_component.local_inertial_tensor);
 
   // change mass in static objects to have maximum values
   if (!physics_component.is_static) {
@@ -186,19 +203,18 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
           auto &physics1 = registry.get<PhysicsComponent>(c.entity1);
           auto &physics2 = registry.get<PhysicsComponent>(c.entity2);
 
+          const auto &transform1 = registry.get<TransformComponent>(c.entity1);
+          const auto &transform2 = registry.get<TransformComponent>(c.entity2);
+
           // only do resolution if at least one of the entities has a non-static physics component
           if (!physics1.is_static || !physics2.is_static) {
 
             afk::io::log << "collision points:\n";
             for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
-              const auto &transform1 = registry.get<TransformComponent>(c.entity1);
-              const auto &transform2 = registry.get<TransformComponent>(c.entity2);
 
               // @todo add more than just the translate
-              const auto world_space1 =
-                  transform1.translation + c.contacts[i].collider1_point;
-              const auto world_space2 =
-                  transform2.translation + c.contacts[i].collider2_point;
+              const auto world_space1 = transform1.translation + c.contacts[i].collider1_point;
+              const auto world_space2 = transform2.translation + c.contacts[i].collider2_point;
               afk::io::log << "\t1: local - x:" + std::to_string(world_space1.x) +
                                   ", y: " + std::to_string(world_space1.x) +
                                   ", z:" + std::to_string(world_space1.x) +
@@ -219,8 +235,24 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
             // normal from item one to item two
             avg_normal /= c.contacts.size();
 
+                        // average points of collision in world space
+            auto avg_collision_point1 = glm::vec3{0.0f};
+            auto avg_collision_point2 = glm::vec3{0.0f};
+            for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
+              avg_collision_point1 += c.contacts[i].collider1_point;
+              avg_collision_point2 += c.contacts[i].collider2_point;
+            }
+            avg_collision_point1 /= c.contacts.size();
+            avg_collision_point2 /= c.contacts.size();
+
+            // vectors from center of mass to collision points
+            const auto r1 = avg_collision_point1 -
+                            (physics1.center_of_mass + transform1.translation);
+            const auto r2 = avg_collision_point2 -
+                            (physics2.center_of_mass + transform2.translation);
+
             const auto impulse_coefficient =
-                PhysicsSystem::get_impulse_coefficient(c, avg_normal);
+                PhysicsSystem::get_impulse_coefficient(c, avg_normal, r1, r2);
 
             const auto impulse = impulse_coefficient * avg_normal;
 
@@ -230,13 +262,17 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
               afk::io::log << "collision applied external forces 1\n";
               physics1.external_forces +=
                   impulse; // applying inverse mass is handled in a different function
+              physics1.external_torques +=
+                  impulse_coefficient * (glm::cross(r1, avg_normal));
             }
             // update forces and torque for collider 2 if it is not static
             // @todo update angular torque
             if (!physics2.is_static) {
               afk::io::log << "collision applied external forces 2\n";
-              physics2.external_forces +=
+              physics2.external_forces -=
                   impulse; // applying inverse mass is handled in a different function
+              physics2.external_torques -=
+                  impulse_coefficient * (glm::cross(r2, avg_normal));   
             }
           }
         }
@@ -249,7 +285,9 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
 // todo check if using contact normal should be used instead of collision normal
 // todo check if a contact normal is being passed or a collision normal is being passed
 auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
-                                            const glm::vec3 &contact_normal) -> f32 {
+                                            const glm::vec3 &contact_normal,
+                                            const glm::vec3 &r1,
+                                            const glm::vec3 &r2) -> f32 {
   // @todo move this to a better place
   // 1 for fully elastic, 0 for no elastiscity at all
   const auto restitution_coefficient = 1.0f;
@@ -264,20 +302,6 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   const auto collider_1_transform = registry.get<TransformComponent>(data.entity1);
   const auto collider_2_transform = registry.get<TransformComponent>(data.entity2);
 
-  // average points of collision in world space
-  auto avg_collision_point1 = glm::vec3{0.0f};
-  auto avg_collision_point2 = glm::vec3{0.0f};
-  for (auto i = size_t{0}; i < data.contacts.size(); ++i) {
-    avg_collision_point1 += data.contacts[i].collider1_point;
-    avg_collision_point2 += data.contacts[i].collider2_point;
-  }
-  avg_collision_point1 /= data.contacts.size();
-  avg_collision_point2 /= data.contacts.size();
-
-  // vectors from center of mass to collision points
-  const auto r1 = avg_collision_point1 - (collider_1_physics.center_of_mass + collider_1_transform.translation);
-  const auto r2 = avg_collision_point2 - (collider_2_physics.center_of_mass + collider_2_transform.translation);
-
   // velocity before collision
   const auto v1 = collider_1_physics.linear_velocity;
   const auto v2 = collider_2_physics.linear_velocity;
@@ -287,29 +311,27 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   const auto omega2 = collider_2_physics.angular_velocity;
 
   // 1/(inertial tensor)
-  const auto &j1 = collider_1_physics.inverse_inertial_tensor;
-  const auto &j2 = collider_2_physics.inverse_inertial_tensor;
+  const auto j1 = collider_1_physics.inverse_inertial_tensor;
+  const auto j2 = collider_2_physics.inverse_inertial_tensor;
+
+  auto orientation_transpose1 = glm::mat4_cast(collider_1_transform.rotation);
+  auto orientation_transpose2 = glm::mat4_cast(collider_2_transform.rotation);
 
   // inverse mass
   // make the number as low as possible for static entities to make it appear like they're very heavy
   const auto &inverse_mass1 = collider_1_physics.total_inverse_mass;
   const auto &inverse_mass2 = collider_2_physics.total_inverse_mass;
 
-  f32 numerator = glm::dot(contact_normal, v1 - v2) +
-                  glm::dot(omega1, glm::cross(r1, contact_normal)) -
-                  glm::dot(r2, contact_normal);
+  // -(1+e)(n + (v1 - v2) + w1.(r1 * n1) - w2.(r2 * n2))
+  f32 numerator = glm::dot(contact_normal, v1 - v2);
+  numerator += glm::dot(omega1, glm::cross(r1, contact_normal));
+  numerator -= glm::dot(omega2, glm::cross(r2, contact_normal));
   numerator *= -(1 + restitution_coefficient);
 
-  // @todo calculate using inverse of inertial tensor once the data is actually populated
-  // f32 denominator =
-  //    glm::dot(glm::cross(r1, contact_normal), j1 * glm::cross(r1, contact_normal));
-  // denominator +=
-  //    glm::dot(glm::cross(r2, contact_normal), j1 * glm::cross(r2, contact_normal));
-  // denominator += inverse_mass1 + inverse_mass2;
-
   f32 denominator =
-      glm::dot(glm::cross(r1, contact_normal), glm::cross(r1, contact_normal));
-  denominator += glm::dot(glm::cross(r2, contact_normal), glm::cross(r2, contact_normal));
+      glm::dot(glm::cross(r1, contact_normal), j1 * glm::cross(r1, contact_normal));
+  denominator +=
+      glm::dot(glm::cross(r2, contact_normal), j1 * glm::cross(r2, contact_normal));
   denominator += inverse_mass1 + inverse_mass2;
 
   return numerator / denominator;
