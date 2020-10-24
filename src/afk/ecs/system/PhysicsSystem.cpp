@@ -73,6 +73,10 @@ auto PhysicsSystem::update() -> void {
       // apply velocity to translation AFTER it has been calculated for semi-implicit euler integration
       transform.translation += physics.linear_velocity * dt;
 
+      // apply rotation
+      transform.rotation +=
+          glm::quat(0.0f, physics.angular_velocity) * transform.rotation * 0.5f * dt;
+
       // reset external forces and torque for the next update cycle
       // these only represent "moments" in acceleration
       physics.external_forces  = glm::vec3{0.0f};
@@ -209,19 +213,19 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
           // only do resolution if at least one of the entities has a non-static physics component
           if (!physics1.is_static || !physics2.is_static) {
 
-            afk::io::log << "collision points:\n";
+            // afk::io::log << "collision points:\n";
             for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
 
               // @todo add more than just the translate
               const auto world_space1 = transform1.translation + c.contacts[i].collider1_point;
               const auto world_space2 = transform2.translation + c.contacts[i].collider2_point;
-              afk::io::log << "\t1: local - x:" + std::to_string(world_space1.x) +
+              /*afk::io::log << "\t1: local - x:" + std::to_string(world_space1.x) +
                                   ", y: " + std::to_string(world_space1.x) +
                                   ", z:" + std::to_string(world_space1.x) +
                                   "\n" + "\t2: local - x:" +
                                   std::to_string(world_space2.x) +
                                   ", y: " + std::to_string(world_space2.x) +
-                                  ", z:" + std::to_string(world_space2.x) + "\n";
+                                  ", z:" + std::to_string(world_space2.x) + "\n";*/
             }
 
             const auto &collider1 = registry.get<ColliderComponent>(c.entity1);
@@ -235,7 +239,7 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
             // normal from item one to item two
             avg_normal /= c.contacts.size();
 
-                        // average points of collision in world space
+            // average points of collision in world space
             auto avg_collision_point1 = glm::vec3{0.0f};
             auto avg_collision_point2 = glm::vec3{0.0f};
             for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
@@ -255,24 +259,23 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
                 PhysicsSystem::get_impulse_coefficient(c, avg_normal, r1, r2);
 
             const auto impulse = impulse_coefficient * avg_normal;
+            afk::io::log << "impulse coefficient " << impulse_coefficient << "\n";
 
             // update forces and torque for collider 1 if it is not static
-            // @todo update angular torque
             if (!physics1.is_static) {
               afk::io::log << "collision applied external forces 1\n";
               physics1.external_forces +=
                   impulse; // applying inverse mass is handled in a different function
               physics1.external_torques +=
-                  impulse_coefficient * (glm::cross(r1, avg_normal));
+                  physics1.inverse_inertial_tensor * (glm::cross(r1, impulse));
             }
             // update forces and torque for collider 2 if it is not static
-            // @todo update angular torque
             if (!physics2.is_static) {
               afk::io::log << "collision applied external forces 2\n";
               physics2.external_forces -=
                   impulse; // applying inverse mass is handled in a different function
               physics2.external_torques -=
-                  impulse_coefficient * (glm::cross(r2, avg_normal));   
+                  physics2.inverse_inertial_tensor * (glm::cross(r2, impulse));
             }
           }
         }
