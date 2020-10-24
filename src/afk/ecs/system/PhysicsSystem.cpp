@@ -195,9 +195,9 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
 
               // @todo add more than just the translate
               const auto world_space1 =
-                  transform1.translation + c.contacts[i].collider1_local_point;
+                  transform1.translation + c.contacts[i].collider1_point;
               const auto world_space2 =
-                  transform2.translation + c.contacts[i].collider2_local_point;
+                  transform2.translation + c.contacts[i].collider2_point;
               afk::io::log << "\t1: local - x:" + std::to_string(world_space1.x) +
                                   ", y: " + std::to_string(world_space1.x) +
                                   ", z:" + std::to_string(world_space1.x) +
@@ -260,12 +260,12 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   const auto collider_1_physics = registry.get<PhysicsComponent>(data.entity1);
   const auto collider_2_physics = registry.get<PhysicsComponent>(data.entity2);
 
-  // average points of collision relative to each rigid body's own local space
+  // average points of collision in world space
   auto avg_local_collision_point1 = glm::vec3{0.0f};
   auto avg_local_collision_point2 = glm::vec3{0.0f};
   for (auto i = size_t{0}; i < data.contacts.size(); ++i) {
-    avg_local_collision_point1 += data.contacts[i].collider1_local_point;
-    avg_local_collision_point2 += data.contacts[i].collider2_local_point;
+    avg_local_collision_point1 += data.contacts[i].collider1_point;
+    avg_local_collision_point2 += data.contacts[i].collider2_point;
   }
   avg_local_collision_point1 /= data.contacts.size();
   avg_local_collision_point2 /= data.contacts.size();

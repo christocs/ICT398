@@ -315,14 +315,22 @@ void CollisionSystem::CollisionEventListener::onContact(
         data.contacts.reserve(contact_pair.getNbContactPoints());
         for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
           const auto &contact_point = contact_pair.getContactPoint(i);
+          const auto collider1_transform =
+              contact_pair.getCollider1()->getLocalToWorldTransform();
+          const auto collider2_transform =
+              contact_pair.getCollider2()->getLocalToWorldTransform();
+          const auto collider1_rp3d_point =
+              collider1_transform * contact_point.getLocalPointOnCollider1();
+          const auto collider2_rp3d_point =
+              collider2_transform * contact_point.getLocalPointOnCollider2();
+
           const auto collider1_local_point =
-              glm::vec3{contact_point.getLocalPointOnCollider1().x,
-                        contact_point.getLocalPointOnCollider1().y,
-                        contact_point.getLocalPointOnCollider1().z};
+              glm::vec3{collider1_rp3d_point.x,
+                        collider1_rp3d_point.y,
+                        collider1_rp3d_point.z};
           const auto collider2_local_point =
-              glm::vec3{contact_point.getLocalPointOnCollider2().x,
-                        contact_point.getLocalPointOnCollider2().y,
-                        contact_point.getLocalPointOnCollider2().z};
+              glm::vec3{collider2_rp3d_point.x, collider2_rp3d_point.y,
+                        collider2_rp3d_point.z};
           const auto contact_normal = glm::vec3{contact_point.getWorldNormal().x,
                                                 contact_point.getWorldNormal().y,
                                                 contact_point.getWorldNormal().z};
