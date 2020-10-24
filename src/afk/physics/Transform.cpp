@@ -22,4 +22,15 @@ Transform::Transform(mat4 transform) {
   this->rotation    = _rotation;
 }
 
+auto Transform::to_mat4() -> glm::mat4 {
+  auto matrix = mat4{1.0f};
+
+  // Apply transformation
+  matrix = glm::translate(matrix, this->translation);
+  matrix *= glm::mat4_cast(this->rotation);
+  matrix = glm::scale(matrix, this->scale);
+
+  return matrix;
+}
+
 /// @endcond

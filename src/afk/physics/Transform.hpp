@@ -24,6 +24,13 @@ namespace afk {
        * @param transform The transformation matrix.
        */
       Transform(glm::mat4 transform);
+
+      /**
+       * Return the transform as a 4x4 transformation matrix
+       * 
+       * @return transformation matrix
+       */
+      auto to_mat4() -> glm::mat4;
     };
   }
 }
