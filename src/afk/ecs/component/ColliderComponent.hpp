@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <glm/glm.hpp>
+#include "afk/NumericTypes.hpp"
 #include "afk/physics/shape/Box.hpp"
 #include "afk/physics/shape/Sphere.hpp"
 #include "afk/physics/Transform.hpp"
@@ -25,8 +26,8 @@ namespace afk {
           ColliderShape shape                = {};
           /** Transform within local space of the entity */
           afk::physics::Transform transform = {};
-          /** center of mass of the collider within the local space of the entity */
-          glm::vec3 center_of_mass = glm::vec3{0.0f};
+          /** Mass of the collider */
+          f32 mass = {};
         };
 
         /** Defining a collection of colliders */

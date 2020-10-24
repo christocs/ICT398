@@ -1,5 +1,7 @@
 #include "afk/ecs/system/PhysicsSystem.hpp"
 
+#include <limits>
+
 #include "afk/Engine.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/ecs/component/ColliderComponent.hpp"
@@ -54,7 +56,7 @@ auto PhysicsSystem::update() -> void {
       }
 
       // integrate linear velocity
-      physics.linear_velocity += dt * physics.inverse_mass * physics.external_forces;
+      physics.linear_velocity += dt * physics.total_inverse_mass * physics.external_forces;
 
       // integrate angular velocity
       physics.angular_velocity += dt * physics.external_torques;
@@ -85,15 +87,51 @@ auto PhysicsSystem::instantiate_physics_component(const afk::ecs::Entity &entity
 
   //// add all colliders to rp3d collision body and start calculating the average center of mass
   physics_component.center_of_mass = glm::vec3{0.0f};
+  physics_component.total_mass     = 0.0f;
   for (const auto &collision_body : collider_component.colliders) {
-    //  // accumulate center of mass
-    physics_component.center_of_mass += collision_body.center_of_mass;
+    physics_component.total_mass += collision_body.mass;
 
-    // calculate average center of mass after all the individual colliders'
-    // centers of mass have been accumulated no point in dividing by 0 or 1
-    if (collider_component.colliders.size() > 1) {
-      physics_component.center_of_mass /= collider_component.colliders.size();
-    }
+    // accumulate center of mass, then divide it later when the total mass is known
+    physics_component.center_of_mass =
+        collision_body.transform.translation * collision_body.mass;
+
+    auto collider_inertia_tensor = glm::vec3{};
+    f32 collider_volume          = 0.0f;
+
+    auto visitor = Visitor{
+        [&collider_inertia_tensor, &collider_volume, &collision_body](const afk::physics::shape::Sphere &shape) {
+          collider_inertia_tensor =
+              PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
+          collider_volume =
+              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
+          
+        },
+        [&collider_inertia_tensor, &collider_volume, &collision_body](const afk::physics::shape::Box &shape) {
+          collider_inertia_tensor =
+              PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
+          collider_volume =
+              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
+        },
+        [](auto &what) {
+            afk_assert(false, "Collider shape type is invalid");
+        }};
+    std::visit(visitor, collision_body.shape);
+    //std::visit(visitor, test);
+    // todo get mass of a collider using the total mass / volume
+    // todo get mass inertia tensor of collider, using the mass of the collider
+
+    // todo change center of mass equation to account for volume
+  }
+  physics_component.center_of_mass /= physics_component.total_mass;
+
+  // change mass in static objects to have maximum values
+  if (!physics_component.is_static) {
+    physics_component.total_inverse_mass = 1.0f / physics_component.total_mass;
+  } else {
+    // set mass to largest value, set inverse to smallest value
+    // set maximum values to make the object not effectively move
+    physics_component.total_mass         = std::numeric_limits<f32>::max();
+    physics_component.total_inverse_mass = std::numeric_limits<f32>::min();
   }
 }
 
@@ -221,8 +259,8 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
 
   // inverse mass
   // make the number as low as possible for static entities to make it appear like they're very heavy
-  const auto &inverse_mass1 = collider_1_physics.inverse_mass;
-  const auto &inverse_mass2 = collider_1_physics.inverse_mass;
+  const auto &inverse_mass1 = collider_1_physics.total_inverse_mass;
+  const auto &inverse_mass2 = collider_2_physics.total_inverse_mass;
 
   f32 numerator = glm::dot(contact_normal, v1 - v2) +
                   glm::dot(omega1, glm::cross(r1, contact_normal)) -
@@ -242,4 +280,33 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   denominator += inverse_mass1 + inverse_mass2;
 
   return numerator / denominator;
+}
+
+auto PhysicsSystem::get_shape_inertia_tensor(const Sphere &shape, f32 mass) -> glm::vec3 {
+  const auto single_axis_inertia = 0.4f * mass * glm::pow(shape, 2);
+  return glm::vec3{single_axis_inertia, single_axis_inertia, single_axis_inertia};
+}
+
+auto PhysicsSystem::get_shape_inertia_tensor(const Box &shape, f32 mass) -> glm::vec3 {
+  const auto m_over_12 = mass / 12.0f;
+
+  // box shape is defined by half extents, need to find full widths
+  const auto x2 = shape.x * 2.0f;
+  const auto y2 = shape.y * 2.0f;
+  const auto z2 = shape.z * 2.0f;
+  return glm::vec3{m_over_12 * (glm::pow(y2, 2) + glm::pow(z2, 2)),
+                   m_over_12 * (glm::pow(x2, 2) + glm::pow(z2, 2)),
+                   m_over_12 * (glm::pow(x2, 2) + glm::pow(y2, 2))};
+}
+
+auto PhysicsSystem::get_shape_volume(const Sphere &shape, const glm::vec3 &scale) -> f32 {
+  // for a sphere to be a sphere, its radius needs to be consistent
+  const auto avg_radius = ((scale.x + scale.y + scale.z) / 3.0f) * shape;
+  return (4.0f / 3.0f) * glm::pi<f32>() * glm::pow(avg_radius, 3);
+}
+
+auto PhysicsSystem::get_shape_volume(const Box &shape, const glm::vec3 &scale) -> f32{
+  // box shape is defined by half extents, so they need to be converted to full extents
+  return (shape.x * 2.0f * scale.x) * (shape.y * 2.0f * scale.y) *
+         (shape.z * 2.0f * scale.z);
 }

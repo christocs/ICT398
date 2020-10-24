@@ -1,7 +1,6 @@
 #include "afk/io/JsonSerialization.hpp"
 
 #include <iostream>
-#include <limits>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -75,14 +74,7 @@ namespace afk {
           afk_assert(false, "Invalid shape type " + shape_type + " provided");
         }
 
-        // if center of mass is provided, use it, else calculate it
-        if (j.find("center_of_mass") != j.end()) {
-          c.center_of_mass = j.at("center_of_mass").get<glm::vec3>();
-        } else {
-          // order of applying transforms is scale, then rotation, then translation
-          // in this order, only the last will have an effect on the center of mass for the simple objects being, so just use the translate
-          c.center_of_mass = c.transform.translation;
-        }
+        c.mass = j.at("mass").get<f32>();
       }
 
       auto from_json(const Json &j, ColliderComponent &c) -> void {
@@ -93,11 +85,6 @@ namespace afk {
         // if static is true, set values to be as stationary as possible
         if (j.find("is_static") != j.end() && j.at("is_static").get<bool>()) {
           c.is_static = true;
-
-          // set mass to largest value, set inverse to smallest value
-          // set maximum values to make the object not effectively move
-          c.mass         = std::numeric_limits<f32>::max();
-          c.inverse_mass = std::numeric_limits<f32>::min();
 
           // set dampening to max so object will efectively not move
           c.linear_dampening  = 1.0f;
@@ -112,10 +99,6 @@ namespace afk {
           c.external_torques = glm::vec3{0.0f};
         } else {
           c.is_static = false;
-
-          // no need to parse center of mass, as it is calculated with the collider data
-          c.mass         = j.at("mass").get<f32>();
-          c.inverse_mass = 1 / c.mass; // calculate inverse mass for later
 
           // get dampening
           c.linear_dampening  = j.at("linear_dampening").get<f32>();

@@ -44,13 +44,13 @@
               "y": 0.0,
               "z": 0.0
             }
-          }
+          },
+          "mass": 5.0
         }
       ]
     },
     "Physics": {
       "is_static": false,
-      "mass": 30.0,
       "linear_dampening": 0.0,
       "angular_dampening": 0.0,
       "linear_velocity": {

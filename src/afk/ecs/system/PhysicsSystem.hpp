@@ -49,6 +49,51 @@ namespace afk {
                                             const glm::vec3 &contact_normal) -> f32;
 
       private:
+        /**
+         * Get inertia tensor of a sphere shape in its own local space
+         * 
+         * @param shape
+         * 
+         * @return inertia tensor in local space
+         * 
+         * @todo reference source of equation
+         */
+        static auto get_shape_inertia_tensor(const afk::physics::shape::Sphere &shape, f32 mass) -> glm::vec3;
+
+        /**
+         * Get inertia tensor of a box shape in its own local space
+         *
+         * @param shape
+         *
+         * @return inertia tensor in local space
+         * 
+         * @todo reference source of equation
+         */
+        static auto get_shape_inertia_tensor(const afk::physics::shape::Box &shape, f32 mass)
+            -> glm::vec3;
+
+        /**
+         * Get volume of sphere shape within the rigid body's local space
+         * 
+         * @param shape
+         * @param scale
+         * 
+         * @return volume
+         */
+        static auto get_shape_volume(const afk::physics::shape::Sphere &shape,
+                                     const glm::vec3 &scale) -> f32;
+
+        /**
+         * Get volume of box shape within the rigid body's local space
+         *
+         * @param shape
+         * @param scale
+         *
+         * @return volume
+         */
+        static auto get_shape_volume(const afk::physics::shape::Box &shape,
+                                     const glm::vec3 &scale) -> f32;
+
         /** Is the physics system initialized? */
         bool is_initialized = false;
       };

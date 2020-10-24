@@ -18,14 +18,14 @@ namespace afk {
       struct PhysicsComponent {
         /** --- more general data --- */
 
-          /** if the component is static */
+        /** if the component is static */
         bool is_static = true;
         /** center of mass local to the entity */
         glm::vec3 center_of_mass = glm::vec3{};
         /** mass in kilograms */
-        f32 mass = 0.0f;
+        f32 total_mass = {};
         /** inverse of mass */
-        f32 inverse_mass = 0.0f;
+        f32 total_inverse_mass = {};
 
         /** --- linear data --- */
 
@@ -44,9 +44,9 @@ namespace afk {
         glm::vec3 external_torques = glm::vec3{0.0f};
         /** angular dampening */
         f32 angular_dampening = 1.0f;
-        /** inertial tensor */
+        /** inertial tensor local to the rigid body */
         glm::mat3x3 inertial_tensor = glm::mat3x3{1.0f};
-        /** inverse inertial tensor */
+        /** inverse inertial tensor local to the rigid body */
         glm::mat3x3 inverse_inertial_tensor = glm::mat3x3{1.0f};
       };
     }
