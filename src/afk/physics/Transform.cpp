@@ -33,4 +33,15 @@ auto Transform::to_mat4() -> glm::mat4 {
   return matrix;
 }
 
+auto Transform::combined_transform_to_mat4(const Transform &child_transform) -> glm::mat4 {
+  auto matrix = this->to_mat4();
+
+  // Apply child transformation.
+  matrix = glm::translate(matrix, child_transform.translation);
+  matrix *= glm::mat4_cast(child_transform.rotation);
+  matrix = glm::scale(matrix, child_transform.scale);
+
+  return matrix;
+}
+
 /// @endcond

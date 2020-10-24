@@ -31,6 +31,13 @@ namespace afk {
        * @return transformation matrix
        */
       auto to_mat4() -> glm::mat4;
+
+      /**
+       * Apply the child transform and return a 4x4 transformation matrix
+       * 
+       * @return 4x4 transformation matrix with child transform applied
+       */
+      auto combined_transform_to_mat4(const Transform& child_transform) -> glm::mat4;
     };
   }
 }
