@@ -50,9 +50,9 @@ auto PhysicsSystem::update() -> void {
     // skip anything that is static
     if (!physics.is_static) {
 
-      // add gravity as an external linear force
+      // integrate gravity acceleration
       if (afk.gravity_enabled) {
-        physics.external_forces += afk.gravity;
+        physics.linear_velocity += dt * afk.gravity;
       }
 
       // integrate linear velocity
