@@ -56,6 +56,7 @@ auto PhysicsSystem::update() -> void {
       }
 
       // integrate linear velocity
+      physics.linear_velocity += physics.total_inverse_mass * physics.external_forces;
       physics.linear_velocity += dt * physics.total_inverse_mass * physics.external_forces;
 
       // integrate angular velocity
@@ -260,6 +261,9 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   const auto collider_1_physics = registry.get<PhysicsComponent>(data.entity1);
   const auto collider_2_physics = registry.get<PhysicsComponent>(data.entity2);
 
+  const auto collider_1_transform = registry.get<TransformComponent>(data.entity1);
+  const auto collider_2_transform = registry.get<TransformComponent>(data.entity2);
+
   // average points of collision in world space
   auto avg_collision_point1 = glm::vec3{0.0f};
   auto avg_collision_point2 = glm::vec3{0.0f};
@@ -271,8 +275,8 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   avg_collision_point2 /= data.contacts.size();
 
   // vectors from center of mass to collision points
-  const auto r1 = avg_collision_point1 - collider_1_physics.center_of_mass;
-  const auto r2 = avg_collision_point1 - collider_2_physics.center_of_mass;
+  const auto r1 = avg_collision_point1 - (collider_1_physics.center_of_mass + collider_1_transform.translation);
+  const auto r2 = avg_collision_point2 - (collider_2_physics.center_of_mass + collider_2_transform.translation);
 
   // velocity before collision
   const auto v1 = collider_1_physics.linear_velocity;
