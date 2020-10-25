@@ -33,6 +33,7 @@ using namespace afk::ecs::component;
 
 auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
   const auto prefab_dir = afk::io::get_resource_path(dir_path);
+  auto &afk             = afk::Engine::get();
 
   for (const auto &entry : directory_iterator{prefab_dir}) {
     const auto path = entry.path();
@@ -51,12 +52,29 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
       const auto &j  = component_json;
       auto component = this->COMPONENT_MAP.at(component_name);
 
-      auto visitor =
-          Visitor{[j](ModelComponent &c) { c = j.get<ModelComponent>(); },
-                  [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
-                  [j](ColliderComponent &c) { c = j.get<ColliderComponent>(); },
-                  [j](PhysicsComponent &c) { c = j.get<PhysicsComponent>(); },
-                  [](auto) { afk_unreachable(); }};
+      auto visitor = Visitor{[j](ModelComponent &c) {
+                               c = j.get<ModelComponent>();
+                             },
+                             [j](TransformComponent &c) {
+                               c = j.get<TransformComponent>();
+                             },
+                             [j](ColliderComponent &c) {
+                               c = j.get<ColliderComponent>();
+                             },
+                             [j, &components, &afk](PhysicsComponent &c) {
+                               c = j.get<PhysicsComponent>();
+                               afk_assert(components.count("Transform") == 1, "prefab must have a Transform component to instantiate a physics component");
+                               afk_assert(
+                                   components.count("Collider") == 1,
+                                   "prefab must have a collider component to "
+                                   "instantiate a collider component");
+
+                               const auto collider =
+                                   components.at("Collider").get<ColliderComponent>();
+
+                               afk.physics_system.initialize_physics_component(c, collider);
+                             },
+                             [](auto) { afk_unreachable(); }};
 
       std::visit(visitor, component);
 
@@ -113,19 +131,6 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
                            registry.emplace<ColliderComponent>(entity, component);
                          },
                          [&registry, entity, &prefab, &afk](PhysicsComponent component) {
-                           afk_assert(prefab.components.count("Transform") == 1, "prefab must have a Transform component to instantiate a physics component");
-                           afk_assert(prefab.components.count("Collider") == 1, "prefab must have a collider component to instantiate a collider component");
-
-                           // check that the "Collider" component is a collider component, then use it when instantiating the physics component
-                           auto collider_visitor = Visitor{
-                               [entity, &afk, &component](ColliderComponent collider) {
-                                 afk.physics_system.instantiate_physics_component(
-                                     entity, component, collider);
-                               },
-                               [](auto) { afk_unreachable(); }};
-
-                           std::visit(collider_visitor, prefab.components.at("Collider"));
-
                            registry.emplace<PhysicsComponent>(entity, component);
                          },
                          [](auto) { afk_unreachable(); }};

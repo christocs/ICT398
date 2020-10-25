@@ -61,7 +61,18 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
             [j](ModelComponent &c) { c = j.get<ModelComponent>(); },
             [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
             [j](ColliderComponent &c) { c = j.get<ColliderComponent>(); },
-            [j](PhysicsComponent &c) { c = j.get<PhysicsComponent>(); },
+            [j, &entity_json = entity_json, &prefab, &afk](PhysicsComponent &c) {
+              c = j.get<PhysicsComponent>();
+
+              // no need to do checks if components are missing, as all prefabs already enforce these checks
+              // here we are just overwriting prefab components if they are defined
+
+              // if the scene defines the collider component, reinstantiate the physics component with the new values
+              if (entity_json.count("Collider") == 1) {
+                afk.physics_system.initialize_physics_component(
+                    c, entity_json.at("Collider").get<ColliderComponent>());
+              }
+            },
             [](auto) { afk_unreachable(); }};
 
         std::visit(visitor, component);

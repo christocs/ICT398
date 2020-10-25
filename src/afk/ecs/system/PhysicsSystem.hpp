@@ -27,10 +27,9 @@ namespace afk {
         auto update() -> void;
 
         /**
-         * Load a physics component associated to an entity
+         * Initialize values for physics component
          */
-        auto instantiate_physics_component(const afk::ecs::Entity &entity,
-                                           afk::ecs::component::PhysicsComponent &physics_component,
+        auto initialize_physics_component(afk::ecs::component::PhysicsComponent &physics_component,
                                            const afk::ecs::component::ColliderComponent &collider_component)
             -> void;
 

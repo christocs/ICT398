@@ -85,8 +85,7 @@ auto PhysicsSystem::update() -> void {
   }
 }
 
-auto PhysicsSystem::instantiate_physics_component(const afk::ecs::Entity &entity,
-                                                  PhysicsComponent &physics_component,
+auto PhysicsSystem::initialize_physics_component(PhysicsComponent &physics_component,
                                                   const ColliderComponent &collider_component)
     -> void {
 
