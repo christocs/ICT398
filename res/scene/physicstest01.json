@@ -78,7 +78,7 @@
       }
     },
     {
-      "name": "stationarybox",
+      "name": "box",
       "components": {
         "Transform": {
           "translation": {
@@ -96,6 +96,9 @@
             "y": 0.0,
             "z": 0.0
           }
+        },
+        "Physics": {
+          "is_static": true
         }
       }
     }
