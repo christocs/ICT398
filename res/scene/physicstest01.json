@@ -12,6 +12,28 @@
       }
     },
     {
+      "name": "basketball",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": -1.0,
+            "y": 10.0,
+            "z": -1.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 45.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    {
       "name": "box",
       "components": {
         "Transform": {
@@ -26,7 +48,7 @@
             "z": 1.0
           },
           "rotation": {
-            "x": 45.0,
+            "x": 0.0,
             "y": 0.0,
             "z": 0.0
           }
