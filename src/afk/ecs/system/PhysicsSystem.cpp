@@ -64,12 +64,13 @@ auto PhysicsSystem::update() -> void {
       }
 
       // integrate linear velocity
+      // external forces is just force, so need to divide mass out (a = F/m)
       // a = F/m
-      physics.linear_velocity += dt * physics.total_inverse_mass *
+      physics.linear_velocity += physics.total_inverse_mass *
                                  physics.external_forces * linear_dampening;
 
       // integrate angular velocity
-      physics.angular_velocity += dt * physics.external_torques * angular_dampening;
+      physics.angular_velocity += physics.external_torques * angular_dampening;
 
       // apply velocity to translation AFTER it has been calculated for semi-implicit euler integration
       transform.translation += physics.linear_velocity * dt;
