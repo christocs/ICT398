@@ -106,22 +106,34 @@ auto PhysicsSystem::instantiate_physics_component(const afk::ecs::Entity &entity
     auto collider_inertia_tensor = glm::vec3{};
     f32 collider_volume          = 0.0f;
 
+    // calculate collider volume and inertia tensor
+    // when calculating inertia tensor for static objects, give it the maximum mass
     auto visitor = Visitor{
         [&collider_inertia_tensor, &collider_volume,
-         &collision_body](const afk::physics::shape::Sphere &shape) {
-          collider_inertia_tensor =
-              PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
+         &collision_body, &physics_component](const afk::physics::shape::Sphere &shape) {
+          if (!physics_component.is_static) {
+            collider_inertia_tensor =
+                PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
+          } else {
+            const auto max_float    = std::numeric_limits<f32>::max();
+            collider_inertia_tensor = glm::vec3{max_float};
+          }
           collider_volume =
               PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
         },
         [&collider_inertia_tensor, &collider_volume,
-         &collision_body](const afk::physics::shape::Box &shape) {
-          collider_inertia_tensor =
-              PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
+         &collision_body, &physics_component](const afk::physics::shape::Box &shape) {
+          if (!physics_component.is_static) {
+            collider_inertia_tensor =
+                PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
+          } else {
+            const auto max_float    = std::numeric_limits<f32>::max();
+            collider_inertia_tensor = glm::vec3{max_float};
+          }
           collider_volume =
               PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
         },
-        [](auto &what) { afk_assert(false, "Collider shape type is invalid"); }};
+        [](auto) { afk_assert(false, "Collider shape type is invalid"); }};
     std::visit(visitor, collision_body.shape);
 
     // Convert the collider inertia tensor into the local-space of the body
