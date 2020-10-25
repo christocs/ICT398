@@ -87,7 +87,7 @@ auto PhysicsSystem::update() -> void {
 }
 
 auto PhysicsSystem::initialize_physics_component(PhysicsComponent &physics_component,
-                                                  const ColliderComponent &collider_component)
+                                                 const ColliderComponent &collider_component)
     -> void {
 
   // set values to zero before iterating through each collider for calculations
@@ -109,8 +109,8 @@ auto PhysicsSystem::initialize_physics_component(PhysicsComponent &physics_compo
     // calculate collider volume and inertia tensor
     // when calculating inertia tensor for static objects, give it the maximum mass
     auto visitor = Visitor{
-        [&collider_inertia_tensor, &collider_volume,
-         &collision_body, &physics_component](const afk::physics::shape::Sphere &shape) {
+        [&collider_inertia_tensor, &collider_volume, &collision_body,
+         &physics_component](const afk::physics::shape::Sphere &shape) {
           if (!physics_component.is_static) {
             collider_inertia_tensor =
                 PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
@@ -121,8 +121,8 @@ auto PhysicsSystem::initialize_physics_component(PhysicsComponent &physics_compo
           collider_volume =
               PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
         },
-        [&collider_inertia_tensor, &collider_volume,
-         &collision_body, &physics_component](const afk::physics::shape::Box &shape) {
+        [&collider_inertia_tensor, &collider_volume, &collision_body,
+         &physics_component](const afk::physics::shape::Box &shape) {
           if (!physics_component.is_static) {
             collider_inertia_tensor =
                 PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);

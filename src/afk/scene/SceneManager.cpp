@@ -52,8 +52,9 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
       auto prefab =
           afk.prefab_manager.prefab_map.at(entity_json.at("name").get<string>());
 
-      for (const auto &[component_name, component_json] :
-           entity_json.at("components").items()) {
+      const auto components_json = entity_json.at("components");
+
+      for (const auto &[component_name, component_json] : components_json.items()) {
         const auto &j  = component_json;
         auto component = PrefabManager::COMPONENT_MAP.at(component_name);
 
@@ -61,16 +62,32 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
             [j](ModelComponent &c) { c = j.get<ModelComponent>(); },
             [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
             [j](ColliderComponent &c) { c = j.get<ColliderComponent>(); },
-            [j, &entity_json = entity_json, &prefab, &afk](PhysicsComponent &c) {
+            [j, components_json_ref = std::ref(components_json), &prefab,
+             &afk](PhysicsComponent &c) {
               c = j.get<PhysicsComponent>();
+
+              const auto components_json = components_json_ref.get();
 
               // no need to do checks if components are missing, as all prefabs already enforce these checks
               // here we are just overwriting prefab components if they are defined
 
-              // if the scene defines the collider component, reinstantiate the physics component with the new values
-              if (entity_json.count("Collider") == 1) {
-                afk.physics_system.initialize_physics_component(
-                    c, entity_json.at("Collider").get<ColliderComponent>());
+              // if the scene defines the collider component, use the one in the scene, else use the one provided by the prefab
+              if (components_json_ref.get().count("Collider") == 1) {
+                const auto &collider =
+                    components_json_ref.get().at("Collider").get<ColliderComponent>();
+                afk.physics_system.initialize_physics_component(c, collider);
+              } else {
+                // need to make sure the component in "Collider" is what it says on the tin, hence using std::visit
+                const auto &collider_component =
+                    prefab.components.at("Collider");
+                auto visitor =
+                    Visitor{[&c, &afk](const ColliderComponent &collider) {
+                              afk.physics_system.initialize_physics_component(c, collider);
+                              afk::io::log << "hi\n";
+                            },
+                            [](auto) { afk_unreachable(); }};
+
+                std::visit(visitor, collider_component);
               }
             },
             [](auto) { afk_unreachable(); }};
