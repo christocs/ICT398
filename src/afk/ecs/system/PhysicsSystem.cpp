@@ -58,24 +58,24 @@ auto PhysicsSystem::update() -> void {
       const auto angular_dampening =
           std::clamp(std::pow(1.0f - physics.angular_dampening, dt), 0.0f, 1.0f);
 
-      // integrate gravity acceleration
+      // integrate constant gravity acceleration
       if (afk.gravity_enabled) {
         physics.linear_velocity += dt * afk.gravity * linear_dampening;
       }
 
-      // integrate linear velocity
+      // add new linear velocity
       // external forces is just force, so need to divide mass out (a = F/m)
       // a = F/m
       physics.linear_velocity += physics.total_inverse_mass *
                                  physics.external_forces * linear_dampening;
 
-      // integrate angular velocity
+      // add new angular velocity
       physics.angular_velocity += physics.external_torques * angular_dampening;
 
-      // apply velocity to translation AFTER it has been calculated for semi-implicit euler integration
+      // integrate velocity to translation AFTER it has been calculated for semi-implicit euler integration
       transform.translation += physics.linear_velocity * dt;
 
-      // apply rotation
+      // integrate rotation AFTER it has been calculated for semi-implicit euler integration
       transform.rotation +=
           glm::quat(0.0f, physics.angular_velocity) * transform.rotation * 0.5f * dt;
 
@@ -276,7 +276,6 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
 
             // update forces and torque for collider 1 if it is not static
             if (!physics1.is_static) {
-              afk::io::log << "collision applied external forces 1\n";
               physics1.external_forces +=
                   impulse; // applying inverse mass is handled in a different function
               physics1.external_torques +=
@@ -284,7 +283,6 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
             }
             // update forces and torque for collider 2 if it is not static
             if (!physics2.is_static) {
-              afk::io::log << "collision applied external forces 2\n";
               physics2.external_forces -=
                   impulse; // applying inverse mass is handled in a different function
               physics2.external_torques -=
