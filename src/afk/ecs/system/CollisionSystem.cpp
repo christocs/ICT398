@@ -111,7 +111,7 @@ auto CollisionSystem::update() -> void {
 
     // update interia tensor
     const auto world_rotation = glm::mat3_cast(transform.rotation);
-    physics.inverse_inertial_tensor = world_rotation * physics.inverse_inertial_tensor *
+    physics.inverse_inertial_tensor = world_rotation * physics.local_inverse_inertial_tensor *
                                       glm::transpose(world_rotation);
 
     // normalize rotation

@@ -272,7 +272,6 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
                 PhysicsSystem::get_impulse_coefficient(c, avg_normal, r1, r2);
 
             const auto impulse = impulse_coefficient * avg_normal;
-            afk::io::log << "impulse coefficient " << impulse_coefficient << "\n";
 
             // update forces and torque for collider 1 if it is not static
             if (!physics1.is_static) {
