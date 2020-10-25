@@ -85,17 +85,16 @@ auto CollisionSystem::on_collider_destroy(afk::ecs::Registry &registry,
 auto CollisionSystem::update() -> void {
   auto &afk      = afk::Engine::get();
   auto &registry = afk.ecs.registry;
-  // not having a PhysicsComponent means that no physics are applied to it and it does not affect physics of other entities
-  // here we are only updating physics items
+  
+  // update every collider component, regardless if it has a physics component or not (transform for an entity may need to be moved regardless)
   auto collider_view =
-      registry.view<ColliderComponent, TransformComponent, PhysicsComponent>();
+      registry.view<ColliderComponent, TransformComponent>();
 
-  // update translation and rotation in physics world
-  // @todo find how to apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
+  // update translation and rotation in react physics 3d representation
+  // @todo apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
   for (auto &entity : collider_view) {
     const auto &collider = collider_view.get<ColliderComponent>(entity);
     auto &transform      = collider_view.get<TransformComponent>(entity);
-    auto &physics        = collider_view.get<PhysicsComponent>(entity);
     afk_assert(this->ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");
     const auto rp3d_body_index = this->ecs_entity_to_rp3d_body_index_map.at(entity);
@@ -108,11 +107,6 @@ auto CollisionSystem::update() -> void {
                          transform.rotation.z, transform.rotation.w));
 
     rp3d_body->setTransform(rp3d_transform);
-
-    // update interia tensor
-    const auto world_rotation = glm::mat3_cast(transform.rotation);
-    physics.inverse_inertial_tensor = world_rotation * physics.local_inverse_inertial_tensor *
-                                      glm::transpose(world_rotation);
 
     // normalize rotation
     transform.rotation = glm::normalize(transform.rotation);

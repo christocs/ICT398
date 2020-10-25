@@ -49,6 +49,10 @@ auto PhysicsSystem::update() -> void {
 
     // skip anything that is static
     if (!physics.is_static) {
+      // update interia tensor
+      const auto world_rotation = glm::mat3_cast(transform.rotation);
+      physics.inverse_inertial_tensor = world_rotation * physics.local_inverse_inertial_tensor *
+                                        glm::transpose(world_rotation);
 
       // get linear dampening
       const auto linear_dampening =
