@@ -29,6 +29,7 @@ namespace afk {
   namespace render {
     struct Model;
     struct Mesh;
+    struct WireframeMesh;
     struct Model;
     struct Texture;
     struct ShaderProgram;
@@ -180,6 +181,9 @@ namespace afk {
          */
         auto draw_model(const ModelHandle &model, const ShaderProgramHandle &shader_program,
                         physics::Transform transform) const -> void;
+
+        auto draw_wireframe_mesh(const WireframeMesh &mesh,
+                                 const ShaderProgramHandle &shader_program) const -> void;
 
         /**
          * Sets up the projection and view matrices.

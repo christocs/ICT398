@@ -64,7 +64,7 @@ namespace afk {
           Tangent,
           Bitangent,
           BoneIndices,
-          BoneWeights
+          BoneWeights,
         };
 
         /** The mesh vertex array object. */

@@ -4,13 +4,19 @@
 #include "afk/debug/Assert.hpp"
 #include "afk/ecs/component/PhysicsComponent.hpp"
 #include "afk/io/Log.hpp"
-#include "afk/io/Time.hpp";
+#include "afk/io/Time.hpp"
+#include "afk/render/WireframeMesh.hpp"
 #include "afk/utility/Visitor.hpp"
+
+using glm::vec3;
+using glm::vec4;
 
 using afk::ecs::component::ColliderComponent;
 using afk::ecs::component::PhysicsComponent;
 using afk::ecs::component::TransformComponent;
 using afk::ecs::system::CollisionSystem;
+using afk::render::Index;
+using afk::render::WireframeMesh;
 
 CollisionSystem::CollisionSystem() {
 
@@ -196,35 +202,55 @@ auto CollisionSystem::instantiate_collider_component(
   }
 }
 
-auto CollisionSystem::get_debug_mesh() -> afk::render::Mesh {
-  afk::render::Mesh mesh     = {};
-  mesh.transform.translation = glm::vec3{0.0f};
+static auto u32_color_to_vec4(u32 color) -> vec4 {
+  constexpr auto red_bits        = u32{0xFF000000};
+  constexpr auto green_bits      = u32{0x00FF0000};
+  constexpr auto blue_bits       = u32{0x0000FF00};
+  constexpr auto alpha_bits      = u32{0x000000FF};
+  constexpr auto max_color_value = static_cast<f32>(0xFF);
 
-  auto debug_renderer = &this->world->getDebugRenderer();
-  auto triangles      = debug_renderer->getTriangles();
+  const auto red   = static_cast<f32>((color & red_bits) >> 24);
+  const auto green = static_cast<f32>((color & green_bits) >> 16);
+  const auto blue  = static_cast<f32>((color & blue_bits) >> 8);
+  const auto alpha = static_cast<f32>(color & alpha_bits);
 
-  // note: some points may be duplicated
-  auto no_vertices = usize{0};
+  return vec4{red / max_color_value, green / max_color_value,
+              blue / max_color_value, alpha / max_color_value};
+}
+
+auto CollisionSystem::get_debug_mesh() -> WireframeMesh {
+  WireframeMesh mesh         = {};
+  mesh.transform.translation = vec3{0.0f};
+
+  const auto vertices_per_triangle = 3;
+  const auto debug_renderer        = &this->world->getDebugRenderer();
+  const auto triangles             = debug_renderer->getTriangles();
+  auto num_vertices                = usize{0};
+
+  // Note: some points may be duplicated
+
   for (auto i = usize{0}; i < triangles.size(); ++i) {
-    auto vertex1     = afk::render::Vertex{};
-    vertex1.position = glm::vec3{triangles[i].point1.x, triangles[i].point1.y,
-                                 triangles[i].point1.z};
-    mesh.vertices.push_back(vertex1);
-    auto vertex2     = afk::render::Vertex{};
-    vertex2.position = glm::vec3{triangles[i].point2.x, triangles[i].point2.y,
-                                 triangles[i].point2.z};
-    mesh.vertices.push_back(vertex2);
-    auto vertex3     = afk::render::Vertex{};
-    vertex3.position = glm::vec3{triangles[i].point3.x, triangles[i].point3.y,
-                                 triangles[i].point3.z};
-    mesh.vertices.push_back(vertex3);
+    const auto &t = triangles[static_cast<u32>(i)];
 
-    mesh.indices.emplace_back(no_vertices);
-    ++no_vertices;
-    mesh.indices.emplace_back(no_vertices);
-    ++no_vertices;
-    mesh.indices.emplace_back(no_vertices);
-    ++no_vertices;
+    const auto v1 =
+        WireframeMesh::Vertex{.position = {t.point1.x, t.point1.y, t.point1.z},
+                              .color    = u32_color_to_vec4(t.color1)};
+    const auto v2 =
+        WireframeMesh::Vertex{.position = {t.point2.x, t.point2.y, t.point2.z},
+                              .color    = u32_color_to_vec4(t.color2)};
+
+    const auto v3 =
+        WireframeMesh::Vertex{.position = {t.point3.x, t.point3.y, t.point3.z},
+                              .color    = u32_color_to_vec4(t.color3)};
+
+    mesh.vertices.push_back(v1);
+    mesh.vertices.push_back(v2);
+    mesh.vertices.push_back(v3);
+
+    for (auto j = num_vertices; j < num_vertices + vertices_per_triangle; ++j) {
+      mesh.indices.push_back(static_cast<Index>(num_vertices));
+      ++num_vertices;
+    }
   }
 
   return mesh;

@@ -76,30 +76,9 @@ auto Engine::render() -> void {
 
   if (this->display_debug_physics_mesh) {
     auto debug_mesh = this->collision_system.get_debug_mesh();
-    if (!debug_mesh.vertices.empty()) {
-      const auto old_wireframe_status = this->renderer.get_wireframe();
-      if (!old_wireframe_status) {
-        this->renderer.set_wireframe(true);
-      }
-      static int debug_mesh_count = 0;
-
-      auto debug_mesh_model = render::Model();
-      ++debug_mesh_count;
-      debug_mesh_model.meshes = {std::move(debug_mesh)};
-      debug_mesh_model.file_path =
-          afk::io::get_resource_path().string() + "/debug/";
-      debug_mesh_model.file_path =
-          debug_mesh_model.file_path.string() + std::to_string(debug_mesh_count);
-
-      auto debug_mesh_model_handle = this->renderer.load_model(debug_mesh_model);
-      const auto shader =
-          this->renderer.get_shader_program("res/shader/rp3dmesh.prog");
-      this->renderer.draw_model(debug_mesh_model_handle, shader, mesh_model_transform);
-
-      if (!old_wireframe_status) {
-        this->renderer.set_wireframe(false);
-      }
-    }
+    const auto shader =
+        this->renderer.get_shader_program("res/shader/rp3dmesh.prog");
+    this->renderer.draw_wireframe_mesh(debug_mesh, shader);
   }
 
   this->ui_manager.prepare();

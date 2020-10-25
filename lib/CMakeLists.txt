@@ -30,12 +30,11 @@ endif()
 string(REGEX REPLACE "/W[0-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 # Disable compiler warnings.
-add_compile_options(
-    # Clang
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-w>
-    # Visual Studio
-    $<$<CXX_COMPILER_ID:MSVC>:/W0>
-)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+    add_compile_options(-w -fvisibility=hidden)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options(/W0)
+endif()
 
 # Include our dependencies.
 add_subdirectory(entt EXCLUDE_FROM_ALL)

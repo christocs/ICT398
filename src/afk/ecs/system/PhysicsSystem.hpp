@@ -4,7 +4,7 @@
 
 #include "afk/ecs/component/ColliderComponent.hpp";
 #include "afk/ecs/component/PhysicsComponent.hpp"
-#include "afk/ecs/component/TransformComponent.hpp";
+#include "afk/ecs/component/TransformComponent.hpp"
 #include "afk/event/Event.hpp"
 #include "afk/physics/Transform.hpp"
 #include "afk/physics/shape/Box.hpp"
