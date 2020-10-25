@@ -9,6 +9,7 @@
 #include "afk/ecs/component/ColliderComponent.hpp"
 #include "afk/ecs/component/TransformComponent.hpp"
 #include "afk/render/WireframeMesh.hpp"
+#include "afk/render/Mesh.hpp"
 
 namespace afk {
   namespace ecs {
@@ -60,6 +61,15 @@ namespace afk {
                                   afk::ecs::component::ColliderComponent &collider_component,
                                   const afk::ecs::component::TransformComponent &transform_component)
             -> void;
+
+        /**
+         * Hack to get debug collision data out of reactphysics3d
+         *
+         * @return
+         *
+         * @todo remove this
+         */
+        auto get_regular_debug_mesh() -> afk::render::Mesh;
 
         /**
          * Hack to get debug collision data out of reactphysics3d
