@@ -76,9 +76,11 @@ auto Engine::render() -> void {
 
   if (this->display_debug_physics_mesh) {
     auto debug_mesh = this->collision_system.get_debug_mesh();
-    const auto shader =
-        this->renderer.get_shader_program("res/shader/default.prog");
-    this->renderer.draw_wireframe_mesh(debug_mesh, shader);
+    if (debug_mesh.vertices.size() > 0) {
+      const auto shader =
+          this->renderer.get_shader_program("res/shader/default.prog");
+      this->renderer.draw_wireframe_mesh(debug_mesh, shader);
+    }
   }
 
   this->ui_manager.prepare();
