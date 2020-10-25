@@ -238,21 +238,20 @@ auto CollisionSystem::get_debug_mesh() -> WireframeMesh {
   for (auto i = usize{0}; i < triangles.size(); ++i) {
     const auto &t = triangles[static_cast<u32>(i)];
 
-    const auto v1 = WireframeMesh::Vertex{t.point1.x, t.point1.y, t.point1.z};
-    const auto v2 = WireframeMesh::Vertex{t.point2.x, t.point2.y, t.point2.z};
-    const auto v3 = WireframeMesh::Vertex{t.point3.x, t.point3.y, t.point3.z};
+    const auto v1 =
+        WireframeMesh::Vertex{.position = {t.point1.x, t.point1.y, t.point1.z},
+                              .color    = u32_color_to_vec4(t.color1)};
+    const auto v2 =
+        WireframeMesh::Vertex{.position = {t.point2.x, t.point2.y, t.point2.z},
+                              .color    = u32_color_to_vec4(t.color2)};
 
-    const auto c1 = u32_color_to_vec4(t.color1);
-    const auto c2 = u32_color_to_vec4(t.color2);
-    const auto c3 = u32_color_to_vec4(t.color3);
+    const auto v3 =
+        WireframeMesh::Vertex{.position = {t.point3.x, t.point3.y, t.point3.z},
+                              .color    = u32_color_to_vec4(t.color3)};
 
     mesh.vertices.push_back(v1);
     mesh.vertices.push_back(v2);
     mesh.vertices.push_back(v3);
-
-    mesh.colors.push_back(c1);
-    mesh.colors.push_back(c2);
-    mesh.colors.push_back(c3);
 
     for (auto j = num_vertices; j < num_vertices + vertices_per_triangle; ++j) {
       mesh.indices.push_back(static_cast<Index>(num_vertices));

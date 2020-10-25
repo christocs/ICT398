@@ -9,21 +9,23 @@
 #include "afk/NumericTypes.hpp"
 #include "afk/physics/Transform.hpp"
 #include "afk/render/Index.hpp"
-#include "afk/render/Mesh.hpp"
 
 namespace afk {
   namespace render {
-    struct Vertex {
-      /** The position. */
-      glm::vec3 position = {};
-      glm::vec4 color    = {};
-    };
-
-    /**
-     * Encapsulates a 3D wireframe mesh.
-     */
-
     struct WireframeMesh {
+      /**
+       * Encapsulates a 3D wireframe mesh.
+       */
+      struct Vertex {
+        using Position = glm::vec3;
+        using Color    = glm::vec4;
+
+        /** The vertex position. */
+        Position position = {};
+        /** The vertex color. */
+        Color color = {};
+      };
+
       /** A collection of vertices. */
       using Vertices = std::vector<Vertex>;
       /** A collection of indicies. */

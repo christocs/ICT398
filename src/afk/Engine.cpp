@@ -80,7 +80,7 @@ auto Engine::render() -> void {
     auto debug_mesh = this->collision_system.get_debug_mesh();
     const auto shader =
         this->renderer.get_shader_program("res/shader/rp3dmesh.prog");
-    this->renderer.draw_wireframe_mesh(debug_mesh);
+    this->renderer.draw_wireframe_mesh(debug_mesh, shader);
   }
 
   this->ui_manager.prepare();

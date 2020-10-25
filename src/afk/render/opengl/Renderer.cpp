@@ -64,8 +64,9 @@ using afk::render::opengl::Renderer;
 using afk::render::opengl::ShaderHandle;
 using afk::render::opengl::ShaderProgramHandle;
 using afk::render::opengl::TextureHandle;
-using Color  = afk::render::WireframeMesh::Color;
 using Buffer = afk::render::opengl::MeshHandle::Buffer;
+using Vertex = afk::render::Mesh::Vertex;
+using Color  = afk::render::WireframeMesh::Vertex::Color;
 namespace io = afk::io;
 
 /**
