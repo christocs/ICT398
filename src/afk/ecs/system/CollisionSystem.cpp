@@ -93,9 +93,9 @@ auto CollisionSystem::update() -> void {
   // update translation and rotation in physics world
   // @todo find how to apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
   for (auto &entity : collider_view) {
-    const auto &collider  = collider_view.get<ColliderComponent>(entity);
-    auto &transform = collider_view.get<TransformComponent>(entity);
-    auto &physics   = collider_view.get<PhysicsComponent>(entity);
+    const auto &collider = collider_view.get<ColliderComponent>(entity);
+    auto &transform      = collider_view.get<TransformComponent>(entity);
+    auto &physics        = collider_view.get<PhysicsComponent>(entity);
     afk_assert(this->ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");
     const auto rp3d_body_index = this->ecs_entity_to_rp3d_body_index_map.at(entity);
@@ -247,7 +247,8 @@ auto CollisionSystem::get_debug_mesh() -> WireframeMesh {
     mesh.vertices.push_back(v2);
     mesh.vertices.push_back(v3);
 
-    for (auto j = num_vertices; j < num_vertices + vertices_per_triangle; ++j) {
+    const auto new_vertex_count = num_vertices + vertices_per_triangle;
+    for (auto j = num_vertices; j < new_vertex_count; ++j) {
       mesh.indices.push_back(static_cast<Index>(num_vertices));
       ++num_vertices;
     }
@@ -360,8 +361,7 @@ void CollisionSystem::CollisionEventListener::onContact(
               collider2_transform * contact_point.getLocalPointOnCollider2();
 
           const auto collider1_local_point =
-              glm::vec3{collider1_rp3d_point.x,
-                        collider1_rp3d_point.y,
+              glm::vec3{collider1_rp3d_point.x, collider1_rp3d_point.y,
                         collider1_rp3d_point.z};
           const auto collider2_local_point =
               glm::vec3{collider2_rp3d_point.x, collider2_rp3d_point.y,
