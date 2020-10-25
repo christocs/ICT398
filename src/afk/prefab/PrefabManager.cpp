@@ -52,8 +52,8 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
       const auto &j  = component_json;
       auto component = this->COMPONENT_MAP.at(component_name);
 
-      auto visitor = Visitor{[j](ModelComponent &c) {
-                               c = j.get<ModelComponent>();
+      auto visitor = Visitor{[j](ModelsComponent &c) {
+                               c = j.get<ModelsComponent>();
                              },
                              [j](TransformComponent &c) {
                                c = j.get<TransformComponent>();
@@ -93,13 +93,26 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
 }
 
 auto PrefabManager::initialize_component(const Json &json, Component &component) -> void {
-  auto visitor = Visitor{[json](ModelComponent &c) {
-                           auto &afk = afk::Engine::get();
-                           auto path = afk::io::get_resource_path(
-                               json.at("file_path").get<string>());
-                           c.model_handle = afk.renderer.get_model(path);
-                         },
-                         [](auto) {}};
+  auto visitor = Visitor{
+      [json](ModelsComponent &c) {
+        auto &afk = afk::Engine::get();
+
+        afk_assert(json.is_array(),
+                   "Models component does not contain an array");
+
+        // delete existing items in component
+        c.models.clear();
+
+        // add items from json
+        for (const auto &[_, model_json] : json.items()) {
+          auto j = model_json;
+          const auto path =
+              afk::io::get_resource_path(model_json.at("file_path").get<string>());
+          auto transform = model_json.at("Transform").get<TransformComponent>();
+          c.models.push_back({afk.renderer.get_model(path), std::move(transform)});
+        }
+      },
+      [](auto) {}};
 
   std::visit(visitor, component);
 }
@@ -110,8 +123,8 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
 
   auto entity = registry.create();
 
-  auto visitor = Visitor{[&registry, entity](ModelComponent component) {
-                           registry.emplace<ModelComponent>(entity, component);
+  auto visitor = Visitor{[&registry, entity](ModelsComponent component) {
+                           registry.emplace<ModelsComponent>(entity, component);
                          },
                          [&registry, entity](TransformComponent component) {
                            registry.emplace<TransformComponent>(entity, component);

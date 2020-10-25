@@ -59,7 +59,7 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
         auto component = PrefabManager::COMPONENT_MAP.at(component_name);
 
         auto visitor = Visitor{
-            [j](ModelComponent &c) { c = j.get<ModelComponent>(); },
+            [j](ModelsComponent &c) { c = j.get<ModelsComponent>(); },
             [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
             [j](ColliderComponent &c) { c = j.get<ColliderComponent>(); },
             [j, components_json_ref = std::ref(components_json), &prefab,

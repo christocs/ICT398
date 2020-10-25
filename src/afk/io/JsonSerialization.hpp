@@ -45,7 +45,8 @@ namespace afk {
   namespace ecs {
     namespace component {
       NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TransformComponent, translation, scale, rotation)
-      auto from_json(const afk::io::Json &j, ModelComponent &c) -> void;
+      auto from_json(const afk::io::Json &j, Model &c) -> void;
+      auto from_json(const afk::io::Json &j, ModelsComponent &c) -> void;
       auto from_json(const afk::io::Json &j, ColliderComponent::Collider &c) -> void;
       auto from_json(const afk::io::Json &j, ColliderComponent &c) -> void;
       auto from_json(const afk::io::Json &j, PhysicsComponent &c) -> void;

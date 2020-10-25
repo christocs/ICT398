@@ -56,7 +56,13 @@ namespace glm {
 namespace afk {
   namespace ecs {
     namespace component {
-      auto from_json(const Json &j, ModelComponent &c) -> void {}
+      auto from_json(const Json &j, Model &c) -> void {
+        c.transform = j.at("Transform").get<TransformComponent>();
+      }
+
+      auto from_json(const Json &j, ModelsComponent &c) -> void {
+        c.models = j.get<std::vector<Model>>();
+      }
 
       auto from_json(const Json &j, ColliderComponent::Collider &c) -> void {
         c.transform = j.at("Transform").get<TransformComponent>();

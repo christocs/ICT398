@@ -25,7 +25,7 @@ namespace afk {
       static constexpr const auto *PREFAB_PATH = u8"res/prefab";
       /** The map of known component names to components. */
       static inline const auto COMPONENT_MAP =
-          ComponentMap{{"Model", afk::ecs::component::ModelComponent{}},
+          ComponentMap{{"Models", afk::ecs::component::ModelsComponent{}},
                        {"Transform", afk::ecs::component::TransformComponent{}},
                        {"Collider", afk::ecs::component::ColliderComponent{}},
                        {"Physics", afk::ecs::component::PhysicsComponent{}}};
