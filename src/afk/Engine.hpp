@@ -123,7 +123,7 @@ namespace afk {
     bool display_debug_physics_mesh = false;
 
     // todo move this to a physics class of some sort
-    bool gravity_enabled = true;
+    bool gravity_enabled = false;
 
     // todo move this to a physics class of some sort
     glm::vec3 gravity = {0.0f, -9.81f, 0.0f};
