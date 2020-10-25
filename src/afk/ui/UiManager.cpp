@@ -127,31 +127,31 @@ auto UiManager::draw_menu_bar() -> void {
     }
 
     if (ImGui::BeginMenu("Tools")) {
-      if (ImGui::MenuItem("Log")) {
-        this->show_log = true;
+      if (ImGui::MenuItem("Log", nullptr, this->show_log)) {
+        this->show_log = !this->show_log;
       }
-      if (ImGui::MenuItem("Model viewer")) {
-        this->show_model_viewer = true;
+      if (ImGui::MenuItem("Model viewer", nullptr, this->show_model_viewer)) {
+        this->show_model_viewer = !this->show_model_viewer;
       }
-      if (ImGui::MenuItem("Toggle Gravity")) {
-        afk::Engine::get().gravity_enabled = !afk::Engine::get().gravity_enabled;
+      if (ImGui::MenuItem("Toggle Gravity", nullptr, afk.gravity_enabled)) {
+        afk.gravity_enabled = !afk.gravity_enabled;
       }
-      if (ImGui::MenuItem("Toggle Wireframe")) {
-        afk::Engine::get().renderer.set_wireframe(!afk::Engine::get().renderer.get_wireframe());
+      if (ImGui::MenuItem("Toggle Wireframe", nullptr, afk.renderer.get_wireframe())) {
+        afk.renderer.set_wireframe(!afk.renderer.get_wireframe());
       }
-      if (ImGui::MenuItem("Toggle Debug Physics Mesh")) {
-        afk::Engine::get().display_debug_physics_mesh =
-            !afk::Engine::get().display_debug_physics_mesh;
+      if (ImGui::MenuItem("Toggle Debug Physics Mesh", nullptr, afk.display_debug_physics_mesh)) {
+        afk.display_debug_physics_mesh =
+            !afk.display_debug_physics_mesh;
       }
       ImGui::EndMenu();
     }
 
     if (ImGui::BeginMenu("Help")) {
-      if (ImGui::MenuItem("About")) {
-        this->show_about = true;
+      if (ImGui::MenuItem("About", nullptr, this->show_about)) {
+        this->show_about = !this->show_about;
       }
-      if (ImGui::MenuItem("Imgui")) {
-        this->show_imgui = true;
+      if (ImGui::MenuItem("Imgui", nullptr, this->show_imgui)) {
+        this->show_imgui = !this->show_imgui;
       }
 
       ImGui::EndMenu();
