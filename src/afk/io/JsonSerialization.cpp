@@ -118,10 +118,6 @@ namespace afk {
             c.angular_velocity = glm::vec3{0.0f};
           }
 
-          // initialise velocities to 0
-          c.linear_velocity  = glm::vec3{0.0f};
-          c.angular_velocity = glm::vec3{0.0f};
-
           // initialise external forces/torque to 0
           c.external_forces  = glm::vec3{0.0f};
           c.external_torques = glm::vec3{0.0f};
