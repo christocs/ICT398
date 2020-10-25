@@ -83,9 +83,10 @@ auto CollisionSystem::on_collider_destroy(afk::ecs::Registry &registry,
 }
 
 auto CollisionSystem::update() -> void {
-  auto &registry = afk::Engine::get().ecs.registry;
-  // not having a PhysicsComponent means the entity is 'static', so ones with a PhysicsComponent are 'dynamic'
-  // so here we are only updating rigid bodies that are dynamic
+  auto &afk      = afk::Engine::get();
+  auto &registry = afk.ecs.registry;
+  // not having a PhysicsComponent means that no physics are applied to it and it does not affect physics of other entities
+  // here we are only updating physics items
   auto collider_view =
       registry.view<ColliderComponent, TransformComponent, PhysicsComponent>();
 
@@ -93,7 +94,8 @@ auto CollisionSystem::update() -> void {
   // @todo find how to apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
   for (auto &entity : collider_view) {
     const auto &collider  = collider_view.get<ColliderComponent>(entity);
-    const auto &transform = collider_view.get<TransformComponent>(entity);
+    auto &transform = collider_view.get<TransformComponent>(entity);
+    auto &physics   = collider_view.get<PhysicsComponent>(entity);
     afk_assert(this->ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");
     const auto rp3d_body_index = this->ecs_entity_to_rp3d_body_index_map.at(entity);
@@ -106,16 +108,24 @@ auto CollisionSystem::update() -> void {
                          transform.rotation.z, transform.rotation.w));
 
     rp3d_body->setTransform(rp3d_transform);
+
+    // update interia tensor
+    const auto world_rotation = glm::mat3_cast(transform.rotation);
+    physics.inverse_inertial_tensor = world_rotation * physics.inverse_inertial_tensor *
+                                      glm::transpose(world_rotation);
+
+    // normalize rotation
+    transform.rotation = glm::normalize(transform.rotation);
   }
 
   // update React3DPhysics world
   // this method calls to update the debug render data
   // this method fires collision events
   // this method also unnecessarily does physics calculations for any rigid bodies, though none should be created in the game engine
-  this->world->update(afk::Engine::get().get_delta_time());
+  this->world->update(afk.get_delta_time());
 }
 
-auto CollisionSystem::instantiate_collider(
+auto CollisionSystem::instantiate_collider_component(
     const afk::ecs::Entity &entity, afk::ecs::component::ColliderComponent &collider_component,
     const afk::ecs::component::TransformComponent &transform_component) -> void {
   // check if entity has already had a collider component loaded
@@ -158,12 +168,7 @@ auto CollisionSystem::instantiate_collider(
       "ReactPhysics body id has already being mapped to an AFK ECS Entity");
   this->rp3d_body_id_to_ecs_entity_map.insert({body->getEntity().id, entity});
 
-  // add all colliders to rp3d collision body and start calculating the average center of mass
-  collider_component.center_of_mass = glm::vec3{0.0f};
   for (const auto &collision_body : collider_component.colliders) {
-    // accumulate center of mass
-    collider_component.center_of_mass += collision_body.center_of_mass;
-
     // combine collider transform scale with parent transform
     // need to apply parent scale at the shape level, as scale cannot be applied to the parent body level
     auto collision_transform = collision_body.transform;
@@ -191,20 +196,9 @@ auto CollisionSystem::instantiate_collider(
           body->addCollider(this->create_shape_sphere(shape, collision_transform.scale),
                             rp3d_transform);
         },
-        [this, &collision_transform, &rp3d_transform, &body](afk::physics::shape::Capsule shape) {
-          // add rp3d shape and rp3d transform to collider
-          body->addCollider(
-              this->create_shape_capsule(shape, collision_transform.scale), rp3d_transform);
-        },
         [](auto) { afk_unreachable(); }};
 
     std::visit(visitor, collision_body.shape);
-  }
-
-  // calculate average center of mass after all the individual colliders'
-  // centers of mass have been accumulated no point in dividing by 0 or 1
-  if (collider_component.colliders.size() > 1) {
-    collider_component.center_of_mass /= collider_component.colliders.size();
   }
 }
 
@@ -310,12 +304,6 @@ rp3d::SphereShape *CollisionSystem::create_shape_sphere(const afk::physics::shap
   return this->physics_common.createSphereShape(sphere * scale_factor);
 }
 
-rp3d::CapsuleShape *CollisionSystem::create_shape_capsule(const afk::physics::shape::Capsule &capsule,
-                                                          const glm::vec3 &scale) {
-  return this->physics_common.createCapsuleShape(
-      capsule.radius * ((scale.x + scale.y) / 2.0f), capsule.height * scale.y);
-}
-
 void CollisionSystem::CollisionEventListener::onContact(
     const rp3d::CollisionCallback::CallbackData &callback_data) {
   // On collision event, there will be two colliders colliding
@@ -344,48 +332,50 @@ void CollisionSystem::CollisionEventListener::onContact(
 
     // check that the colliders do not belong to the same entity in react physics 3d
     if (object1 != object2) {
-      // entities without physics components are considered to be static
-      // if both objects are static, don't bother to fire an event
-      if (registry.has<PhysicsComponent>(object1) ||
-          registry.has<PhysicsComponent>(object2)) {
 
-        auto &event_manager = engine.event_manager;
+      auto &event_manager = engine.event_manager;
 
-        // fire collision events
-        // note that if a collision body is "sleeping" in reactphysics3d, a
-        // collision event of type ContactStay will not fire at the moment,
-        // "sleeping" is disabled treat contact enter and contact stay as "impulses"
+      // fire collision events
+      // note that if a collision body is "sleeping" in reactphysics3d, a
+      // collision event of type ContactStay will not fire at the moment,
+      // "sleeping" is disabled treat contact enter and contact stay as "impulses"
 
-        if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
-            contact_pair.getEventType() ==
-                CollisionCallback::ContactPair::EventType::ContactStay) {
-          auto data = afk::event::Event::Collision{object1, object2, {}};
+      if (contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStart ||
+          contact_pair.getEventType() == CollisionCallback::ContactPair::EventType::ContactStay) {
+        auto data = afk::event::Event::Collision{object1, object2, {}};
 
-          afk_assert(contact_pair.getNbContactPoints() > 0,
-                     "No contact points found on collision");
+        afk_assert(contact_pair.getNbContactPoints() > 0,
+                   "No contact points found on collision");
 
-          data.contacts.reserve(contact_pair.getNbContactPoints());
-          for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
-            const auto &contact_point = contact_pair.getContactPoint(i);
-            const auto collider1_local_point =
-                glm::vec3{contact_point.getLocalPointOnCollider1().x,
-                          contact_point.getLocalPointOnCollider1().y,
-                          contact_point.getLocalPointOnCollider1().z};
-            const auto collider2_local_point =
-                glm::vec3{contact_point.getLocalPointOnCollider2().x,
-                          contact_point.getLocalPointOnCollider2().y,
-                          contact_point.getLocalPointOnCollider2().z};
-            const auto contact_normal = glm::vec3{contact_point.getWorldNormal().x,
-                                                  contact_point.getWorldNormal().y,
-                                                  contact_point.getWorldNormal().z};
+        data.contacts.reserve(contact_pair.getNbContactPoints());
+        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
+          const auto &contact_point = contact_pair.getContactPoint(i);
+          const auto collider1_transform =
+              contact_pair.getCollider1()->getLocalToWorldTransform();
+          const auto collider2_transform =
+              contact_pair.getCollider2()->getLocalToWorldTransform();
+          const auto collider1_rp3d_point =
+              collider1_transform * contact_point.getLocalPointOnCollider1();
+          const auto collider2_rp3d_point =
+              collider2_transform * contact_point.getLocalPointOnCollider2();
 
-            data.contacts.push_back(afk::event::Event::Collision::Contact{
-                collider1_local_point, collider2_local_point, contact_normal,
-                contact_point.getPenetrationDepth()});
-          }
+          const auto collider1_local_point =
+              glm::vec3{collider1_rp3d_point.x,
+                        collider1_rp3d_point.y,
+                        collider1_rp3d_point.z};
+          const auto collider2_local_point =
+              glm::vec3{collider2_rp3d_point.x, collider2_rp3d_point.y,
+                        collider2_rp3d_point.z};
+          const auto contact_normal = glm::vec3{contact_point.getWorldNormal().x,
+                                                contact_point.getWorldNormal().y,
+                                                contact_point.getWorldNormal().z};
 
-          event_manager.push_event(afk::event::Event{data, afk::event::Event::Type::Collision});
+          data.contacts.push_back(afk::event::Event::Collision::Contact{
+              collider1_local_point, collider2_local_point, contact_normal,
+              contact_point.getPenetrationDepth()});
         }
+
+        event_manager.push_event(afk::event::Event{data, afk::event::Event::Type::Collision});
       }
     }
   }

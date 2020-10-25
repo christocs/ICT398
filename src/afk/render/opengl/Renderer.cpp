@@ -270,17 +270,8 @@ auto Renderer::draw_model(const ModelHandle &model, const ShaderProgramHandle &s
       this->bind_texture(mesh.textures[i]);
     }
 
-    auto model_matrix = mat4{1.0f};
-
-    // Apply parent tranformation.
-    model_matrix = glm::translate(model_matrix, transform.translation);
-    model_matrix *= glm::mat4_cast(transform.rotation);
-    model_matrix = glm::scale(model_matrix, transform.scale);
-
-    // Apply local transformation.
-    model_matrix = glm::translate(model_matrix, mesh.transform.translation);
-    model_matrix *= glm::mat4_cast(mesh.transform.rotation);
-    model_matrix = glm::scale(model_matrix, mesh.transform.scale);
+    // Get parent transform as 4x4 matrix
+    auto model_matrix = transform.combined_transform_to_mat4(mesh.transform);
 
     this->set_uniform(shader_program, "u_matrices.model", model_matrix);
 

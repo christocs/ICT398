@@ -1,10 +1,11 @@
 #pragma once
 
 #include <variant>
+#include <vector>
 
 #include <glm/glm.hpp>
+#include "afk/NumericTypes.hpp"
 #include "afk/physics/shape/Box.hpp"
-#include "afk/physics/shape/Capsule.hpp"
 #include "afk/physics/shape/Sphere.hpp"
 #include "afk/physics/Transform.hpp"
 
@@ -17,7 +18,7 @@ namespace afk {
       struct ColliderComponent {
         /** Collision shape variant definition, defining the possible physics shapes of a collider */
         using ColliderShape =
-            std::variant<afk::physics::shape::Box, afk::physics::shape::Sphere, afk::physics::shape::Capsule>;
+            std::variant<afk::physics::shape::Box, afk::physics::shape::Sphere>;
 
         /** A collider body is made up of a collision body as well as a transform local to the entity */
         struct Collider {
@@ -25,8 +26,8 @@ namespace afk {
           ColliderShape shape                = {};
           /** Transform within local space of the entity */
           afk::physics::Transform transform = {};
-          /** center of mass of the collider within the local space of the entity */
-          glm::vec3 center_of_mass = glm::vec3{0.0f};
+          /** Mass of the collider */
+          f32 mass = {};
         };
 
         /** Defining a collection of colliders */
@@ -34,18 +35,6 @@ namespace afk {
 
         /** Collecition of colliders for the entity */
         ColliderCollection colliders = {};
-
-        /**
-         * Average center of mass derrived from each collider's center of mass
-         * 
-         * @todo consider moving this to the PhysicsComponent, as this value is unused for static rigid bodies
-         */
-        glm::vec3 center_of_mass = glm::vec3{0.0f};
-
-        /** inertial tensor */
-        glm::mat3x3 inertial_tensor = glm::mat3x3{1.0f};
-        /** inverse inertial tensor */
-        glm::mat3x3 inverse_inertial_tensor = glm::mat3x3{1.0f};
       };
     }
   }

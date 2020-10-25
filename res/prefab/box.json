@@ -1,5 +1,5 @@
 {
-  "name": "city",
+  "name": "box",
   "components": {
     "Transform": {
       "translation": {
@@ -19,14 +19,16 @@
       }
     },
     "Model": {
-      "file_path": "res/model/city/city.fbx"
+      "file_path": "res/model/box/box.obj"
     },
     "Collider": {
       "Colliders": [
         {
           "Shape": {
-            "type": "sphere",
-            "radius": 3.0
+            "type": "box",
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
           },
           "Transform": {
             "translation": {
@@ -45,12 +47,19 @@
               "z": 0.0
             }
           },
-          "mass": 9999
+          "mass": 50.0
         }
       ]
     },
     "Physics": {
-      "is_static": true
+      "is_static": false,
+      "linear_dampening": 0.0,
+      "angular_dampening": 0.0,
+      "linear_velocity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
     }
   }
 }

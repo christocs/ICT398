@@ -3,6 +3,7 @@
 #include "afk/io/Json.hpp"
 #include "afk/physics/Transform.hpp"
 #include "afk/render/Renderer.hpp"
+#include "afk/render/Model.hpp"
 
 namespace afk {
   namespace ecs {

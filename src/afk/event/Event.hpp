@@ -77,10 +77,10 @@ namespace afk {
       struct Collision {
         /** Representation of a single contact in a collision */
         struct Contact {
-          /** Point of contact on collider 1 in the collider's local space */
-          glm::vec3 collider1_local_point;
-          /** Point of contact on collider 2 in the collider's local space */
-          glm::vec3 collider2_local_point;
+          /** Point of contact on collider 1 in world space */
+          glm::vec3 collider1_point;
+          /** Point of contact on collider 2 in world space */
+          glm::vec3 collider2_point;
           /** normal of contact from the first to second body relative to the world space */
           glm::vec3 normal;
           /** get penetration depth of the collision */

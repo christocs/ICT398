@@ -48,6 +48,7 @@ auto Engine::initialize() -> void {
   this->event_manager.initialize(this->renderer.window);
   this->ui_manager.initialize(this->renderer.window);
   this->collision_system.initialize();
+  this->physics_system.initialize();
   this->prefab_manager.initialize();
   this->scene_manager.initialize();
 
@@ -61,11 +62,8 @@ auto Engine::initialize() -> void {
         this->move_keyboard(event);
       }});
 
-  this->event_manager.register_event(
-      Event::Type::Collision,
-      event::EventManager::Callback{ecs::system::PhysicsSystem::collision_resolution_callback});
 
-  this->scene_manager.instantiate_scene("default");
+  this->last_update = afk::Engine::get_time();
 }
 
 auto Engine::render() -> void {
@@ -90,6 +88,8 @@ auto Engine::render() -> void {
 }
 
 auto Engine::update() -> void {
+  // Update physics before running collisions
+  this->physics_system.update();
   this->collision_system.update();
   this->ecs.system_manager.update();
   this->event_manager.pump_events();
