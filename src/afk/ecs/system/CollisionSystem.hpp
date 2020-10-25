@@ -8,7 +8,7 @@
 #include "afk/ecs/Registry.hpp"
 #include "afk/ecs/component/ColliderComponent.hpp"
 #include "afk/ecs/component/TransformComponent.hpp"
-#include "afk/render/Mesh.hpp"
+#include "afk/render/WireframeMesh.hpp"
 
 namespace afk {
   namespace ecs {
@@ -68,7 +68,7 @@ namespace afk {
          *
          * @todo remove this
          */
-        auto get_debug_mesh() -> afk::render::Mesh;
+        auto get_debug_mesh() -> afk::render::WireframeMesh;
 
       private:
         /** Is the CollisionSystem initialized? */

@@ -2,9 +2,8 @@
 
 #include "afk/NumericTypes.hpp"
 #include "afk/debug/Assert.hpp"
-#include "afk/NumericTypes.hpp"
 
-using afk::render::Vertex;
+using Vertex = afk::render::Mesh::Vertex;
 
 auto Vertex::push_back_bone(Index bone_index, f32 bone_weight) -> void {
   auto found_empty_element = false;

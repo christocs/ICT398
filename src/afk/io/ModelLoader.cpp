@@ -46,7 +46,7 @@ using afk::render::Bone;
 using afk::render::Mesh;
 using afk::render::Model;
 using afk::render::Texture;
-using afk::render::Vertex;
+using Vertex = afk::render::Mesh::Vertex;
 
 /** The assimp importer options to use. */
 constexpr unsigned ASSIMP_OPTIONS =
