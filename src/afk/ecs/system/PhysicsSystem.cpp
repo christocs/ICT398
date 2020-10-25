@@ -50,25 +50,26 @@ auto PhysicsSystem::update() -> void {
     // skip anything that is static
     if (!physics.is_static) {
 
+      // get linear dampening
+      const auto linear_dampening =
+          std::clamp(std::pow(1.0f - physics.linear_dampening, dt), 0.0f, 1.0f);
+
+      // get angular dampening
+      const auto angular_dampening =
+          std::clamp(std::pow(1.0f - physics.angular_dampening, dt), 0.0f, 1.0f);
+
       // integrate gravity acceleration
       if (afk.gravity_enabled) {
-        physics.linear_velocity += dt * afk.gravity;
+        physics.linear_velocity += dt * afk.gravity * linear_dampening;
       }
 
       // integrate linear velocity
       // a = F/m
-      physics.linear_velocity += dt * physics.total_inverse_mass * physics.external_forces;
+      physics.linear_velocity += dt * physics.total_inverse_mass *
+                                 physics.external_forces * linear_dampening;
 
       // integrate angular velocity
-      physics.angular_velocity += dt * physics.external_torques;
-
-      // apply linear dampening
-      const auto linear_dampening = std::pow(1.0f - physics.linear_dampening, dt);
-      physics.linear_velocity *= linear_dampening;
-
-      // apply angular dampening
-      const auto angular_dampening = std::pow(1.0f - physics.angular_dampening, dt);
-      physics.angular_velocity *= angular_dampening;
+      physics.angular_velocity += dt * physics.external_torques * angular_dampening;
 
       // apply velocity to translation AFTER it has been calculated for semi-implicit euler integration
       transform.translation += physics.linear_velocity * dt;
