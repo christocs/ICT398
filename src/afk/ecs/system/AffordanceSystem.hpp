@@ -9,7 +9,7 @@ namespace afk {
       struct AffordanceSystem {
         //...
         static auto update() -> void;
-      }
+      };
     }
   }
 }

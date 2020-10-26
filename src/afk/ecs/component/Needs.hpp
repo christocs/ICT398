@@ -1,25 +1,33 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
+using std::string;
+
 namespace afk {
   namespace ecs {
     namespace component {
       // Represents both needs and the affordances to sate these needs
       struct Needs {
         /**
-         * rest - 0-1
+         * rest
          */
-        float sit = 0;
+        const static string sit;
         /**
-         * hunger - 0-1
+         * hunger
          */
-        float eat = 0;
+        const static string eat;
         /**
-         * sudden urge for violence - 0-1
+         * sudden urge for violence
          */
-        float kick = 0;
+        const static string kick;
+
+        std::unordered_map<string, float> need;
 
         Needs &operator-=(const Needs &right);
         Needs &operator+=(const Needs &right);
+        float operator[](const string &index);
       };
     }
   }
