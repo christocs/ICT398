@@ -15,9 +15,9 @@ namespace afk {
          */
         const static string sit;
         /**
-         * hunger
+         * hold
          */
-        const static string eat;
+        const static string grab;
         /**
          * sudden urge for violence
          */

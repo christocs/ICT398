@@ -6,7 +6,7 @@ using afk::ecs::component::Needs;
 
 const string Needs::sit  = "sit";
 const string Needs::kick = "kick";
-const string Needs::eat  = "eat";
+const string Needs::grab = "grab";
 
 Needs &Needs::operator-=(const Needs &right) {
   for (auto rkvp : right.need) {
