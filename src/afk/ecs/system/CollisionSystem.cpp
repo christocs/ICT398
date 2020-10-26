@@ -118,11 +118,12 @@ auto CollisionSystem::update() -> void {
   const auto camera_front = afk.camera.get_front();
   const auto camera_front_rp3d =
       rp3d::Vector3(camera_front.x, camera_front.y, camera_front.z);
-  const auto raycast_start = camera_front * afk.camera.get_near();
-  const auto raycast_end   = camera_front * afk.camera.get_far();
+  const auto camera_pos      = afk.camera.get_position();
+  const auto camera_pos_rp3d =
+      rp3d::Vector3(camera_pos.x, camera_pos.y, camera_pos.z);
 
-  auto camera_ray = rp3d::Ray(camera_front_rp3d * afk.camera.get_near(),
-                              camera_front_rp3d * afk.camera.get_far());
+  auto camera_ray = rp3d::Ray(camera_front_rp3d * afk.camera.get_near() + camera_pos_rp3d,
+                              camera_front_rp3d * afk.camera.get_far() + camera_pos_rp3d);
 
   // populate raycast info
   this->world->raycast(camera_ray, &raycast_callback);
