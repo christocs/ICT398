@@ -17,6 +17,8 @@ namespace afk {
          * sudden urge for violence
          */
         float kick = 0;
+
+        Needs &operator-=(const Needs &right);
       };
     }
   }
