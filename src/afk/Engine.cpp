@@ -61,7 +61,14 @@ auto Engine::initialize() -> void {
       Event::Type::KeyDown, event::EventManager::Callback{[this](Event event) {
         this->move_keyboard(event);
       }});
-
+  this->event_manager.register_event(
+      Event::Type::KeyUp, event::EventManager::Callback{[this](Event event) {
+        this->move_keyboard(event);
+      }});
+  this->event_manager.register_event(Event::Type::KeyRepeat,
+                                     event::EventManager::Callback{[this](Event event) {
+                                       this->move_keyboard(event);
+                                     }});
 
   this->last_update = afk::Engine::get_time();
 }
@@ -74,7 +81,7 @@ auto Engine::render() -> void {
   mesh_model_transform.translation = glm::vec3{0.0f, 0.0f, 0.0f};
   mesh_model_transform.rotation    = glm::identity<glm::quat>();
 
-  //if (this->display_debug_physics_mesh) {
+  // if (this->display_debug_physics_mesh) {
   //  auto debug_mesh = this->collision_system.get_debug_mesh();
   //  if (debug_mesh.vertices.size() > 0) {
   //    const auto shader =
@@ -83,7 +90,7 @@ auto Engine::render() -> void {
   //  }
   //}
 
-    if (this->display_debug_physics_mesh) {
+  if (this->display_debug_physics_mesh) {
     auto debug_mesh = this->collision_system.get_regular_debug_mesh();
     if (!debug_mesh.vertices.empty()) {
       const auto old_wireframe_status = this->renderer.get_wireframe();
@@ -118,6 +125,20 @@ auto Engine::render() -> void {
 }
 
 auto Engine::update() -> void {
+  const auto dt = this->get_delta_time();
+  if (this->camera.get_key(render::Camera::Movement::Forward)) {
+    this->camera.handle_key(render::Camera::Movement::Forward, dt);
+  }
+  if (this->camera.get_key(render::Camera::Movement::Left)) {
+    this->camera.handle_key(render::Camera::Movement::Left, dt);
+  }
+  if (this->camera.get_key(render::Camera::Movement::Right)) {
+    this->camera.handle_key(render::Camera::Movement::Right, dt);
+  }
+  if (this->camera.get_key(render::Camera::Movement::Backward)) {
+    this->camera.handle_key(render::Camera::Movement::Backward, dt);
+  }
+
   // Update physics before running collisions
   this->physics_system.update();
   this->collision_system.update();
@@ -184,11 +205,45 @@ auto Engine::move_mouse(Event event) -> void {
 auto Engine::move_keyboard(Event event) -> void {
   const auto key = std::get<Event::Key>(event.data).key;
 
-  if (event.type == Event::Type::KeyDown && key == GLFW_KEY_ESCAPE) {
-    this->exit();
-  } else if (event.type == Event::Type::KeyDown && key == GLFW_KEY_GRAVE_ACCENT) {
-    this->ui_manager.show_menu = !this->ui_manager.show_menu;
-  } else if (event.type == Event::Type::KeyDown && key == GLFW_KEY_1) {
-    this->renderer.set_wireframe(!this->renderer.get_wireframe());
+  afk::io::log << "event type " << static_cast<int>(event.type) << "\n";
+
+  // proccess key down events
+  if (event.type == Event::Type::KeyDown) {
+    if (key == GLFW_KEY_ESCAPE) {
+      this->exit();
+    } else if (key == GLFW_KEY_GRAVE_ACCENT) {
+      this->ui_manager.show_menu = !this->ui_manager.show_menu;
+    } else if (key == GLFW_KEY_1) {
+      this->renderer.set_wireframe(!this->renderer.get_wireframe());
+    }
+
+    if (key == GLFW_KEY_W) {
+      this->camera.set_key(render::Camera::Movement::Forward, true);
+    }
+    if (key == GLFW_KEY_A) {
+      this->camera.set_key(render::Camera::Movement::Left, true);
+    }
+    if (key == GLFW_KEY_S) {
+      this->camera.set_key(render::Camera::Movement::Backward, true);
+    }
+    if (key == GLFW_KEY_D) {
+      this->camera.set_key(render::Camera::Movement::Right, true);
+    }
+  }
+
+  // process events on key being released
+  if (event.type == Event::Type::KeyUp) {
+    if (key == GLFW_KEY_W) {
+      this->camera.set_key(render::Camera::Movement::Forward, false);
+    }
+    if (key == GLFW_KEY_A) {
+      this->camera.set_key(render::Camera::Movement::Left, false);
+    }
+    if (key == GLFW_KEY_S) {
+      this->camera.set_key(render::Camera::Movement::Backward, false);
+    }
+    if (key == GLFW_KEY_D) {
+      this->camera.set_key(render::Camera::Movement::Right, false);
+    }
   }
 }
