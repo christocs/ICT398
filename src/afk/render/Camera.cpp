@@ -90,3 +90,11 @@ auto Camera::set_position(glm::vec3 v) -> void {
 auto Camera::set_angles(glm::vec2 v) -> void {
   this->angles = v;
 }
+
+auto Camera::get_key(Movement movement) -> bool {
+  return this->key_states.at(movement);
+}
+
+auto Camera::set_key(Movement movement, bool down) -> void {
+  this->key_states.at(movement) = down;
+}

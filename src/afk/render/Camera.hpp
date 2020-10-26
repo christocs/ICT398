@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <unordered_map>
 
 #include "afk/NumericTypes.hpp"
 
@@ -33,6 +34,22 @@ namespace afk {
        * @param dt The delta time.
        */
       auto handle_key(Movement movement, f32 dt) -> void;
+
+      /**
+       * Determines if a key is currently being pressed
+       *
+       * @param movement The movement type.
+       * @param dt The delta time.
+       */
+      auto get_key(Movement movement) -> bool;
+
+      /**
+       * Sets if a key is currently being pressed
+       *
+       * @param movement The movement type.
+       * @param dt The delta time.
+       */
+      auto set_key(Movement movement, bool down) -> void;
 
       /**
        * Returns the view matrix.
@@ -115,6 +132,13 @@ namespace afk {
       glm::vec2 angles = {};
       /** The position. */
       glm::vec3 position = {};
+
+      using KeyStates = std::unordered_map<Movement, bool>;
+      /** Movement key states */
+      KeyStates key_states = {{Movement::Forward, false},
+                              {Movement::Left, false},
+                              {Movement::Right, false},
+                              {Movement::Backward, false}};
     };
   }
 }
