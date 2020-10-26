@@ -91,10 +91,26 @@ auto Camera::set_angles(glm::vec2 v) -> void {
   this->angles = v;
 }
 
-auto Camera::get_key(Movement movement) -> bool {
+auto Camera::get_key(Movement movement) const -> bool {
   return this->key_states.at(movement);
 }
 
 auto Camera::set_key(Movement movement, bool down) -> void {
   this->key_states.at(movement) = down;
+}
+
+auto Camera::get_near() const -> f32 {
+  return this->near;
+}
+
+auto Camera::get_far() const -> f32 {
+  return this->far;
+}
+
+auto Camera::set_raycast_entity(OptionalEntity entity) -> void {
+  this->raycast_entity = entity;
+}
+
+auto Camera::get_raycast_entity() const -> OptionalEntity {
+  return this->raycast_entity;
 }

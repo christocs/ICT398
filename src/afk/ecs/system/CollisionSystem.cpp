@@ -85,10 +85,9 @@ auto CollisionSystem::on_collider_destroy(afk::ecs::Registry &registry,
 auto CollisionSystem::update() -> void {
   auto &afk      = afk::Engine::get();
   auto &registry = afk.ecs.registry;
-  
+
   // update every collider component, regardless if it has a physics component or not (transform for an entity may need to be moved regardless)
-  auto collider_view =
-      registry.view<ColliderComponent, TransformComponent>();
+  auto collider_view = registry.view<ColliderComponent, TransformComponent>();
 
   // update translation and rotation in react physics 3d representation
   // @todo apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
@@ -110,6 +109,49 @@ auto CollisionSystem::update() -> void {
 
     // normalize rotation
     transform.rotation = glm::normalize(transform.rotation);
+  }
+
+  // set camera raycast entity to nothing
+  afk.camera.set_raycast_entity(std::nullopt);
+
+  // build camera raycast
+  const auto camera_front = afk.camera.get_front();
+  const auto camera_front_rp3d =
+      rp3d::Vector3(camera_front.x, camera_front.y, camera_front.z);
+  const auto raycast_start = camera_front * afk.camera.get_near();
+  const auto raycast_end   = camera_front * afk.camera.get_far();
+
+  auto camera_ray = rp3d::Ray(camera_front_rp3d * afk.camera.get_near(),
+                              camera_front_rp3d * afk.camera.get_far());
+
+  // populate raycast info
+  this->world->raycast(camera_ray, &raycast_callback);
+
+  // process raycast hit data if any exists, get the closest one to set in the camera, then delete the data
+  if (!this->camera_raycast_info.empty()) {
+    auto shortest_raycast_index = size_t{0};
+    for (auto i = size_t{0}; i < this->camera_raycast_info.size(); ++i) {
+      // if hit fraction is lower, that means it is closer to the camera, hence set that as the shortest raycast
+      if (this->camera_raycast_info[i].hit_fraction <
+          this->camera_raycast_info[shortest_raycast_index].hit_fraction) {
+        shortest_raycast_index = i;
+      }
+    }
+
+    const auto &shortest_raycast = this->camera_raycast_info[shortest_raycast_index];
+    afk_assert(shortest_raycast.collision_body != nullptr,
+               "Raycast body is null");
+    const auto hit_body_id = shortest_raycast.collision_body->getEntity().id;
+
+    afk_assert(this->rp3d_body_id_to_ecs_entity_map.count(hit_body_id) == 1,
+               "Raycast hit a collider that is not mapped");
+
+    const auto hit_entity = this->rp3d_body_id_to_ecs_entity_map.at(hit_body_id);
+
+    afk.camera.set_raycast_entity(hit_entity);
+
+    // throw away unnecessary raycast info
+    this->camera_raycast_info.clear();
   }
 
   // update React3DPhysics world
@@ -413,4 +455,14 @@ void CollisionSystem::Logger::log(rp3d::Logger::Level level, const std::string &
                                   rp3d::Logger::Category category, const std::string &message,
                                   const char *filename, int lineNumber) {
   afk::io::log << "[" << getLevelName(level) << "] " << message << "\n";
+}
+
+rp3d::decimal CollisionSystem::RaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo &info) {
+  auto &afk = afk::Engine::get();
+  // copy info
+  afk.collision_system.camera_raycast_info.push_back(RaycastHitInfo{info.body, info.hitFraction});
+
+  // return 1.0 so that rp3d knows to process more raycasts
+  // this is necessary because the order of raycast hits is not guarenteed
+  return 1.0f;
 }

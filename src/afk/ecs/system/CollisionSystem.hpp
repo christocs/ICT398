@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <vector>
 
 #include <reactphysics3d/reactphysics3d.h>
 
@@ -8,8 +9,8 @@
 #include "afk/ecs/Registry.hpp"
 #include "afk/ecs/component/ColliderComponent.hpp"
 #include "afk/ecs/component/TransformComponent.hpp"
-#include "afk/render/WireframeMesh.hpp"
 #include "afk/render/Mesh.hpp"
+#include "afk/render/WireframeMesh.hpp"
 
 namespace afk {
   namespace ecs {
@@ -58,8 +59,8 @@ namespace afk {
          * @todo instead of creating new shapes for each entity, check if the prefab has already been instantiated and use shapes from the previous instantiation
          */
         auto instantiate_collider_component(const afk::ecs::Entity &entity,
-                                  afk::ecs::component::ColliderComponent &collider_component,
-                                  const afk::ecs::component::TransformComponent &transform_component)
+                                            afk::ecs::component::ColliderComponent &collider_component,
+                                            const afk::ecs::component::TransformComponent &transform_component)
             -> void;
 
         /**
@@ -95,6 +96,17 @@ namespace afk {
         /** alias to ReactPhysics3D ids for their internal rp3d ECS */
         using rp3d_id = rp3d::uint;
 
+        /** Represents raycast hit collision data*/
+        struct RaycastHitInfo {
+          /** Body that was hit */
+          rp3d::CollisionBody *collision_body = nullptr;
+          /**
+           * Fraction distance of the hit point between point1 and point2 of the ray
+           * The hit point "p" is such that p = point1 + hitFraction * (point2 - point1)
+           */
+          f32 hit_fraction = {};
+        };
+
         /** Logger class for logging ReactPhysics3D events
          * @todo Enable/disable logs by level in GUI
          * @todo Be able to display logs separate from game logs in GUI
@@ -114,6 +126,14 @@ namespace afk {
          */
         class CollisionEventListener : public rp3d::EventListener {
           virtual void onContact(const rp3d::CollisionCallback::CallbackData &callback_data) override;
+        };
+
+        /**
+         * Callback class for each raycast hit
+         * Will store raycast information in this->camera_raycast_info
+         */
+        class RaycastCallback : public rp3d::RaycastCallback {
+          virtual rp3d::decimal notifyRaycastHit(const rp3d::RaycastInfo &info) override;
         };
 
         /**
@@ -140,6 +160,9 @@ namespace afk {
         /** Event listener used for firing collision events that occur in the ReactPhysics3D world */
         CollisionEventListener event_listener = {};
 
+        /** Raycast callback used for determining raycast hits from the camera that occur in teh react physics 3d world */
+        RaycastCallback raycast_callback = {};
+
         /** Logger used for displaying ReactPhysics3D events */
         Logger logger = {};
 
@@ -157,6 +180,9 @@ namespace afk {
 
         /** Map to point the ReactPhysics3D collision body identifier an AFK ECS entity */
         std::unordered_map<rp3d_id, ecs::Entity> rp3d_body_id_to_ecs_entity_map = {};
+
+        /** Stores raycast collision data for the camera's raycast */
+        std::vector<RaycastHitInfo> camera_raycast_info = {};
       };
     }
   }
