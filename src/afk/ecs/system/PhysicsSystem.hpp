@@ -30,7 +30,7 @@ namespace afk {
          * Initialize values for physics component
          */
         auto initialize_physics_component(afk::ecs::component::PhysicsComponent &physics_component,
-                                           const afk::ecs::component::ColliderComponent &collider_component)
+                                           const afk::ecs::component::ColliderComponent &collider_component, const afk::ecs::component::TransformComponent &transform_component)
             -> void;
 
         /**
@@ -95,6 +95,30 @@ namespace afk {
          */
         static auto get_shape_volume(const afk::physics::shape::Box &shape,
                                      const glm::vec3 &scale) -> f32;
+
+        /**
+         * Calculate local center of mass
+         */
+        static auto get_local_center_of_mass(const afk::ecs::component::ColliderComponent &collider_component, f32 total_mass)
+            -> glm::vec3;
+
+        /**
+         * Calculate total mass
+         */
+        static auto get_total_mass(const afk::ecs::component::ColliderComponent &collider_component) -> f32;
+
+        /**
+         * Calculate inertia tensor in a collider's local space
+         */
+        static auto get_local_inertia_tensor(const afk::ecs::component::ColliderComponent &collider_component,
+                                             f32 total_mass, const glm::vec3 &local_center_of_mass)
+            -> glm::vec3;
+
+        /**
+         * Calcualte thhe inverse inertia tensor in global space using the rotation for the entity
+         */
+        static auto get_inverse_inertia_tensor(const glm::vec3 &local_inverse_inertia_tensor,
+                                       const glm::quat &rotation) -> glm::mat3;
 
         /** Is the physics system initialized? */
         bool is_initialized = false;

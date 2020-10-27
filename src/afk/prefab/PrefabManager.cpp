@@ -72,7 +72,10 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
                                const auto collider =
                                    components.at("Collider").get<ColliderComponent>();
 
-                               afk.physics_system.initialize_physics_component(c, collider);
+                               const auto transform =
+                                   components.at("Transform").get<TransformComponent>();
+
+                               afk.physics_system.initialize_physics_component(c, collider, transform);
                              },
                              [](auto) { afk_unreachable(); }};
 

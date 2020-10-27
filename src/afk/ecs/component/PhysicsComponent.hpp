@@ -92,13 +92,13 @@ namespace afk {
          * inertial tensor local to the rigid body
          * constant value after initialization
          */
-        glm::mat3 local_inertial_tensor = glm::zero<glm::mat3>();
+        glm::vec3 local_inertial_tensor = glm::zero<glm::vec3>();
 
         /**
          * inverse inertial tensor local to the rigid body
          * constant value after initialisation, derrived from local inertial tensor
          */
-        glm::mat3 local_inverse_inertial_tensor = glm::mat3x3{1.0f};
+        glm::vec3 local_inverse_inertial_tensor = glm::zero<glm::vec3>();
       };
     }
   }

@@ -47,12 +47,12 @@ auto PhysicsSystem::update() -> void {
     auto &physics   = registry.get<PhysicsComponent>(entity);
     auto &transform = registry.get<TransformComponent>(entity);
 
+    // update interia tensor
+    physics.inverse_inertial_tensor = PhysicsSystem::get_inverse_inertia_tensor(
+        physics.local_inverse_inertial_tensor, transform.rotation);
+
     // skip anything that is static
     if (!physics.is_static) {
-      // update interia tensor
-      const auto world_rotation = glm::mat3_cast(transform.rotation);
-      physics.inverse_inertial_tensor = world_rotation * physics.local_inverse_inertial_tensor *
-                                        glm::transpose(world_rotation);
 
       // get linear dampening
       const auto linear_dampening =
@@ -70,8 +70,8 @@ auto PhysicsSystem::update() -> void {
       // add new linear velocity
       // external forces is just force, so need to divide mass out (a = F/m)
       // a = F/m
-      physics.linear_velocity += physics.total_inverse_mass *
-                                 physics.external_forces * linear_dampening;
+      physics.linear_velocity +=
+          physics.total_inverse_mass * physics.external_forces * linear_dampening;
 
       // add new angular velocity
       physics.angular_velocity += physics.external_torques * angular_dampening;
@@ -92,116 +92,42 @@ auto PhysicsSystem::update() -> void {
 }
 
 auto PhysicsSystem::initialize_physics_component(PhysicsComponent &physics_component,
-                                                 const ColliderComponent &collider_component)
+                                                 const ColliderComponent &collider_component,
+                                                 const TransformComponent &transform_component)
     -> void {
 
-  // set values to zero before iterating through each collider for calculations
-  // assumes each collider's center of mass is always at the center of the
-  // collider assume each collider has an even distribution of mass
-  physics_component.center_of_mass = glm::vec3{0.0f};
-  physics_component.total_mass     = 0.0f;
-  auto temp_inertia_tensor         = glm::zero<glm::mat3>();
-  for (const auto &collision_body : collider_component.colliders) {
-    physics_component.total_mass += collision_body.mass;
+  static auto constexpr max_float = std::numeric_limits<f32>::max();
+  static auto constexpr min_float = std::numeric_limits<f32>::min();
 
-    // accumulate center of mass, then divide it later when the total mass is known
-    physics_component.center_of_mass =
-        collision_body.transform.translation * collision_body.mass;
+  // need this value to get local center of mass
+  physics_component.total_mass = PhysicsSystem::get_total_mass(collider_component);
+  physics_component.center_of_mass = PhysicsSystem::get_local_center_of_mass(
+      collider_component, physics_component.total_mass);
 
-    auto collider_inertia_tensor = glm::vec3{};
-    f32 collider_volume          = 0.0f;
-
-    // calculate collider volume and inertia tensor
-    // when calculating inertia tensor for static objects, give it the maximum mass
-    auto visitor = Visitor{
-        [&collider_inertia_tensor, &collider_volume, &collision_body,
-         &physics_component](const afk::physics::shape::Sphere &shape) {
-          if (!physics_component.is_static) {
-            collider_inertia_tensor =
-                PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
-          } else {
-            const auto max_float    = std::numeric_limits<f32>::max();
-            collider_inertia_tensor = glm::vec3{max_float};
-          }
-          collider_volume =
-              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
-        },
-        [&collider_inertia_tensor, &collider_volume, &collision_body,
-         &physics_component](const afk::physics::shape::Box &shape) {
-          if (!physics_component.is_static) {
-            collider_inertia_tensor =
-                PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
-          } else {
-            const auto max_float    = std::numeric_limits<f32>::max();
-            collider_inertia_tensor = glm::vec3{max_float};
-          }
-          collider_volume =
-              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
-        },
-        [](auto) { afk_assert(false, "Collider shape type is invalid"); }};
-    std::visit(visitor, collision_body.shape);
-
-    // Convert the collider inertia tensor into the local-space of the body
-    // do not need to worry about scale, as we are assuming that the center of mass is at the center of each collider and each collider has an even distribution of mass
-    const auto collider_rotation = glm::mat3_cast(collision_body.transform.rotation);
-    auto collider_rotation_transpose = glm::transpose(collider_rotation);
-    // row multiplication (glm by default hhas column access)
-    collider_rotation_transpose[0][0] *= collider_inertia_tensor.x;
-    collider_rotation_transpose[1][0] *= collider_inertia_tensor.x;
-    collider_rotation_transpose[2][0] *= collider_inertia_tensor.x;
-    collider_rotation_transpose[0][1] *= collider_inertia_tensor.y;
-    collider_rotation_transpose[1][1] *= collider_inertia_tensor.y;
-    collider_rotation_transpose[2][1] *= collider_inertia_tensor.y;
-    collider_rotation_transpose[0][2] *= collider_inertia_tensor.z;
-    collider_rotation_transpose[1][2] *= collider_inertia_tensor.z;
-    collider_rotation_transpose[2][2] *= collider_inertia_tensor.z;
-    const auto collider_inertia_tensor_in_body_space =
-        collider_rotation * collider_rotation_transpose;
-
-    // Use the parallel axis theorem to convert the inertia tensor w.r.t the
-    // collider center into a inertia tensor w.r.t to the body origin.
-    // assume center of mass is the center of the collider
-    // @todo convert from row-major to column-major (rp3d vs glm)
-    const auto offset = collision_body.transform.translation;
-    const auto radius_from_center_squared = glm::pow(glm::length(offset), 2);
-    auto offset_matrix =
-        glm::mat3{glm::vec3{radius_from_center_squared, 0.0f, 0.0f},
-                  glm::vec3{0.0f, radius_from_center_squared, 0.0f},
-                  glm::vec3{0.0f, 0.0f, radius_from_center_squared}};
-    const auto offset_x = offset * (-offset.x);
-    const auto offset_y = offset * (-offset.y);
-    const auto offset_z = offset * (-offset.z);
-    offset_matrix[0][0] *= offset_x.x;
-    offset_matrix[1][0] *= offset_x.y;
-    offset_matrix[2][0] *= offset_x.z;
-    offset_matrix[0][1] *= offset_y.x;
-    offset_matrix[1][1] *= offset_y.y;
-    offset_matrix[2][1] *= offset_y.z;
-    offset_matrix[0][2] *= offset_z.x;
-    offset_matrix[1][2] *= offset_z.y;
-    offset_matrix[2][2] *= offset_z.z;
-    offset_matrix *= collision_body.mass;
-
-    temp_inertia_tensor += collider_inertia_tensor_in_body_space + offset_matrix;
+  // if the physics component is static, now set the total mass to the maximum after the center of mass has been calculated
+  if (physics_component.is_static) {
+    physics_component.total_mass = max_float;
   }
-  physics_component.center_of_mass /= physics_component.total_mass;
 
-  physics_component.local_inertial_tensor =
-      glm::mat3{glm::vec3{temp_inertia_tensor[0][0], 0.0f, 0.0f},
-                glm::vec3{0.0f, temp_inertia_tensor[1][1], 0.0f},
-                glm::vec3{0.0f, 0.0f, temp_inertia_tensor[2][2]}};
-  physics_component.local_inverse_inertial_tensor =
-      glm::inverse(physics_component.local_inertial_tensor);
-
-  // change mass in static objects to have maximum values
-  if (!physics_component.is_static) {
-    physics_component.total_inverse_mass = 1.0f / physics_component.total_mass;
+  // set the inverse masses
+  if (physics_component.is_static) {
+    physics_component.total_inverse_mass = min_float;
   } else {
-    // set mass to largest value, set inverse to smallest value
-    // set maximum values to make the object not effectively move
-    physics_component.total_mass         = std::numeric_limits<f32>::max();
-    physics_component.total_inverse_mass = std::numeric_limits<f32>::min();
+    physics_component.total_inverse_mass = 1 / physics_component.total_mass;
   }
+
+  // set inertia tensor and the inverse
+  physics_component.local_inertial_tensor = PhysicsSystem::get_local_inertia_tensor(
+      collider_component, physics_component.total_mass, physics_component.center_of_mass);
+  const auto &local_tensor = physics_component.local_inertial_tensor;
+  physics_component.local_inverse_inertial_tensor =
+      glm::vec3{local_tensor.x != 0.0f ? 1 / local_tensor.x : 0.0f,
+                local_tensor.y != 0.0f ? 1 / local_tensor.y : 0.0f,
+                local_tensor.z != 0.0f ? 1 / local_tensor.z : 0.0f};
+
+  // initialise inverse inertial tensor value
+  physics_component.inverse_inertial_tensor = PhysicsSystem::get_inverse_inertia_tensor(
+      physics_component.local_inverse_inertial_tensor, transform_component.rotation);
 }
 
 auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
@@ -381,4 +307,104 @@ auto PhysicsSystem::get_shape_volume(const Box &shape, const glm::vec3 &scale) -
   // box shape is defined by half extents, so they need to be converted to full extents
   return (shape.x * 2.0f * scale.x) * (shape.y * 2.0f * scale.y) *
          (shape.z * 2.0f * scale.z);
+}
+
+auto PhysicsSystem::get_local_center_of_mass(const afk::ecs::component::ColliderComponent &collider_component,
+                                             f32 total_mass) -> glm::vec3 {
+
+  auto center_of_mass = glm::zero<glm::vec3>();
+
+  for (const auto &collision_body : collider_component.colliders) {
+    center_of_mass = (collision_body.transform.translation * collision_body.mass) / total_mass;
+  }
+
+  return center_of_mass;
+}
+
+auto PhysicsSystem::get_total_mass(const afk::ecs::component::ColliderComponent &collider_component)
+    -> f32 {
+
+  f32 total_mass = {};
+
+  for (const auto &collider : collider_component.colliders) {
+    total_mass += collider.mass;
+  }
+
+  return total_mass;
+}
+
+auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::ColliderComponent &collider_component,
+                                             f32 total_mass, const glm::vec3 &local_center_of_mass)
+    -> glm::vec3 {
+
+  auto temp_inertia_tensor = glm::zero<glm::mat3>();
+  for (const auto &collision_body : collider_component.colliders) {
+    auto collider_inertia_tensor = glm::vec3{};
+    f32 collider_volume          = 0.0f;
+
+    // calculate collider volume and inertia tensor
+    auto visitor = Visitor{
+        [&collider_inertia_tensor, &collider_volume,
+         &collision_body](const afk::physics::shape::Sphere &shape) {
+          collider_inertia_tensor =
+              PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
+          collider_volume =
+              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
+        },
+        [&collider_inertia_tensor, &collider_volume,
+         &collision_body](const afk::physics::shape::Box &shape) {
+          collider_inertia_tensor =
+              PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
+          collider_volume =
+              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
+        },
+        [](auto) { afk_assert(false, "Collider shape type is invalid"); }};
+    std::visit(visitor, collision_body.shape);
+
+    // Convert the collider inertia tensor into the local-space of the body
+    // do not need to worry about scale, as we are assuming that the center of mass is at the center of each collider and each collider has an even distribution of mass
+    const auto collider_rotation = glm::mat3_cast(collision_body.transform.rotation);
+    auto collider_rotation_transpose = glm::transpose(collider_rotation);
+    // row multiplication (glm by default hhas column access)
+    collider_rotation_transpose[0] *= collider_inertia_tensor.x;
+    collider_rotation_transpose[1] *= collider_inertia_tensor.y;
+    collider_rotation_transpose[2] *= collider_inertia_tensor.z;
+    const auto collider_inertia_tensor_in_body_space =
+        collider_rotation * collider_rotation_transpose;
+
+    // Use the parallel axis theorem to convert the inertia tensor w.r.t the
+    // collider center into a inertia tensor w.r.t to the body origin.
+    // assume center of mass is the center of the collider
+    // @todo convert from row-major to column-major (rp3d vs glm)
+    const auto offset = collision_body.transform.translation - local_center_of_mass;
+    const auto radius_from_center_squared = glm::pow(glm::length(offset), 2);
+    auto offset_matrix =
+        glm::mat3{glm::vec3{radius_from_center_squared, 0.0f, 0.0f},
+                  glm::vec3{0.0f, radius_from_center_squared, 0.0f},
+                  glm::vec3{0.0f, 0.0f, radius_from_center_squared}};
+    offset_matrix[0] = offset * (-offset.x);
+    offset_matrix[1] = offset * (-offset.y);
+    offset_matrix[2] = offset * (-offset.z);
+    offset_matrix *= collision_body.mass;
+
+    temp_inertia_tensor += collider_inertia_tensor_in_body_space + offset_matrix;
+  }
+
+  return glm::vec3{temp_inertia_tensor[0][0], temp_inertia_tensor[1][1],
+                   temp_inertia_tensor[2][2]};
+}
+
+auto PhysicsSystem::get_inverse_inertia_tensor(const glm::vec3 &local_inverse_inertia_tensor,
+                                               const glm::quat &rotation) -> glm::mat3 {
+  const auto orientation           = glm::mat3_cast(rotation);
+  auto orientation_transpose = glm::transpose(orientation);
+  // @todo make sure access of calculation is correct
+  for (auto i = size_t{0}; i < 3; ++i) {
+    orientation_transpose[i] *= local_inverse_inertia_tensor[i];
+    /*for (auto j = size_t{0}; j < 3; ++j) {
+      orientation_transpose[i][j] = local_inverse_inertia_tensor[i];
+    }*/
+  }
+
+  return orientation * orientation_transpose;
 }

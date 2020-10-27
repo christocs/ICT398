@@ -71,24 +71,26 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
               // no need to do checks if components are missing, as all prefabs already enforce these checks
               // here we are just overwriting prefab components if they are defined
 
+              auto collider  = ColliderComponent{};
+              auto transform = TransformComponent{};
+
               // if the scene defines the collider component, use the one in the scene, else use the one provided by the prefab
               if (components_json_ref.get().count("Collider") == 1) {
-                const auto &collider =
-                    components_json_ref.get().at("Collider").get<ColliderComponent>();
-                afk.physics_system.initialize_physics_component(c, collider);
+                collider = components_json_ref.get().at("Collider").get<ColliderComponent>();
               } else {
-                // need to make sure the component in "Collider" is what it says on the tin, hence using std::visit
-                const auto &collider_component =
-                    prefab.components.at("Collider");
-                auto visitor =
-                    Visitor{[&c, &afk](const ColliderComponent &collider) {
-                              afk.physics_system.initialize_physics_component(c, collider);
-                              afk::io::log << "hi\n";
-                            },
-                            [](auto) { afk_unreachable(); }};
-
-                std::visit(visitor, collider_component);
+                collider = std::get<ColliderComponent>(
+                    prefab.components.at("Collider"));
               }
+
+              // if the scene defines the transform component, use the one in the scene, else use the one provided by the prefab
+              if (components_json_ref.get().count("Transform") == 1) {
+                transform =
+                    components_json_ref.get().at("Transform").get<TransformComponent>();
+              } else {
+                transform = std::get<TransformComponent>(prefab.components.at("Collider"));
+              }
+
+              afk.physics_system.initialize_physics_component(c, collider, transform);
             },
             [](auto) { afk_unreachable(); }};
 
