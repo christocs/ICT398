@@ -55,6 +55,8 @@ namespace afk {
 
         /**
          * Synchronises colliders with their transform components
+         * 
+         * This will NOT trigger collision events
          */
         auto syncronize_colliders() -> void;
 

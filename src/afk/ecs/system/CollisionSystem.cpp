@@ -471,7 +471,9 @@ void CollisionSystem::CollisionEventListener::onContact(
 void CollisionSystem::Logger::log(rp3d::Logger::Level level, const std::string &physicsWorldName,
                                   rp3d::Logger::Category category, const std::string &message,
                                   const char *filename, int lineNumber) {
-  afk::io::log << "[" << getLevelName(level) << "] " << message << "\n";
+  if (level != rp3d::Logger::Level::Information) {
+    afk::io::log << "[rp3d " << getLevelName(level) << "] " << message << "\n";
+  }
 }
 
 rp3d::decimal CollisionSystem::RaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo &info) {
