@@ -143,6 +143,9 @@ auto UiManager::draw_menu_bar() -> void {
       if (ImGui::MenuItem("Toggle Debug Physics Mesh", nullptr, afk.display_debug_physics_mesh)) {
         afk.display_debug_physics_mesh = !afk.display_debug_physics_mesh;
       }
+      if (ImGui::MenuItem("Reset Camera Position")) {
+        afk.camera.set_position(glm::vec3{0.0f});
+      }
       ImGui::EndMenu();
     }
 
