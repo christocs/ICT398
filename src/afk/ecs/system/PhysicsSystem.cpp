@@ -365,10 +365,10 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     // do not need to worry about scale, as we are assuming that the center of mass is at the center of each collider and each collider has an even distribution of mass
     const auto collider_rotation = glm::mat3_cast(collision_body.transform.rotation);
     auto collider_rotation_transpose = glm::transpose(collider_rotation);
-    // row multiplication (glm by default hhas column access)
-    collider_rotation_transpose[0] *= collider_inertia_tensor.x;
-    collider_rotation_transpose[1] *= collider_inertia_tensor.y;
-    collider_rotation_transpose[2] *= collider_inertia_tensor.z;
+    // row multiplication (note that glm by default has column access)
+    for (auto i = size_t{0}; i < 3; ++i) {
+      collider_rotation_transpose[i] *= collider_inertia_tensor[i];
+    }
     const auto collider_inertia_tensor_in_body_space =
         collider_rotation * collider_rotation_transpose;
 
@@ -398,12 +398,15 @@ auto PhysicsSystem::get_inverse_inertia_tensor(const glm::vec3 &local_inverse_in
                                                const glm::quat &rotation) -> glm::mat3 {
   const auto orientation           = glm::mat3_cast(rotation);
   auto orientation_transpose = glm::transpose(orientation);
-  // @todo make sure access of calculation is correct
+  // note that rp3d and glm have different access on matrices
+  // glm is column access by default, while rp3d is row access
+  // @todo convert between rp3d and glm access types elsewhere, rather than applying the rotation in rp3d's preferred form
+  // the engine should always store glm's matrix types rather than going around it and using rp3d's preference
   for (auto i = size_t{0}; i < 3; ++i) {
-    orientation_transpose[i] *= local_inverse_inertia_tensor[i];
-    /*for (auto j = size_t{0}; j < 3; ++j) {
-      orientation_transpose[i][j] = local_inverse_inertia_tensor[i];
-    }*/
+    /*orientation_transpose[i] *= local_inverse_inertia_tensor[i];*/
+    for (auto j = size_t{0}; j < 3; ++j) {
+      orientation_transpose[j][i] = local_inverse_inertia_tensor[i];
+    }
   }
 
   return orientation * orientation_transpose;
