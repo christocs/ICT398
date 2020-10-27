@@ -47,8 +47,9 @@ auto PhysicsSystem::update() -> void {
   // or when no depenetrations have tried to be resolved (which probably means that its finished)
   do {
     depenetrations_resolved = this->depenetrate_dynamic_rigid_bodies();
-  } while (i < PhysicsSystem::depenetration_maximum_iterations ||
-           depenetrations_resolved == 0);
+    ++i;
+  } while (i < PhysicsSystem::depenetration_maximum_iterations &&
+           depenetrations_resolved > 0);
 }
 
 auto PhysicsSystem::initialize_physics_component(PhysicsComponent &physics_component,
@@ -296,6 +297,11 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
 }
 
 auto PhysicsSystem::depenetrate_dynamic_rigid_bodies() -> u32 {
+  auto &afk = afk::Engine::get();
+  auto &collision_system = afk.collision_system;
+
+  auto collisions = collision_system.get_current_collisions();
+
   return 0;
 }
 

@@ -11,6 +11,7 @@
 #include "afk/ecs/component/TransformComponent.hpp"
 #include "afk/render/Mesh.hpp"
 #include "afk/render/WireframeMesh.hpp"
+#include "afk/event/Event.hpp"
 
 namespace afk {
   namespace ecs {
@@ -54,13 +55,6 @@ namespace afk {
         auto update() -> void;
 
         /**
-         * Synchronises colliders with their transform components
-         * 
-         * This will NOT trigger collision events
-         */
-        auto syncronize_colliders() -> void;
-
-        /**
          * Load a collision component associated to an entity
          *
          * @todo instead of creating new shapes for each entity, check if the prefab has already been instantiated and use shapes from the previous instantiation
@@ -88,6 +82,11 @@ namespace afk {
          */
         auto get_debug_mesh() -> afk::render::WireframeMesh;
 
+        /**
+         * Test and return current collisions, this will not trigger collision events in the event system
+         */
+        [[nodiscard]] std::vector<afk::event::Event::Collision> get_current_collisions();
+
       private:
         /** Is the CollisionSystem initialized? */
         bool is_initialized = false;
@@ -99,6 +98,14 @@ namespace afk {
          * @todo set which debug items to generate display data for in GUI
          */
         rp3d::PhysicsWorld *create_rp3d_physics_world();
+
+        
+        /**
+         * Synchronises colliders with their transform components
+         *
+         * This will NOT trigger collision events
+         */
+        auto syncronize_colliders() -> void;
 
         /**
          * Update camera raycast
@@ -141,6 +148,14 @@ namespace afk {
         };
 
         /**
+         * Callback to test collisions occuring in ReactPhysics3D
+         * The intent for this class is to store the current collisions without routing it through the event system
+         */
+        class CollisionCallback : public rp3d::CollisionCallback {
+          virtual void onContact(const rp3d::CollisionCallback::CallbackData &callback_data) override;
+        };
+
+        /**
          * Callback class for each raycast hit
          * Will store raycast information in this->camera_raycast_info
          */
@@ -172,6 +187,9 @@ namespace afk {
         /** Event listener used for firing collision events that occur in the ReactPhysics3D world */
         CollisionEventListener event_listener = {};
 
+        /** Callback for testing collisions when called */
+        CollisionCallback collision_callback = {};
+
         /** Raycast callback used for determining raycast hits from the camera that occur in teh react physics 3d world */
         RaycastCallback raycast_callback = {};
 
@@ -195,6 +213,13 @@ namespace afk {
 
         /** Stores raycast collision data for the camera's raycast */
         std::vector<RaycastHitInfo> camera_raycast_info = {};
+
+        /**
+         * Temporary store of collision data, might need to move this elsewhere
+         * @todo don't make this static
+         * @todo think of a better way to temporarily store the collision data
+         */
+        std::vector<afk::event::Event::Collision> temporary_collisions = {};
       };
     }
   }
