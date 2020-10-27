@@ -20,7 +20,7 @@
     },
     "Models": [
       {
-        "file_path": "res/model/classroom/room7.obj",
+        "file_path": "res/model/classroom/classroom.obj",
         "Transform": {
           "translation": {
             "x": 0.0,
