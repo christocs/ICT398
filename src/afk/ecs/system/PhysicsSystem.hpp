@@ -144,7 +144,7 @@ namespace afk {
         bool is_initialized = false;
 
         /** maximum number of times to run depenetration per update */
-        static constexpr u32 DEPENETRATION_MAXIMUM_ITERATIONS = 5;
+        static constexpr u32 DEPENETRATION_MAXIMUM_ITERATIONS = 10;
 
         /** maximum penetration value */
         static constexpr f32 MAXIMUM_PENETRATION = 0.1f;
