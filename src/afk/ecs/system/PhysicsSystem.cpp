@@ -252,9 +252,6 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
                                             const glm::vec3 &contact_normal,
                                             const glm::vec3 &r1,
                                             const glm::vec3 &r2) -> f32 {
-  // @todo move this to a better place
-  // 1 for fully elastic, 0 for no elastiscity at all
-  const auto restitution_coefficient = 1.0f;
 
   auto &registry = afk::Engine::get().ecs.registry;
   auto collider1 = registry.get<ColliderComponent>(data.entity1);
@@ -290,7 +287,7 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   f32 numerator = glm::dot(contact_normal, v1 - v2);
   numerator += glm::dot(omega1, glm::cross(r1, contact_normal));
   numerator -= glm::dot(omega2, glm::cross(r2, contact_normal));
-  numerator *= -(1 + restitution_coefficient);
+  numerator *= -(1 + PhysicsSystem::COEFFICENT_OF_RESTITUTION);
 
   f32 denominator =
       glm::dot(glm::cross(r1, contact_normal), j1 * glm::cross(r1, contact_normal));

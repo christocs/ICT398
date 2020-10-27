@@ -148,6 +148,12 @@ namespace afk {
 
         /** maximum penetration value */
         static constexpr f32 MAXIMUM_PENETRATION = 0.1f;
+
+        /**
+         * coefficient of restitution
+         * 1 for perfectly elastic collisions, 0 for all energy lost
+         */
+        static constexpr f32 COEFFICENT_OF_RESTITUTION = 0.9f;
       };
     }
   }
