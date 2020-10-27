@@ -54,6 +54,11 @@ namespace afk {
         auto update() -> void;
 
         /**
+         * Synchronises colliders with their transform components
+         */
+        auto syncronize_colliders() -> void;
+
+        /**
          * Load a collision component associated to an entity
          *
          * @todo instead of creating new shapes for each entity, check if the prefab has already been instantiated and use shapes from the previous instantiation
@@ -92,6 +97,11 @@ namespace afk {
          * @todo set which debug items to generate display data for in GUI
          */
         rp3d::PhysicsWorld *create_rp3d_physics_world();
+
+        /**
+         * Update camera raycast
+         */
+        auto update_camera_raycast() -> void;
 
         /** alias to ReactPhysics3D ids for their internal rp3d ECS */
         using rp3d_id = rp3d::uint;

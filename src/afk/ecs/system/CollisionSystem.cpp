@@ -83,6 +83,20 @@ auto CollisionSystem::on_collider_destroy(afk::ecs::Registry &registry,
 }
 
 auto CollisionSystem::update() -> void {
+  auto &afk = afk::Engine::get();
+
+  this->syncronize_colliders();
+
+  this->update_camera_raycast();
+
+  // update React3DPhysics world
+  // this method calls to update the debug render data
+  // this method fires collision events
+  // this method also unnecessarily does physics calculations for any rigid bodies, though none should be created in the game engine
+  this->world->update(afk.get_delta_time());
+}
+
+auto CollisionSystem::syncronize_colliders() -> void {
   auto &afk      = afk::Engine::get();
   auto &registry = afk.ecs.registry;
 
@@ -110,20 +124,28 @@ auto CollisionSystem::update() -> void {
     // normalize rotation
     transform.rotation = glm::normalize(transform.rotation);
   }
+}
+
+auto CollisionSystem::update_camera_raycast() -> void {
+  auto &afk = afk::Engine::get();
 
   // set camera raycast entity to nothing
   afk.camera.set_raycast_entity(std::nullopt);
+
+  // throw away unnecessary raycast info left ovver
+  this->camera_raycast_info.clear();
 
   // build camera raycast
   const auto camera_front = afk.camera.get_front();
   const auto camera_front_rp3d =
       rp3d::Vector3(camera_front.x, camera_front.y, camera_front.z);
-  const auto camera_pos      = afk.camera.get_position();
+  const auto camera_pos = afk.camera.get_position();
   const auto camera_pos_rp3d =
       rp3d::Vector3(camera_pos.x, camera_pos.y, camera_pos.z);
 
-  auto camera_ray = rp3d::Ray(camera_front_rp3d * afk.camera.get_near() + camera_pos_rp3d,
-                              camera_front_rp3d * afk.camera.get_far() + camera_pos_rp3d);
+  auto camera_ray =
+      rp3d::Ray(camera_front_rp3d * afk.camera.get_near() + camera_pos_rp3d,
+                camera_front_rp3d * afk.camera.get_far() + camera_pos_rp3d);
 
   // populate raycast info
   this->world->raycast(camera_ray, &raycast_callback);
@@ -154,12 +176,6 @@ auto CollisionSystem::update() -> void {
     // throw away unnecessary raycast info
     this->camera_raycast_info.clear();
   }
-
-  // update React3DPhysics world
-  // this method calls to update the debug render data
-  // this method fires collision events
-  // this method also unnecessarily does physics calculations for any rigid bodies, though none should be created in the game engine
-  this->world->update(afk.get_delta_time());
 }
 
 auto CollisionSystem::instantiate_collider_component(
