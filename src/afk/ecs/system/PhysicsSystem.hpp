@@ -29,9 +29,10 @@ namespace afk {
         /**
          * Initialize values for physics component
          */
-        auto initialize_physics_component(afk::ecs::component::PhysicsComponent &physics_component,
-                                           const afk::ecs::component::ColliderComponent &collider_component, const afk::ecs::component::TransformComponent &transform_component)
-            -> void;
+        auto initialize_physics_component(
+            afk::ecs::component::PhysicsComponent &physics_component,
+            const afk::ecs::component::ColliderComponent &collider_component,
+            const afk::ecs::component::TransformComponent &transform_component) -> void;
 
         /**
          * Callback to call when a collision occurs
@@ -44,12 +45,39 @@ namespace afk {
          */
         static auto collision_resolution_callback(afk::event::Event event) -> void;
 
+        /**
+         * Callback to call when a collision occurs
+         *
+         * Should only pass in event of type Collision
+         *
+         * @param event - event information
+         *
+         * @todo copy event parameter by reference not value
+         */
+        static auto collision_resolution_callback(afk::event::Event event) -> void;
+
+      private:
+        /**
+         * Apply changes queued for rigid bodies
+         */
+        auto apply_rigid_body_changes(f32 dt) -> void;
+
+        /**
+         * Method depenetrates non-static rigid bodies from other colliders
+         * May cause new, different penetrations so it is recommende to run this multiple times
+         *
+         * @return number of rigid bodies de-penetrated
+         */
+        auto depenetrate_dynamic_rigid_bodies() -> u32;
+
+        /**
+         * Get the coefficient of the impulse vector
+         */
         static auto get_impulse_coefficient(const afk::event::Event::Collision &data,
                                             const glm::vec3 &contact_normal,
                                             const glm::vec3 &r1,
                                             const glm::vec3 &r2) -> f32;
 
-      private:
         /**
          * Get inertia tensor of a sphere shape in its own local space
          *
@@ -99,13 +127,14 @@ namespace afk {
         /**
          * Calculate local center of mass
          */
-        static auto get_local_center_of_mass(const afk::ecs::component::ColliderComponent &collider_component, f32 total_mass)
-            -> glm::vec3;
+        static auto get_local_center_of_mass(const afk::ecs::component::ColliderComponent &collider_component,
+                                             f32 total_mass) -> glm::vec3;
 
         /**
          * Calculate total mass
          */
-        static auto get_total_mass(const afk::ecs::component::ColliderComponent &collider_component) -> f32;
+        static auto get_total_mass(const afk::ecs::component::ColliderComponent &collider_component)
+            -> f32;
 
         /**
          * Calculate inertia tensor in a collider's local space
@@ -118,10 +147,13 @@ namespace afk {
          * Calcualte thhe inverse inertia tensor in global space using the rotation for the entity
          */
         static auto get_inverse_inertia_tensor(const glm::vec3 &local_inverse_inertia_tensor,
-                                       const glm::quat &rotation) -> glm::mat3;
+                                               const glm::quat &rotation) -> glm::mat3;
 
         /** Is the physics system initialized? */
         bool is_initialized = false;
+
+        /** maximum number of times to run depenetration per update */
+        const static u32 depenetration_maximum_iterations = 5;
       };
     }
   }

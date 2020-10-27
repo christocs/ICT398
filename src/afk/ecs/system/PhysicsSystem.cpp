@@ -38,57 +38,17 @@ auto PhysicsSystem::update() -> void {
   auto &registry      = afk.ecs.registry;
   auto &event_manager = afk.event_manager;
   auto dt             = afk.get_delta_time();
-  // only bother updating rigid bodies
-  const auto view =
-      registry.view<ColliderComponent, PhysicsComponent, TransformComponent>();
 
-  // process updates to each dynamic rigid body using semi-implicit euler integration
-  for (const auto entity : view) {
-    auto &physics   = registry.get<PhysicsComponent>(entity);
-    auto &transform = registry.get<TransformComponent>(entity);
+  this->apply_rigid_body_changes(dt);
 
-    // update interia tensor
-    physics.inverse_inertial_tensor = PhysicsSystem::get_inverse_inertia_tensor(
-        physics.local_inverse_inertial_tensor, transform.rotation);
-
-    // skip anything that is static
-    if (!physics.is_static) {
-
-      // get linear dampening
-      const auto linear_dampening =
-          std::clamp(std::pow(1.0f - physics.linear_dampening, dt), 0.0f, 1.0f);
-
-      // get angular dampening
-      const auto angular_dampening =
-          std::clamp(std::pow(1.0f - physics.angular_dampening, dt), 0.0f, 1.0f);
-
-      // integrate constant gravity acceleration
-      if (afk.gravity_enabled) {
-        physics.linear_velocity += dt * afk.gravity * linear_dampening;
-      }
-
-      // add new linear velocity
-      // external forces is just force, so need to divide mass out (a = F/m)
-      // a = F/m
-      physics.linear_velocity +=
-          physics.total_inverse_mass * physics.external_forces * linear_dampening;
-
-      // add new angular velocity
-      physics.angular_velocity += physics.external_torques * angular_dampening;
-
-      // integrate velocity to translation AFTER it has been calculated for semi-implicit euler integration
-      transform.translation += physics.linear_velocity * dt;
-
-      // integrate rotation AFTER it has been calculated for semi-implicit euler integration
-      transform.rotation +=
-          glm::quat(0.0f, physics.angular_velocity) * transform.rotation * 0.5f * dt;
-
-      // reset external forces and torque for the next update cycle
-      // these only represent "moments" in acceleration
-      physics.external_forces  = glm::vec3{0.0f};
-      physics.external_torques = glm::vec3{0.0f};
-    }
-  }
+  auto i = size_t{0};
+  auto depenetrations_resolved = u32{0};
+  // run depenetrations until reaching the maximum number of interations
+  // or when no depenetrations have tried to be resolved (which probably means that its finished)
+  do {
+    depenetrations_resolved = this->depenetrate_dynamic_rigid_bodies();
+  } while (i < PhysicsSystem::depenetration_maximum_iterations ||
+           depenetrations_resolved == 0);
 }
 
 auto PhysicsSystem::initialize_physics_component(PhysicsComponent &physics_component,
@@ -138,8 +98,6 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
   auto &afk      = afk::Engine::get();
   const auto dt  = afk.get_delta_time();
   auto &registry = afk.ecs.registry;
-
-  afk::io::log << "collision physics callback called\n";
 
   auto visitor = Visitor{
       [dt, &afk, &registry](Event::Collision &c) {
@@ -225,6 +183,63 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
   std::visit(visitor, event.data);
 }
 
+auto PhysicsSystem::apply_rigid_body_changes(f32 dt) -> void {
+  auto &afk           = afk::Engine::get();
+  auto &registry      = afk.ecs.registry;
+  auto &event_manager = afk.event_manager;
+  // only bother updating rigid bodies
+  const auto view =
+      registry.view<ColliderComponent, PhysicsComponent, TransformComponent>();
+
+  // process updates to each dynamic rigid body using semi-implicit euler integration
+  for (const auto entity : view) {
+    auto &physics   = registry.get<PhysicsComponent>(entity);
+    auto &transform = registry.get<TransformComponent>(entity);
+
+    // update interia tensor
+    physics.inverse_inertial_tensor = PhysicsSystem::get_inverse_inertia_tensor(
+        physics.local_inverse_inertial_tensor, transform.rotation);
+
+    // skip anything that is static
+    if (!physics.is_static) {
+
+      // get linear dampening
+      const auto linear_dampening =
+          std::clamp(std::pow(1.0f - physics.linear_dampening, dt), 0.0f, 1.0f);
+
+      // get angular dampening
+      const auto angular_dampening =
+          std::clamp(std::pow(1.0f - physics.angular_dampening, dt), 0.0f, 1.0f);
+
+      // integrate constant gravity acceleration
+      if (afk.gravity_enabled) {
+        physics.linear_velocity += dt * afk.gravity * linear_dampening;
+      }
+
+      // add new linear velocity
+      // external forces is just force, so need to divide mass out (a = F/m)
+      // a = F/m
+      physics.linear_velocity +=
+          physics.total_inverse_mass * physics.external_forces * linear_dampening;
+
+      // add new angular velocity
+      physics.angular_velocity += physics.external_torques * angular_dampening;
+
+      // integrate velocity to translation AFTER it has been calculated for semi-implicit euler integration
+      transform.translation += physics.linear_velocity * dt;
+
+      // integrate rotation AFTER it has been calculated for semi-implicit euler integration
+      transform.rotation +=
+          glm::quat(0.0f, physics.angular_velocity) * transform.rotation * 0.5f * dt;
+
+      // reset external forces and torque for the next update cycle
+      // these only represent "moments" in acceleration
+      physics.external_forces  = glm::vec3{0.0f};
+      physics.external_torques = glm::vec3{0.0f};
+    }
+  }
+}
+
 // todo check if using contact normal should be used instead of collision normal
 // todo check if a contact normal is being passed or a collision normal is being passed
 auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
@@ -278,6 +293,10 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   denominator += inverse_mass1 + inverse_mass2;
 
   return numerator / denominator;
+}
+
+auto PhysicsSystem::depenetrate_dynamic_rigid_bodies() -> u32 {
+  return 0;
 }
 
 auto PhysicsSystem::get_shape_inertia_tensor(const Sphere &shape, f32 mass) -> glm::vec3 {
