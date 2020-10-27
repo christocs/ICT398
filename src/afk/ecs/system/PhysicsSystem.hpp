@@ -45,17 +45,6 @@ namespace afk {
          */
         static auto collision_resolution_callback(afk::event::Event event) -> void;
 
-        /**
-         * Callback to call when a collision occurs
-         *
-         * Should only pass in event of type Collision
-         *
-         * @param event - event information
-         *
-         * @todo copy event parameter by reference not value
-         */
-        static auto collision_resolution_callback(afk::event::Event event) -> void;
-
       private:
         /**
          * Apply changes queued for rigid bodies
