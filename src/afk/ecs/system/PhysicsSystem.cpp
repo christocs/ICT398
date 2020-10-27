@@ -34,22 +34,27 @@ auto PhysicsSystem::initialize() -> void {
 }
 
 auto PhysicsSystem::update() -> void {
-  auto &afk           = afk::Engine::get();
-  auto &registry      = afk.ecs.registry;
-  auto &event_manager = afk.event_manager;
-  auto dt             = afk.get_delta_time();
+  auto &afk              = afk::Engine::get();
+  auto &registry         = afk.ecs.registry;
+  auto &event_manager    = afk.event_manager;
+  auto &collision_system = afk.collision_system;
+  auto dt                = afk.get_delta_time();
 
   this->apply_rigid_body_changes(dt);
 
-  auto i = size_t{0};
+  // run depenetration AFTER applying queued rigid body changes
+  auto i                       = size_t{0};
   auto depenetrations_resolved = u32{0};
   // run depenetrations until reaching the maximum number of interations
   // or when no depenetrations have tried to be resolved (which probably means that its finished)
   do {
     depenetrations_resolved = this->depenetrate_dynamic_rigid_bodies();
     ++i;
-  } while (i < PhysicsSystem::depenetration_maximum_iterations &&
+  } while (i < PhysicsSystem::DEPENETRATION_MAXIMUM_ITERATIONS &&
            depenetrations_resolved > 0);
+
+  // ensure the colliders are always syncronised
+  collision_system.syncronize_colliders();
 }
 
 auto PhysicsSystem::initialize_physics_component(PhysicsComponent &physics_component,
@@ -297,12 +302,70 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
 }
 
 auto PhysicsSystem::depenetrate_dynamic_rigid_bodies() -> u32 {
-  auto &afk = afk::Engine::get();
+  auto &afk              = afk::Engine::get();
   auto &collision_system = afk.collision_system;
+  auto &registry         = afk.ecs.registry;
 
   auto collisions = collision_system.get_current_collisions();
 
-  return 0;
+  for (const auto &collision : collisions) {
+    // only bother processing the event if both items are rigid bodies
+    if (registry.has<PhysicsComponent>(collision.entity1) &&
+        registry.has<PhysicsComponent>(collision.entity2)) {
+
+      const auto &entity1_physics = registry.get<PhysicsComponent>(collision.entity1);
+      const auto &entity2_physics = registry.get<PhysicsComponent>(collision.entity2);
+
+      // only bother processing if at least one of the items is not static
+      if (!entity1_physics.is_static || !entity2_physics.is_static) {
+
+        const auto &contacts = collision.contacts;
+        if (contacts.size() > 0) {
+
+          // get deepest penetration
+          auto deepest_penetration_index = size_t{0};
+          for (auto i = size_t{1}; i < contacts.size(); ++i) {
+            if (contacts[i].penetration_depth >
+                contacts[deepest_penetration_index].penetration_depth) {
+              deepest_penetration_index = i;
+            }
+          }
+
+          // contact normal is from the first object to the second, so needs to be inversed when applying to the second object
+          const auto &contact_normal = contacts[deepest_penetration_index].normal;
+          auto penetration = contacts[deepest_penetration_index].penetration_depth;
+
+          // move the object backwards from the max penetration value
+          if (penetration > PhysicsSystem::MAXIMUM_PENETRATION) {
+            penetration -= PhysicsSystem::MAXIMUM_PENETRATION;
+
+            const auto offset = contact_normal * penetration;
+
+            // determine which transform to edit
+            // prefer the non static object
+            // if both are non static, prefer the first object
+            if (!entity1_physics.is_static) {
+              auto &transform = registry.get<TransformComponent>(collision.entity1);
+              // move the transform in the opposite direction of the contact with the magnitude of the penetration
+              transform.translation -= offset;
+            } else {
+              auto &transform = registry.get<TransformComponent>(collision.entity2);
+              // move the transform in the opposite direction of the contact with the magnitude of the penetration
+              transform.translation += offset;
+            }
+          }
+
+        } else {
+          // shouldn't be able to reach a collisioni that has no points
+          afk_unreachable_debug();
+        }
+      }
+    }
+  }
+
+  // return the number of collisions as the number of cases "resolved"
+  // assume each case is resolved for the current penetrations (though more may be caused from moving the items)
+  return collisions.size();
 }
 
 auto PhysicsSystem::get_shape_inertia_tensor(const Sphere &shape, f32 mass) -> glm::vec3 {
@@ -423,7 +486,7 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
 
 auto PhysicsSystem::get_inverse_inertia_tensor(const glm::vec3 &local_inverse_inertia_tensor,
                                                const glm::quat &rotation) -> glm::mat3 {
-  const auto orientation           = glm::mat3_cast(rotation);
+  const auto orientation     = glm::mat3_cast(rotation);
   auto orientation_transpose = glm::transpose(orientation);
   // note that rp3d and glm have different access on matrices
   // glm is column access by default, while rp3d is row access

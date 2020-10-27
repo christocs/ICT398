@@ -9,9 +9,9 @@
 #include "afk/ecs/Registry.hpp"
 #include "afk/ecs/component/ColliderComponent.hpp"
 #include "afk/ecs/component/TransformComponent.hpp"
+#include "afk/event/Event.hpp"
 #include "afk/render/Mesh.hpp"
 #include "afk/render/WireframeMesh.hpp"
-#include "afk/event/Event.hpp"
 
 namespace afk {
   namespace ecs {
@@ -53,6 +53,13 @@ namespace afk {
          * Update collisions for firing events and generating physics debug mesh, and sync ReactPhysics3D world with the TransformComponent
          */
         auto update() -> void;
+
+        /**
+         * Synchronises colliders with their transform components
+         *
+         * This will NOT trigger collision events
+         */
+        auto syncronize_colliders() -> void;
 
         /**
          * Load a collision component associated to an entity
@@ -98,14 +105,6 @@ namespace afk {
          * @todo set which debug items to generate display data for in GUI
          */
         rp3d::PhysicsWorld *create_rp3d_physics_world();
-
-        
-        /**
-         * Synchronises colliders with their transform components
-         *
-         * This will NOT trigger collision events
-         */
-        auto syncronize_colliders() -> void;
 
         /**
          * Update camera raycast

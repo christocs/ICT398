@@ -54,6 +54,8 @@ namespace afk {
         /**
          * Method depenetrates non-static rigid bodies from other colliders
          * May cause new, different penetrations so it is recommende to run this multiple times
+         * 
+         * Does NOT re-syncronise the transform components and the colliders, so be sure to syncronise them after calling this
          *
          * @return number of rigid bodies de-penetrated
          */
@@ -142,7 +144,10 @@ namespace afk {
         bool is_initialized = false;
 
         /** maximum number of times to run depenetration per update */
-        const static u32 depenetration_maximum_iterations = 5;
+        static constexpr u32 DEPENETRATION_MAXIMUM_ITERATIONS = 5;
+
+        /** maximum penetration value */
+        static constexpr f32 MAXIMUM_PENETRATION = 0.1f;
       };
     }
   }
