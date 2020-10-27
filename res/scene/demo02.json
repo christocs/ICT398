@@ -1,12 +1,12 @@
 {
-  "name": "weightedlevertest",
+  "name": "demo02",
   "entities": [
     {
       "name": "basketball",
       "components": {
         "Transform": {
           "translation": {
-            "x": 0.0,
+            "x": 5.0,
             "y": 0.0,
             "z": 10.0
           },
@@ -34,13 +34,13 @@
       }
     },
     {
-      "name": "weightedlever",
+      "name": "box",
       "components": {
         "Transform": {
           "translation": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": -10.0
+            "x": 5.0,
+            "y": 1.5,
+            "z": 0.0
           },
           "scale": {
             "x": 1.0,
@@ -49,7 +49,7 @@
           },
           "rotation": {
             "x": 0.0,
-            "y": 180.0,
+            "y": 0.0,
             "z": 0.0
           }
         }

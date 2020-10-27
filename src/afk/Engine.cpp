@@ -70,6 +70,8 @@ auto Engine::initialize() -> void {
                                        this->move_keyboard(event);
                                      }});
 
+  this->scene_manager.instantiate_scene("default");
+
   this->last_update = afk::Engine::get_time();
 }
 
@@ -204,8 +206,6 @@ auto Engine::move_mouse(Event event) -> void {
 
 auto Engine::move_keyboard(Event event) -> void {
   const auto key = std::get<Event::Key>(event.data).key;
-
-  afk::io::log << "event type " << static_cast<int>(event.type) << "\n";
 
   // proccess key down events
   if (event.type == Event::Type::KeyDown) {
