@@ -367,7 +367,9 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     auto collider_rotation_transpose = glm::transpose(collider_rotation);
     // row multiplication (note that glm by default has column access)
     for (auto i = size_t{0}; i < 3; ++i) {
-      collider_rotation_transpose[i] *= collider_inertia_tensor[i];
+      for (auto j = size_t{0}; j < 3; ++j) {
+        collider_rotation_transpose[j][i] *= collider_inertia_tensor[i];
+      }
     }
     const auto collider_inertia_tensor_in_body_space =
         collider_rotation * collider_rotation_transpose;
