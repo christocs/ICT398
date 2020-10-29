@@ -292,7 +292,7 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   f32 denominator =
       glm::dot(glm::cross(r1, contact_normal), j1 * glm::cross(r1, contact_normal));
   denominator +=
-      glm::dot(glm::cross(r2, contact_normal), j1 * glm::cross(r2, contact_normal));
+      glm::dot(glm::cross(r2, contact_normal), j2 * glm::cross(r2, contact_normal));
   denominator += inverse_mass1 + inverse_mass2;
 
   return numerator / denominator;
