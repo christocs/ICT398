@@ -201,8 +201,8 @@ auto CollisionSystem::instantiate_collider_component(
 
   // find the index of the collision body
   const auto no_collision_bodies = this->world->getNbCollisionBodies();
-  for (auto i = size_t{0}; i < no_collision_bodies; ++i) {
-    if (this->world->getCollisionBody(i) == body) {
+  for (u32 i = 0u; i < no_collision_bodies; ++i) {
+    if (this->world->getCollisionBody(i)->getEntity().id == body->getEntity().id) {
       // check that the rp3d body has not already been mapped to a afk ecs entity
       afk_assert(this->rp3d_body_index_to_ecs_entity_map.count(i) == 0,
                  "ReactPhysics3D body index has already being mapped to an AFK "
@@ -279,8 +279,8 @@ auto CollisionSystem::get_regular_debug_mesh() -> afk::render::Mesh {
   auto triangles      = debug_renderer->getTriangles();
 
   // note: some points may be duplicated
-  auto no_vertices = usize{0};
-  for (auto i = usize{0}; i < triangles.size(); ++i) {
+  u32 no_vertices = 0u;
+  for (u32 i = 0u; i < triangles.size(); ++i) {
     auto vertex1     = afk::render::Mesh::Vertex{};
     vertex1.position = glm::vec3{triangles[i].point1.x, triangles[i].point1.y,
                                  triangles[i].point1.z};
@@ -359,7 +359,7 @@ auto CollisionSystem::get_debug_mesh() -> WireframeMesh {
   this->temporary_collisions = {};
 
   // return the collisions
-  return std::move(collisions);
+  return collisions;
 }
 
 rp3d::PhysicsWorld *CollisionSystem::create_rp3d_physics_world() {
@@ -420,7 +420,6 @@ void CollisionSystem::CollisionEventListener::onContact(
     const auto contact_pair = callback_data.getContactPair(p);
 
     auto &engine         = afk::Engine::get();
-    const auto &registry = engine.ecs.registry;
 
     // get the AFK ECS entities of the colliders
     const auto body_to_ecs_map = &engine.collision_system.rp3d_body_id_to_ecs_entity_map;
@@ -496,7 +495,6 @@ void CollisionSystem::CollisionCallback::onContact(const rp3d::CollisionCallback
     const auto contact_pair = callback_data.getContactPair(p);
 
     auto &engine         = afk::Engine::get();
-    const auto &registry = engine.ecs.registry;
 
     // get the AFK ECS entities of the colliders
     const auto body_to_ecs_map = &engine.collision_system.rp3d_body_id_to_ecs_entity_map;
@@ -514,8 +512,6 @@ void CollisionSystem::CollisionCallback::onContact(const rp3d::CollisionCallback
 
     // check that the colliders do not belong to the same entity in react physics 3d
     if (object1 != object2) {
-
-      auto &event_manager = engine.event_manager;
 
       // fire collision events
       // note that if a collision body is "sleeping" in reactphysics3d, a

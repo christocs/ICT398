@@ -43,7 +43,6 @@ namespace afk {
        * Determines if a key is currently being pressed
        *
        * @param movement The movement type.
-       * @param dt The delta time.
        */
       auto get_key(Movement movement) const -> bool;
 
@@ -51,7 +50,7 @@ namespace afk {
        * Sets if a key is currently being pressed
        *
        * @param movement The movement type.
-       * @param dt The delta time.
+       * @param down True if a key is down.
        */
       auto set_key(Movement movement, bool down) -> void;
 

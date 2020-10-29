@@ -68,8 +68,6 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
                &afk](PhysicsComponent &c) {
                 c = j.get<PhysicsComponent>();
 
-                const auto components_json = components_json_ref.get();
-
                 // no need to do checks if components are missing, as all prefabs already enforce these checks
                 // here we are just overwriting prefab components if they are defined
 

@@ -45,6 +45,9 @@ namespace afk {
 
         /**
          * Function to be run when a ColliderComponent is destroyed
+         * 
+         * @param registry ECS registry
+         * @param entity entity being destroyed
          */
         static auto on_collider_destroy(afk::ecs::Registry &registry,
                                         afk::ecs::Entity entity) -> void;
@@ -63,6 +66,10 @@ namespace afk {
 
         /**
          * Load a collision component associated to an entity
+         * 
+         * @param entity entity the component is getting instantiated with
+         * @param collider_component component to instantiate
+         * @param transform_component transform component of the entity
          *
          * @todo instead of creating new shapes for each entity, check if the prefab has already been instantiated and use shapes from the previous instantiation
          */
@@ -72,25 +79,27 @@ namespace afk {
             -> void;
 
         /**
-         * Hack to get debug collision data out of reactphysics3d
+         * Get debug mesh out of react physics 3d
          *
-         * @return
+         * @return debug render mesh without colours/textures
          *
-         * @todo remove this
+         * @todo remove this once get_debug_mesh() is fixed
          */
         auto get_regular_debug_mesh() -> afk::render::Mesh;
 
         /**
-         * Hack to get debug collision data out of reactphysics3d
+         * Get debug mesh out of react physics 3d as a wireframe with colours
          *
-         * @return
+         * @return debug wireframe mesh with colours
          *
-         * @todo remove this
+         * @todo fix this implementation
          */
         auto get_debug_mesh() -> afk::render::WireframeMesh;
 
         /**
          * Test and return current collisions, this will not trigger collision events in the event system
+         * 
+         * @return collision data
          */
         [[nodiscard]] std::vector<afk::event::Event::Collision> get_current_collisions();
 
@@ -100,6 +109,8 @@ namespace afk {
 
         /**
          * Create and return the pointer of the reactphysics3d physics world
+         * 
+         * @return pointer to the physics world
          *
          * @todo turn off debug ReactPhysics3D data to be generated in ReactPhysics3D when debug rendering is not being used
          * @todo set which debug items to generate display data for in GUI
@@ -126,6 +137,7 @@ namespace afk {
         };
 
         /** Logger class for logging ReactPhysics3D events
+        * 
          * @todo Enable/disable logs by level in GUI
          * @todo Be able to display logs separate from game logs in GUI
          */
@@ -167,6 +179,8 @@ namespace afk {
          *
          * @param shape the box shape
          * @param scale scale of the shape
+         * 
+         * @return box shape pointer
          */
         rp3d::BoxShape *create_shape_box(const afk::physics::shape::Box &shape,
                                          const glm::vec3 &scale);
@@ -179,6 +193,8 @@ namespace afk {
          *
          * @param shape the sphere shape
          * @param scale scale of the shape
+         * 
+         * @return sphere shape pointer
          */
         rp3d::SphereShape *create_shape_sphere(const afk::physics::shape::Sphere &shape,
                                                const glm::vec3 &scale);

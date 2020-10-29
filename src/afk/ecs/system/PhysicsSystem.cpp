@@ -35,8 +35,6 @@ auto PhysicsSystem::initialize() -> void {
 
 auto PhysicsSystem::update() -> void {
   auto &afk              = afk::Engine::get();
-  auto &registry         = afk.ecs.registry;
-  auto &event_manager    = afk.event_manager;
   auto &collision_system = afk.collision_system;
   auto dt                = afk.get_delta_time();
 
@@ -84,7 +82,7 @@ auto PhysicsSystem::initialize_physics_component(PhysicsComponent &physics_compo
 
   // set inertia tensor and the inverse
   physics_component.local_inertial_tensor = PhysicsSystem::get_local_inertia_tensor(
-      collider_component, physics_component.total_mass, physics_component.center_of_mass);
+      collider_component, physics_component.center_of_mass);
   const auto &local_tensor = physics_component.local_inertial_tensor;
   physics_component.local_inverse_inertial_tensor =
       glm::vec3{local_tensor.x != 0.0f ? 1 / local_tensor.x : 0.0f,
@@ -102,11 +100,10 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
              "event type was not 'Collision'");
 
   auto &afk      = afk::Engine::get();
-  const auto dt  = afk.get_delta_time();
   auto &registry = afk.ecs.registry;
 
   auto visitor = Visitor{
-      [dt, &afk, &registry](Event::Collision &c) {
+      [&afk, &registry](Event::Collision &c) {
         // only do physics resolution on entities that are not static
         if (registry.has<PhysicsComponent>(c.entity1) &&
             registry.has<PhysicsComponent>(c.entity2)) {
@@ -119,24 +116,6 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
 
           // only do resolution if at least one of the entities has a non-static physics component
           if (!physics1.is_static || !physics2.is_static) {
-
-            // afk::io::log << "collision points:\n";
-            for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
-
-              // @todo add more than just the translate
-              const auto world_space1 = transform1.translation + c.contacts[i].collider1_point;
-              const auto world_space2 = transform2.translation + c.contacts[i].collider2_point;
-              /*afk::io::log << "\t1: local - x:" + std::to_string(world_space1.x) +
-                                  ", y: " + std::to_string(world_space1.x) +
-                                  ", z:" + std::to_string(world_space1.x) +
-                                  "\n" + "\t2: local - x:" +
-                                  std::to_string(world_space2.x) +
-                                  ", y: " + std::to_string(world_space2.x) +
-                                  ", z:" + std::to_string(world_space2.x) + "\n";*/
-            }
-
-            const auto &collider1 = registry.get<ColliderComponent>(c.entity1);
-            const auto &collider2 = registry.get<ColliderComponent>(c.entity2);
 
             auto avg_normal = glm::vec3{0.0f};
             for (auto i = size_t{0}; i < c.contacts.size(); ++i) {
@@ -192,7 +171,6 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
 auto PhysicsSystem::apply_rigid_body_changes(f32 dt) -> void {
   auto &afk           = afk::Engine::get();
   auto &registry      = afk.ecs.registry;
-  auto &event_manager = afk.event_manager;
   // only bother updating rigid bodies
   const auto view =
       registry.view<ColliderComponent, PhysicsComponent, TransformComponent>();
@@ -274,9 +252,6 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   // 1/(inertial tensor)
   const auto j1 = collider_1_physics.inverse_inertial_tensor;
   const auto j2 = collider_2_physics.inverse_inertial_tensor;
-
-  auto orientation_transpose1 = glm::mat4_cast(collider_1_transform.rotation);
-  auto orientation_transpose2 = glm::mat4_cast(collider_2_transform.rotation);
 
   // inverse mass
   // make the number as low as possible for static entities to make it appear like they're very heavy
@@ -384,15 +359,16 @@ auto PhysicsSystem::get_shape_inertia_tensor(const Box &shape, f32 mass) -> glm:
   const auto x2 = shape.x * 2.0f;
   const auto y2 = shape.y * 2.0f;
   const auto z2 = shape.z * 2.0f;
-  return glm::vec3{m_over_12 * (glm::pow(y2, 2) + glm::pow(z2, 2)),
-                   m_over_12 * (glm::pow(x2, 2) + glm::pow(z2, 2)),
-                   m_over_12 * (glm::pow(x2, 2) + glm::pow(y2, 2))};
+  return glm::vec3{m_over_12 * (glm::pow<f32>(y2, 2) + glm::pow<f32>(z2, 2)),
+                   m_over_12 * (glm::pow<f32>(x2, 2) + glm::pow<f32>(z2, 2)),
+                   m_over_12 * (glm::pow<f32>(x2, 2) + glm::pow<f32>(y2, 2))};
 }
 
 auto PhysicsSystem::get_shape_volume(const Sphere &shape, const glm::vec3 &scale) -> f32 {
   // for a sphere to be a sphere, its radius needs to be consistent
   const auto avg_radius = ((scale.x + scale.y + scale.z) / 3.0f) * shape;
-  return (4.0f / 3.0f) * glm::pi<f32>() * glm::pow(avg_radius, 3);
+  static constexpr auto PI   = glm::pi<f32>();
+  return static_cast<f32>(4.0f / 3.0f) * PI * glm::pow<f32>(avg_radius, 3);
 }
 
 auto PhysicsSystem::get_shape_volume(const Box &shape, const glm::vec3 &scale) -> f32 {
@@ -425,8 +401,7 @@ auto PhysicsSystem::get_total_mass(const afk::ecs::component::ColliderComponent 
   return total_mass;
 }
 
-auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::ColliderComponent &collider_component,
-                                             f32 total_mass, const glm::vec3 &local_center_of_mass)
+auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::ColliderComponent &collider_component, const glm::vec3 &local_center_of_mass)
     -> glm::vec3 {
 
   auto temp_inertia_tensor = glm::zero<glm::mat3>();

@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "afk/ecs/component/ColliderComponent.hpp";
+#include "afk/ecs/component/ColliderComponent.hpp"
 #include "afk/ecs/component/PhysicsComponent.hpp"
 #include "afk/ecs/component/TransformComponent.hpp"
 #include "afk/event/Event.hpp"
@@ -28,6 +28,10 @@ namespace afk {
 
         /**
          * Initialize values for physics component
+         * 
+         * @param physics_component physics component to initialise its data
+         * @param collider_component collider component used to generate the physics component's data
+         * @param transform_component transform component used to generate the phhysics component's data
          */
         auto initialize_physics_component(
             afk::ecs::component::PhysicsComponent &physics_component,
@@ -39,7 +43,7 @@ namespace afk {
          *
          * Should only pass in event of type Collision
          *
-         * @param event - event information
+         * @param event event information
          *
          * @todo copy event parameter by reference not value
          */
@@ -63,6 +67,11 @@ namespace afk {
 
         /**
          * Get the coefficient of the impulse vector
+         * 
+         * @param data collision event data
+         * @param contact_normal the contact normal from the first body to the second
+         * @param r1 the first body's vector from center of mass to its collision point in local space
+         * @param r2 the second body's vector from center of mass to its collision point in local space
          */
         static auto get_impulse_coefficient(const afk::event::Event::Collision &data,
                                             const glm::vec3 &contact_normal,
@@ -72,7 +81,8 @@ namespace afk {
         /**
          * Get inertia tensor of a sphere shape in its own local space
          *
-         * @param shape
+         * @param shape definition of the individual collider
+         * @param mass mass of the individual collider
          *
          * @return inertia tensor in local space
          *
@@ -84,7 +94,8 @@ namespace afk {
         /**
          * Get inertia tensor of a box shape in its own local space
          *
-         * @param shape
+         * @param shape definition of the individual collider
+         * @param mass mass of the individual collider
          *
          * @return inertia tensor in local space
          *
@@ -96,10 +107,10 @@ namespace afk {
         /**
          * Get volume of sphere shape within the rigid body's local space
          *
-         * @param shape
-         * @param scale
+         * @param shape definition of the individual collider
+         * @param scale scale of the individual collider
          *
-         * @return volume
+         * @return volume of the shape with scale applied
          */
         static auto get_shape_volume(const afk::physics::shape::Sphere &shape,
                                      const glm::vec3 &scale) -> f32;
@@ -107,35 +118,50 @@ namespace afk {
         /**
          * Get volume of box shape within the rigid body's local space
          *
-         * @param shape
-         * @param scale
+         * @param shape definition of the individual collider
+         * @param scale scale of the individual collider
          *
-         * @return volume
+         * @return volume of the shape with scale applied
          */
         static auto get_shape_volume(const afk::physics::shape::Box &shape,
                                      const glm::vec3 &scale) -> f32;
 
         /**
-         * Calculate local center of mass
+         * Get the local center of mass
+         * 
+         * @param collider_component collider component to generate the centre off mass for
+         * @param total_mass total mass of the collider component
+         * 
+         * @return center of mass of the collider component in its local space
          */
         static auto get_local_center_of_mass(const afk::ecs::component::ColliderComponent &collider_component,
                                              f32 total_mass) -> glm::vec3;
 
         /**
-         * Calculate total mass
+         * Get total mass
+         * 
+         * @param collider_component collider component to calculate the total mass for
+         * 
+         * @return total mass of the collider
          */
         static auto get_total_mass(const afk::ecs::component::ColliderComponent &collider_component)
             -> f32;
 
         /**
-         * Calculate inertia tensor in a collider's local space
+         * Calculate inertia tensor in a collider component's local space
+         * 
+         * @param collider_component the collider component to calculate the inertia tensor for
+         * @param total_mass the total mass of the collider component
+         * @param local_center_of_mass center of mass in local space of the collider component
          */
-        static auto get_local_inertia_tensor(const afk::ecs::component::ColliderComponent &collider_component,
-                                             f32 total_mass, const glm::vec3 &local_center_of_mass)
+        static auto get_local_inertia_tensor(const afk::ecs::component::ColliderComponent &collider_component, const glm::vec3 &local_center_of_mass)
             -> glm::vec3;
 
         /**
-         * Calcualte thhe inverse inertia tensor in global space using the rotation for the entity
+         * Calcualate the inverse inertia tensor in global space using the rotation for the entity
+         * 
+         * @param local_inverse_inertia_tensor inertia tensor of the collider component in local space
+         * @param rotation the global rotation of the collider component
          */
         static auto get_inverse_inertia_tensor(const glm::vec3 &local_inverse_inertia_tensor,
                                                const glm::quat &rotation) -> glm::mat3;
