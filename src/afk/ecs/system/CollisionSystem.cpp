@@ -201,7 +201,7 @@ auto CollisionSystem::instantiate_collider_component(
 
   // find the index of the collision body
   const auto no_collision_bodies = this->world->getNbCollisionBodies();
-  for (u32 i = 0u; i < no_collision_bodies; ++i) {
+  for (auto i = u32{0}; i < no_collision_bodies; ++i) {
     if (this->world->getCollisionBody(i)->getEntity().id == body->getEntity().id) {
       // check that the rp3d body has not already been mapped to a afk ecs entity
       afk_assert(this->rp3d_body_index_to_ecs_entity_map.count(i) == 0,
@@ -279,8 +279,8 @@ auto CollisionSystem::get_regular_debug_mesh() -> afk::render::Mesh {
   auto triangles      = debug_renderer->getTriangles();
 
   // note: some points may be duplicated
-  u32 no_vertices = 0u;
-  for (u32 i = 0u; i < triangles.size(); ++i) {
+  auto no_vertices = u32{0};
+  for (auto i = u32{0}; i < triangles.size(); ++i) {
     auto vertex1     = afk::render::Mesh::Vertex{};
     vertex1.position = glm::vec3{triangles[i].point1.x, triangles[i].point1.y,
                                  triangles[i].point1.z};
@@ -453,7 +453,7 @@ void CollisionSystem::CollisionEventListener::onContact(
                    "No contact points found on collision");
 
         data.contacts.reserve(contact_pair.getNbContactPoints());
-        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
+        for (auto i = u32{0}; i < contact_pair.getNbContactPoints(); ++i) {
           const auto &contact_point = contact_pair.getContactPoint(i);
           const auto collider1_transform =
               contact_pair.getCollider1()->getLocalToWorldTransform();
@@ -526,7 +526,7 @@ void CollisionSystem::CollisionCallback::onContact(const rp3d::CollisionCallback
                    "No contact points found on collision");
 
         data.contacts.reserve(contact_pair.getNbContactPoints());
-        for (u32 i = 0; i < contact_pair.getNbContactPoints(); ++i) {
+        for (auto i = u32{0}; i < contact_pair.getNbContactPoints(); ++i) {
           const auto &contact_point = contact_pair.getContactPoint(i);
           const auto collider1_transform =
               contact_pair.getCollider1()->getLocalToWorldTransform();

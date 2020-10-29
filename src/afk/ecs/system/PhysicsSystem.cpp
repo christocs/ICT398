@@ -433,8 +433,8 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     const auto collider_rotation = glm::mat3_cast(collision_body.transform.rotation);
     auto collider_rotation_transpose = glm::transpose(collider_rotation);
     // row multiplication (note that glm by default has column access)
-    for (auto i = size_t{0}; i < 3; ++i) {
-      for (auto j = size_t{0}; j < 3; ++j) {
+    for (auto i = u32{0}; i < 3; ++i) {
+      for (auto j = u32{0}; j < 3; ++j) {
         collider_rotation_transpose[j][i] *= collider_inertia_tensor[i];
       }
     }
@@ -471,9 +471,9 @@ auto PhysicsSystem::get_inverse_inertia_tensor(const glm::vec3 &local_inverse_in
   // glm is column access by default, while rp3d is row access
   // @todo convert between rp3d and glm access types elsewhere, rather than applying the rotation in rp3d's preferred form
   // the engine should always store glm's matrix types rather than going around it and using rp3d's preference
-  for (auto i = size_t{0}; i < 3; ++i) {
+  for (auto i = u32{0}; i < 3; ++i) {
     /*orientation_transpose[i] *= local_inverse_inertia_tensor[i];*/
-    for (auto j = size_t{0}; j < 3; ++j) {
+    for (auto j = u32{0}; j < 3; ++j) {
       orientation_transpose[j][i] = local_inverse_inertia_tensor[i];
     }
   }
