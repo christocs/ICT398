@@ -75,7 +75,8 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
                                const auto transform =
                                    components.at("Transform").get<TransformComponent>();
 
-                               afk.physics_system.initialize_physics_component(c, collider, transform);
+                               afk.physics_system.initialize_physics_component(
+                                   c, collider, transform);
                              },
                              [](auto) { afk_unreachable(); }};
 
@@ -146,7 +147,7 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
 
                            registry.emplace<ColliderComponent>(entity, component);
                          },
-                         [&registry, entity, &prefab, &afk](PhysicsComponent component) {
+                         [&registry, entity](PhysicsComponent component) {
                            registry.emplace<PhysicsComponent>(entity, component);
                          },
                          [](auto) { afk_unreachable(); }};
