@@ -486,6 +486,8 @@ void CollisionSystem::CollisionEventListener::onContact(
 }
 
 void CollisionSystem::CollisionCallback::onContact(const rp3d::CollisionCallback::CallbackData &callback_data) {
+  auto &engine = afk::Engine::get();
+  engine.collision_system.temporary_collisions.resize(callback_data.getNbContactPairs());
 
   // On collision event, there will be two colliders colliding
   // Iterate over all these pairs
@@ -493,8 +495,6 @@ void CollisionSystem::CollisionCallback::onContact(const rp3d::CollisionCallback
 
     // Get the contact pair
     const auto contact_pair = callback_data.getContactPair(p);
-
-    auto &engine         = afk::Engine::get();
 
     // get the AFK ECS entities of the colliders
     const auto body_to_ecs_map = &engine.collision_system.rp3d_body_id_to_ecs_entity_map;

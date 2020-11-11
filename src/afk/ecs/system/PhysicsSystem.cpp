@@ -407,23 +407,16 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
   auto temp_inertia_tensor = glm::zero<glm::mat3>();
   for (const auto &collision_body : collider_component.colliders) {
     auto collider_inertia_tensor = glm::vec3{};
-    f32 collider_volume          = 0.0f;
 
     // calculate collider volume and inertia tensor
     auto visitor = Visitor{
-        [&collider_inertia_tensor, &collider_volume,
-         &collision_body](const afk::physics::shape::Sphere &shape) {
+        [&collider_inertia_tensor, &collision_body](const afk::physics::shape::Sphere &shape) {
           collider_inertia_tensor =
               PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
-          collider_volume =
-              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
         },
-        [&collider_inertia_tensor, &collider_volume,
-         &collision_body](const afk::physics::shape::Box &shape) {
+        [&collider_inertia_tensor, &collision_body](const afk::physics::shape::Box &shape) {
           collider_inertia_tensor =
               PhysicsSystem::get_shape_inertia_tensor(shape, collision_body.mass);
-          collider_volume =
-              PhysicsSystem::get_shape_volume(shape, collision_body.transform.scale);
         },
         [](auto) { afk_assert(false, "Collider shape type is invalid"); }};
     std::visit(visitor, collision_body.shape);
@@ -438,27 +431,28 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
         collider_rotation_transpose[j][i] *= collider_inertia_tensor[i];
       }
     }
-    const auto collider_inertia_tensor_in_body_space =
+    auto collider_inertia_tensor_in_body_space =
         collider_rotation * collider_rotation_transpose;
 
-    // Use the parallel axis theorem to convert the inertia tensor w.r.t the
-    // collider center into a inertia tensor w.r.t to the body origin.
-    // assume center of mass is the center of the collider
-    // @todo convert from row-major to column-major (rp3d vs glm)
+    // use parallel axis theorem to move the inertia tensor
+    // refer to https://www.real-world-physics-problems.com/parallel-axis-and-parallel-plane-theorem.html
     const auto offset = collision_body.transform.translation - local_center_of_mass;
     const auto radius_from_center_squared = glm::pow(glm::length(offset), 2);
-    auto offset_matrix =
-        glm::mat3{glm::vec3{radius_from_center_squared, 0.0f, 0.0f},
-                  glm::vec3{0.0f, radius_from_center_squared, 0.0f},
-                  glm::vec3{0.0f, 0.0f, radius_from_center_squared}};
-    offset_matrix[0] = offset * (-offset.x);
-    offset_matrix[1] = offset * (-offset.y);
-    offset_matrix[2] = offset * (-offset.z);
+    auto offset_matrix                    = glm::zero<glm::mat3>();
+    const auto axis_offsets =
+        glm::vec3{offset.y + offset.z, offset.x + offset.z, offset.x + offset.y};
+    // row multiplication (note that glm by default has column access)
+    for (auto i = u32{0}; i < 3; ++i) {
+      for (auto j = u32{0}; j < 3; ++j) {
+        offset_matrix[j][i] += axis_offsets[i];
+      }
+    }
     offset_matrix *= collision_body.mass;
 
     temp_inertia_tensor += collider_inertia_tensor_in_body_space + offset_matrix;
   }
 
+  // only bother returning sensor of xx, yy, zz
   return glm::vec3{temp_inertia_tensor[0][0], temp_inertia_tensor[1][1],
                    temp_inertia_tensor[2][2]};
 }

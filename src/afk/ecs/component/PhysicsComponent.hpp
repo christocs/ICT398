@@ -28,7 +28,7 @@ namespace afk {
          * center of mass local to the entity
          * is constant after initialisation
          */
-        glm::vec3 center_of_mass = glm::vec3{};
+        glm::vec3 center_of_mass = {};
 
         /** --- linear data --- */
 
