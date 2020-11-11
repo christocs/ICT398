@@ -103,7 +103,7 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
   auto &registry = afk.ecs.registry;
 
   auto visitor = Visitor{
-      [&afk, &registry](Event::Collision &c) {
+      [&registry](Event::Collision &c) {
         // only do physics resolution on entities that are not static
         if (registry.has<PhysicsComponent>(c.entity1) &&
             registry.has<PhysicsComponent>(c.entity2)) {
@@ -169,8 +169,8 @@ auto PhysicsSystem::collision_resolution_callback(Event event) -> void {
 }
 
 auto PhysicsSystem::apply_rigid_body_changes(f32 dt) -> void {
-  auto &afk           = afk::Engine::get();
-  auto &registry      = afk.ecs.registry;
+  auto &afk      = afk::Engine::get();
+  auto &registry = afk.ecs.registry;
   // only bother updating rigid bodies
   const auto view =
       registry.view<ColliderComponent, PhysicsComponent, TransformComponent>();
@@ -238,8 +238,8 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   const auto collider_1_physics = registry.get<PhysicsComponent>(data.entity1);
   const auto collider_2_physics = registry.get<PhysicsComponent>(data.entity2);
 
-  const auto collider_1_transform = registry.get<TransformComponent>(data.entity1);
-  const auto collider_2_transform = registry.get<TransformComponent>(data.entity2);
+  // const auto collider_1_transform = registry.get<TransformComponent>(data.entity1);
+  // const auto collider_2_transform = registry.get<TransformComponent>(data.entity2);
 
   // velocity before collision
   const auto v1 = collider_1_physics.linear_velocity;
@@ -348,7 +348,7 @@ auto PhysicsSystem::depenetrate_dynamic_rigid_bodies() -> u32 {
 }
 
 auto PhysicsSystem::get_shape_inertia_tensor(const Sphere &shape, f32 mass) -> glm::vec3 {
-  const auto single_axis_inertia = 0.4f * mass * glm::pow(shape, 2);
+  const auto single_axis_inertia = 0.4 * static_cast<double>(mass) * glm::pow(shape, 2);
   return glm::vec3{single_axis_inertia, single_axis_inertia, single_axis_inertia};
 }
 
@@ -359,16 +359,18 @@ auto PhysicsSystem::get_shape_inertia_tensor(const Box &shape, f32 mass) -> glm:
   const auto x2 = shape.x * 2.0f;
   const auto y2 = shape.y * 2.0f;
   const auto z2 = shape.z * 2.0f;
-  return glm::vec3{m_over_12 * (glm::pow<f32>(y2, 2) + glm::pow<f32>(z2, 2)),
-                   m_over_12 * (glm::pow<f32>(x2, 2) + glm::pow<f32>(z2, 2)),
-                   m_over_12 * (glm::pow<f32>(x2, 2) + glm::pow<f32>(y2, 2))};
+  return glm::vec3{
+      static_cast<double>(m_over_12) * (glm::pow<f32>(y2, 2) + glm::pow<f32>(z2, 2)),
+      static_cast<double>(m_over_12) * (glm::pow<f32>(x2, 2) + glm::pow<f32>(z2, 2)),
+      static_cast<double>(m_over_12) * (glm::pow<f32>(x2, 2) + glm::pow<f32>(y2, 2))};
 }
 
 auto PhysicsSystem::get_shape_volume(const Sphere &shape, const glm::vec3 &scale) -> f32 {
   // for a sphere to be a sphere, its radius needs to be consistent
-  const auto avg_radius = ((scale.x + scale.y + scale.z) / 3.0f) * shape;
-  static constexpr auto PI   = glm::pi<f32>();
-  return static_cast<f32>(4.0f / 3.0f) * PI * glm::pow<f32>(avg_radius, 3);
+  const auto avg_radius    = ((scale.x + scale.y + scale.z) / 3.0f) * shape;
+  static constexpr auto PI = glm::pi<f32>();
+  return static_cast<f32>(4.0f / 3.0f) * static_cast<f32>(PI) *
+         static_cast<f32>(glm::pow<f32>(avg_radius, 3));
 }
 
 auto PhysicsSystem::get_shape_volume(const Box &shape, const glm::vec3 &scale) -> f32 {
@@ -401,7 +403,8 @@ auto PhysicsSystem::get_total_mass(const afk::ecs::component::ColliderComponent 
   return total_mass;
 }
 
-auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::ColliderComponent &collider_component, const glm::vec3 &local_center_of_mass)
+auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::ColliderComponent &collider_component,
+                                             const glm::vec3 &local_center_of_mass)
     -> glm::vec3 {
 
   auto temp_inertia_tensor = glm::zero<glm::mat3>();
@@ -426,8 +429,8 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     const auto collider_rotation = glm::mat3_cast(collision_body.transform.rotation);
     auto collider_rotation_transpose = glm::transpose(collider_rotation);
     // row multiplication (note that glm by default has column access)
-    for (auto i = u32{0}; i < 3; ++i) {
-      for (auto j = u32{0}; j < 3; ++j) {
+    for (glm::vec3::length_type i = u32{0}; i < 3; ++i) {
+      for (glm::vec3::length_type j = u32{0}; j < 3; ++j) {
         collider_rotation_transpose[j][i] *= collider_inertia_tensor[i];
       }
     }
@@ -465,9 +468,9 @@ auto PhysicsSystem::get_inverse_inertia_tensor(const glm::vec3 &local_inverse_in
   // glm is column access by default, while rp3d is row access
   // @todo convert between rp3d and glm access types elsewhere, rather than applying the rotation in rp3d's preferred form
   // the engine should always store glm's matrix types rather than going around it and using rp3d's preference
-  for (auto i = u32{0}; i < 3; ++i) {
+  for (glm::vec3::length_type i = u32{0}; i < 3; ++i) {
     /*orientation_transpose[i] *= local_inverse_inertia_tensor[i];*/
-    for (auto j = u32{0}; j < 3; ++j) {
+    for (glm::vec3::length_type j = u32{0}; j < 3; ++j) {
       orientation_transpose[j][i] = local_inverse_inertia_tensor[i];
     }
   }

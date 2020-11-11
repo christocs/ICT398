@@ -106,8 +106,8 @@ auto CollisionSystem::syncronize_colliders() -> void {
   // update translation and rotation in react physics 3d representation
   // @todo apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
   for (auto &entity : collider_view) {
-    const auto &collider = collider_view.get<ColliderComponent>(entity);
-    auto &transform      = collider_view.get<TransformComponent>(entity);
+    // const auto &collider = collider_view.get<ColliderComponent>(entity);
+    auto &transform = collider_view.get<TransformComponent>(entity);
     afk_assert(this->ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");
     const auto rp3d_body_index = this->ecs_entity_to_rp3d_body_index_map.at(entity);
@@ -355,7 +355,7 @@ auto CollisionSystem::get_debug_mesh() -> WireframeMesh {
   this->world->testCollision(this->collision_callback);
 
   //// empty the temporary store
-  auto collisions = std::move(CollisionSystem::temporary_collisions);
+  auto collisions            = std::move(CollisionSystem::temporary_collisions);
   this->temporary_collisions = {};
 
   // return the collisions
@@ -419,7 +419,7 @@ void CollisionSystem::CollisionEventListener::onContact(
     // Get the contact pair
     const auto contact_pair = callback_data.getContactPair(p);
 
-    auto &engine         = afk::Engine::get();
+    auto &engine = afk::Engine::get();
 
     // get the AFK ECS entities of the colliders
     const auto body_to_ecs_map = &engine.collision_system.rp3d_body_id_to_ecs_entity_map;
@@ -560,9 +560,12 @@ void CollisionSystem::CollisionCallback::onContact(const rp3d::CollisionCallback
   }
 }
 
-void CollisionSystem::Logger::log(rp3d::Logger::Level level, const std::string &physicsWorldName,
-                                  rp3d::Logger::Category category, const std::string &message,
-                                  const char *filename, int lineNumber) {
+void CollisionSystem::Logger::log(rp3d::Logger::Level level,
+                                  [[maybe_unused]] const std::string &physicsWorldName,
+                                  [[maybe_unused]] rp3d::Logger::Category category,
+                                  const std::string &message,
+                                  [[maybe_unused]] const char *filename,
+                                  [[maybe_unused]] int lineNumber) {
   if (level != rp3d::Logger::Level::Information) {
     afk::io::log << "[rp3d " << getLevelName(level) << "] " << message << "\n";
   }
