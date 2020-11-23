@@ -48,13 +48,13 @@ namespace afk {
         f32 linear_dampening = 1.0f;
 
         /**
-         * mass in kilograms, derrived from adding all masses of colliders
+         * mass in kilograms, derived from adding all masses of colliders
          * together is constant after initialisation
          */
         f32 total_mass = {};
 
         /**
-         * inverse of mass, derrived from 1 / total_mass
+         * inverse of mass, derived from 1 / total_mass
          * is constant after initialisation
          */
         f32 total_inverse_mass = {};
@@ -80,20 +80,20 @@ namespace afk {
         f32 angular_dampening = 1.0f;
 
         /**
-         * inertial tensor in world rotation
-         * changesg on each update depending on the local inertia tensor and the rotation of the entity
+         * inertia tensor in world rotation
+         * changes on each update depending on the local inertia tensor and the rotation of the entity
          */
         glm::mat3 inverse_inertial_tensor = glm::zero<glm::mat3>();
 
         /**
-         * inertial tensor local to the rigid body
+         * inertia tensor local to the rigid body
          * constant value after initialization
          */
         glm::vec3 local_inertial_tensor = glm::zero<glm::vec3>();
 
         /**
-         * inverse inertial tensor local to the rigid body
-         * constant value after initialisation, derrived from local inertial tensor
+         * inverse inertia tensor local to the rigid body
+         * constant value after initialisation, derived from local inertial tensor
          */
         glm::vec3 local_inverse_inertial_tensor = glm::zero<glm::vec3>();
       };
