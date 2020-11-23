@@ -224,8 +224,6 @@ auto PhysicsSystem::apply_rigid_body_changes(f32 dt) -> void {
   }
 }
 
-// todo check if using contact normal should be used instead of collision normal
-// todo check if a contact normal is being passed or a collision normal is being passed
 auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
                                             const glm::vec3 &contact_normal,
                                             const glm::vec3 &r1,
@@ -246,7 +244,7 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   const auto omega1 = collider_1_physics.angular_velocity;
   const auto omega2 = collider_2_physics.angular_velocity;
 
-  // 1/(inertial tensor)
+  // 1/(inertia tensor)
   const auto j1 = collider_1_physics.inverse_inertial_tensor;
   const auto j2 = collider_2_physics.inverse_inertial_tensor;
 
