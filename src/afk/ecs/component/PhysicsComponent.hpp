@@ -11,9 +11,6 @@ namespace afk {
     namespace component {
       /**
        * Encapsulates a physics component.
-       *
-       * Any entity with a ColliderComponent but without a PhysicsComponent is assumed to be a static rigid body
-       * Any entity with a ColliderComponent and a PhysicsComponent is assumed to be a dynamic rigid body
        */
       struct PhysicsComponent {
         /** --- more general data --- */
