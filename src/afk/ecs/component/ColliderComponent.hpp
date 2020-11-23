@@ -4,10 +4,11 @@
 #include <vector>
 
 #include <glm/glm.hpp>
+
 #include "afk/NumericTypes.hpp"
+#include "afk/physics/Transform.hpp"
 #include "afk/physics/shape/Box.hpp"
 #include "afk/physics/shape/Sphere.hpp"
-#include "afk/physics/Transform.hpp"
 
 namespace afk {
   namespace ecs {
@@ -23,7 +24,7 @@ namespace afk {
         /** A collider body is made up of a collision body as well as a transform local to the entity */
         struct Collider {
           /** Shape of the collider */
-          ColliderShape shape                = {};
+          ColliderShape shape = {};
           /** Transform within local space of the entity */
           afk::physics::Transform transform = {};
           /** Mass of the collider */
@@ -33,7 +34,7 @@ namespace afk {
         /** Defining a collection of colliders */
         using ColliderCollection = std::vector<Collider>;
 
-        /** Collecition of colliders for the entity */
+        /** Collection of colliders for the entity */
         ColliderCollection colliders = {};
       };
     }

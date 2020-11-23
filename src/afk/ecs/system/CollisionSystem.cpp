@@ -106,7 +106,6 @@ auto CollisionSystem::syncronize_colliders() -> void {
   // update translation and rotation in react physics 3d representation
   // @todo apply scale dynamically, most likely need to trigger a change and at that point make new rp3d shapes that are scaled
   for (auto &entity : collider_view) {
-    // const auto &collider = collider_view.get<ColliderComponent>(entity);
     auto &transform = collider_view.get<TransformComponent>(entity);
     afk_assert(this->ecs_entity_to_rp3d_body_index_map.count(entity) == 1,
                "ECS entity is not mapped to a rp3d body");

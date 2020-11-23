@@ -238,9 +238,6 @@ auto PhysicsSystem::get_impulse_coefficient(const Event::Collision &data,
   const auto collider_1_physics = registry.get<PhysicsComponent>(data.entity1);
   const auto collider_2_physics = registry.get<PhysicsComponent>(data.entity2);
 
-  // const auto collider_1_transform = registry.get<TransformComponent>(data.entity1);
-  // const auto collider_2_transform = registry.get<TransformComponent>(data.entity2);
-
   // velocity before collision
   const auto v1 = collider_1_physics.linear_velocity;
   const auto v2 = collider_2_physics.linear_velocity;
@@ -426,16 +423,10 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
 
     // Convert the collider inertia tensor into the local-space of the body
     // do not need to worry about scale, as we are assuming that the center of mass is at the center of each collider and each collider has an even distribution of mass
-    const auto collider_rotation = glm::mat3_cast(collision_body.transform.rotation);
-    auto collider_rotation_transpose = glm::transpose(collider_rotation);
-    // row multiplication (note that glm by default has column access)
+    auto collider_inertia_tensor_in_body_space = glm::mat3_cast(collision_body.transform.rotation);
     for (glm::vec3::length_type i = u32{0}; i < 3; ++i) {
-      for (glm::vec3::length_type j = u32{0}; j < 3; ++j) {
-        collider_rotation_transpose[j][i] *= collider_inertia_tensor[i];
-      }
+      collider_inertia_tensor_in_body_space[i] *= collider_inertia_tensor[i];
     }
-    auto collider_inertia_tensor_in_body_space =
-        collider_rotation * collider_rotation_transpose;
 
     // use parallel axis theorem to move the inertia tensor
     // refer to https://www.real-world-physics-problems.com/parallel-axis-and-parallel-plane-theorem.html
@@ -462,18 +453,11 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
 
 auto PhysicsSystem::get_inverse_inertia_tensor(const glm::vec3 &local_inverse_inertia_tensor,
                                                const glm::quat &rotation) -> glm::mat3 {
-  const auto orientation     = glm::mat3_cast(rotation);
-  auto orientation_transpose = glm::transpose(orientation);
-  // note that rp3d and glm have different access on matrices
-  // glm is column access by default, while rp3d is row access
-  // @todo convert between rp3d and glm access types elsewhere, rather than applying the rotation in rp3d's preferred form
-  // the engine should always store glm's matrix types rather than going around it and using rp3d's preference
+  auto world_inverse_inertia_tensor = glm::mat3_cast(rotation);
+
   for (glm::vec3::length_type i = u32{0}; i < 3; ++i) {
-    /*orientation_transpose[i] *= local_inverse_inertia_tensor[i];*/
-    for (glm::vec3::length_type j = u32{0}; j < 3; ++j) {
-      orientation_transpose[j][i] = local_inverse_inertia_tensor[i];
-    }
+    world_inverse_inertia_tensor[i] *= local_inverse_inertia_tensor[i];
   }
 
-  return orientation * orientation_transpose;
+  return world_inverse_inertia_tensor;
 }
