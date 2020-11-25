@@ -436,7 +436,7 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     const auto offset = collision_body.transform.translation - local_center_of_mass;
     auto offsets_squared = offset;
     for (auto i = glm::vec3::length_type{0}; i < 3; ++i) {
-      offsets_squared[i] = glm::pow(offsets_squared[i], 2);
+      offsets_squared[i] = glm::pow<f32>(offsets_squared[i], 2);
     }
     auto offset_matrix      = glm::zero<glm::mat3>();
     const auto axis_offsets = glm::vec3{offsets_squared.y + offsets_squared.z,
