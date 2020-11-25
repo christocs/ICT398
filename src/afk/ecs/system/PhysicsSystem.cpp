@@ -422,7 +422,7 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     // Convert the collider inertia tensor into the local-space of the body
     // do not need to worry about scale, as we are assuming that the center of mass is at the center of each collider and each collider has an even distribution of mass
     auto collider_inertia_tensor_in_body_space = glm::mat3_cast(collision_body.transform.rotation);
-    for (glm::vec3::length_type i = u32{0}; i < 3; ++i) {
+    for (auto i = glm::vec3::length_type{0}; i < 3; ++i) {
       collider_inertia_tensor_in_body_space[i] *= collider_inertia_tensor[i];
     }
 
@@ -434,8 +434,8 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     const auto axis_offsets =
         glm::vec3{offset.y + offset.z, offset.x + offset.z, offset.x + offset.y};
     // row multiplication (note that glm by default has column access)
-    for (auto i = u32{0}; i < 3; ++i) {
-      for (auto j = u32{0}; j < 3; ++j) {
+    for (auto i = i32{0}; i < 3; ++i) {
+      for (auto j = i32{0}; j < 3; ++j) {
         offset_matrix[j][i] += axis_offsets[i];
       }
     }
@@ -453,7 +453,7 @@ auto PhysicsSystem::get_inverse_inertia_tensor(const glm::vec3 &local_inverse_in
                                                const glm::quat &rotation) -> glm::mat3 {
   auto world_inverse_inertia_tensor = glm::mat3_cast(rotation);
 
-  for (glm::vec3::length_type i = u32{0}; i < 3; ++i) {
+  for (auto i = glm::vec3::length_type{0}; i < 3; ++i) {
     world_inverse_inertia_tensor[i] *= local_inverse_inertia_tensor[i];
   }
 
