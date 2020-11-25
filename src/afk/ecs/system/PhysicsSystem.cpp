@@ -429,10 +429,14 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     // use parallel axis theorem to move the inertia tensor
     // refer to https://www.real-world-physics-problems.com/parallel-axis-and-parallel-plane-theorem.html
     const auto offset = collision_body.transform.translation - local_center_of_mass;
-    const auto radius_from_center_squared = glm::pow(glm::length(offset), 2);
+    auto offsets_squared                  = offset;
+    for (auto i = glm::vec3::length_type{0}; i < 3; ++i) {
+      offsets_squared[i] = glm::pow(offsets_squared[i], 2);
+    }
     auto offset_matrix                    = glm::zero<glm::mat3>();
-    const auto axis_offsets =
-        glm::vec3{offset.y + offset.z, offset.x + offset.z, offset.x + offset.y};
+    const auto axis_offsets = glm::vec3{offsets_squared.y + offsets_squared.z,
+                                        offsets_squared.x + offsets_squared.z,
+                                        offsets_squared.x + offsets_squared.y};
     // row multiplication (note that glm by default has column access)
     for (auto i = i32{0}; i < 3; ++i) {
       for (auto j = i32{0}; j < 3; ++j) {
