@@ -1,6 +1,7 @@
 #include "afk/ui/UiManager.hpp"
 
 #include <filesystem>
+#include <string>
 #include <vector>
 
 #include <imgui/examples/imgui_impl_glfw.h>
@@ -112,22 +113,48 @@ auto UiManager::draw_menu_bar() -> void {
   auto &afk = Engine::get();
 
   if (ImGui::BeginMainMenuBar()) {
-    if (ImGui::BeginMenu("Tools")) {
-      if (ImGui::MenuItem("Log")) {
-        this->show_log = true;
+    // show available scenes and allow the user to instantiate one
+    // instantiating a scene will clear all current entities and replace them with ones from the scene
+    auto &scene_manager   = afk.scene_manager;
+    const auto &scene_map = scene_manager.scene_map;
+    if (ImGui::BeginMenu("Load Scene")) {
+      for (auto it = scene_map.begin(); it != scene_map.end(); ++it) {
+        const auto &key = it->first;
+        if (ImGui::MenuItem(key.c_str())) {
+          scene_manager.instantiate_scene(key);
+        }
       }
-      if (ImGui::MenuItem("Model viewer")) {
-        this->show_model_viewer = true;
+      ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Tools")) {
+      if (ImGui::MenuItem("Log", nullptr, this->show_log)) {
+        this->show_log = !this->show_log;
+      }
+      if (ImGui::MenuItem("Model viewer", nullptr, this->show_model_viewer)) {
+        this->show_model_viewer = !this->show_model_viewer;
+      }
+      if (ImGui::MenuItem("Toggle Gravity", nullptr, afk.gravity_enabled)) {
+        afk.gravity_enabled = !afk.gravity_enabled;
+      }
+      if (ImGui::MenuItem("Toggle Wireframe", nullptr, afk.renderer.get_wireframe())) {
+        afk.renderer.set_wireframe(!afk.renderer.get_wireframe());
+      }
+      if (ImGui::MenuItem("Toggle Debug Physics Mesh", nullptr, afk.display_debug_physics_mesh)) {
+        afk.display_debug_physics_mesh = !afk.display_debug_physics_mesh;
+      }
+      if (ImGui::MenuItem("Reset Camera Position")) {
+        afk.camera.set_position(glm::vec3{0.0f});
       }
       ImGui::EndMenu();
     }
 
     if (ImGui::BeginMenu("Help")) {
-      if (ImGui::MenuItem("About")) {
-        this->show_about = true;
+      if (ImGui::MenuItem("About", nullptr, this->show_about)) {
+        this->show_about = !this->show_about;
       }
-      if (ImGui::MenuItem("Imgui")) {
-        this->show_imgui = true;
+      if (ImGui::MenuItem("Imgui", nullptr, this->show_imgui)) {
+        this->show_imgui = !this->show_imgui;
       }
 
       ImGui::EndMenu();
@@ -142,6 +169,7 @@ auto UiManager::draw_menu_bar() -> void {
 }
 
 auto UiManager::draw_stats() -> void {
+  const auto &afk     = Engine::get();
   const auto offset_x = 10.0f;
   const auto offset_y = 37.0f;
   static auto corner  = 1;
@@ -158,13 +186,12 @@ auto UiManager::draw_stats() -> void {
   }
 
   ImGui::SetNextWindowBgAlpha(0.35f);
-  ImGui::SetNextWindowSize({200, 100});
+  ImGui::SetNextWindowSize({200, 125});
   if (ImGui::Begin("Stats", &this->show_stats,
                    (corner != -1 ? ImGuiWindowFlags_NoMove : 0) | ImGuiWindowFlags_NoDecoration |
                        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings |
                        ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav)) {
 
-    const auto &afk   = Engine::get();
     const auto pos    = afk.camera.get_position();
     const auto angles = afk.camera.get_angles();
 
@@ -175,6 +202,13 @@ auto UiManager::draw_stats() -> void {
                 static_cast<f64>(pos.y), static_cast<f64>(pos.z));
     ImGui::Text("Angles   {%.1f, %.1f}", static_cast<f64>(angles.x),
                 static_cast<f64>(angles.y));
+
+    const auto &camera_raycast_entity = afk.camera.get_raycast_entity();
+    const auto camera_raycast_entity_display =
+        camera_raycast_entity.has_value()
+            ? std::to_string(static_cast<u32>(camera_raycast_entity.value()))
+            : "None";
+    ImGui::Text("Raycast  {%s}", camera_raycast_entity_display.c_str());
 
     if (ImGui::BeginPopupContextWindow()) {
       if (ImGui::MenuItem("Custom", nullptr, corner == -1)) {

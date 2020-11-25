@@ -8,12 +8,14 @@
 
 #include "afk/config/Config.hpp"
 #include "afk/debug/Assert.hpp"
+#include "afk/ecs/system/PhysicsSystem.hpp"
 #include "afk/io/Json.hpp"
 #include "afk/io/JsonSerialization.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
 #include "afk/io/Time.hpp"
 #include "afk/io/Unicode.hpp"
+#include "afk/render/Model.hpp"
 #include "afk/render/Renderer.hpp"
 
 using namespace std::string_literals;
@@ -45,6 +47,8 @@ auto Engine::initialize() -> void {
   this->renderer.initialize();
   this->event_manager.initialize(this->renderer.window);
   this->ui_manager.initialize(this->renderer.window);
+  this->collision_system.initialize();
+  this->physics_system.initialize();
   this->prefab_manager.initialize();
   this->scene_manager.initialize();
 
@@ -57,19 +61,90 @@ auto Engine::initialize() -> void {
       Event::Type::KeyDown, event::EventManager::Callback{[this](Event event) {
         this->move_keyboard(event);
       }});
+  this->event_manager.register_event(
+      Event::Type::KeyUp, event::EventManager::Callback{[this](Event event) {
+        this->move_keyboard(event);
+      }});
+  this->event_manager.register_event(Event::Type::KeyRepeat,
+                                     event::EventManager::Callback{[this](Event event) {
+                                       this->move_keyboard(event);
+                                     }});
 
   this->scene_manager.instantiate_scene("default");
+
+  this->last_update = afk::Engine::get_time();
 }
 
 auto Engine::render() -> void {
   this->renderer.clear_screen({135.0f, 206.0f, 235.0f, 1.0f});
-  this->ecs.system_manager.update();
+  this->ecs.system_manager.display_update();
+
+  auto mesh_model_transform        = physics::Transform{};
+  mesh_model_transform.translation = glm::vec3{0.0f, 0.0f, 0.0f};
+  mesh_model_transform.rotation    = glm::identity<glm::quat>();
+
+  // if (this->display_debug_physics_mesh) {
+  //  auto debug_mesh = this->collision_system.get_debug_mesh();
+  //  if (debug_mesh.vertices.size() > 0) {
+  //    const auto shader =
+  //        this->renderer.get_shader_program("res/shader/default.prog");
+  //    this->renderer.draw_wireframe_mesh(debug_mesh, shader);
+  //  }
+  //}
+
+  if (this->display_debug_physics_mesh) {
+    auto debug_mesh = this->collision_system.get_regular_debug_mesh();
+    if (!debug_mesh.vertices.empty()) {
+      const auto old_wireframe_status = this->renderer.get_wireframe();
+      if (!old_wireframe_status) {
+        this->renderer.set_wireframe(true);
+      }
+      static int debug_mesh_count = 0;
+
+      auto debug_mesh_model = render::Model();
+      ++debug_mesh_count;
+      debug_mesh_model.meshes = {std::move(debug_mesh)};
+      debug_mesh_model.file_path =
+          afk::io::get_resource_path().string() + "/debug/";
+      debug_mesh_model.file_path =
+          debug_mesh_model.file_path.string() + std::to_string(debug_mesh_count);
+
+      auto debug_mesh_model_handle = this->renderer.load_model(debug_mesh_model);
+      const auto shader =
+          this->renderer.get_shader_program("res/shader/rp3dmesh.prog");
+      this->renderer.draw_model(debug_mesh_model_handle, shader, mesh_model_transform);
+
+      if (!old_wireframe_status) {
+        this->renderer.set_wireframe(false);
+      }
+    }
+  }
+
   this->ui_manager.prepare();
   this->ui_manager.draw();
+
   this->renderer.swap_buffers();
 }
 
 auto Engine::update() -> void {
+  const auto dt = this->get_delta_time();
+  if (this->camera.get_key(render::Camera::Movement::Forward)) {
+    this->camera.handle_key(render::Camera::Movement::Forward, dt);
+  }
+  if (this->camera.get_key(render::Camera::Movement::Left)) {
+    this->camera.handle_key(render::Camera::Movement::Left, dt);
+  }
+  if (this->camera.get_key(render::Camera::Movement::Right)) {
+    this->camera.handle_key(render::Camera::Movement::Right, dt);
+  }
+  if (this->camera.get_key(render::Camera::Movement::Backward)) {
+    this->camera.handle_key(render::Camera::Movement::Backward, dt);
+  }
+
+  // Update physics before running collisions
+  this->physics_system.update();
+  this->collision_system.update();
+  this->ecs.system_manager.update();
   this->event_manager.pump_events();
 
   if (glfwWindowShouldClose(this->renderer.window.get())) {
@@ -132,11 +207,43 @@ auto Engine::move_mouse(Event event) -> void {
 auto Engine::move_keyboard(Event event) -> void {
   const auto key = std::get<Event::Key>(event.data).key;
 
-  if (event.type == Event::Type::KeyDown && key == GLFW_KEY_ESCAPE) {
-    this->exit();
-  } else if (event.type == Event::Type::KeyDown && key == GLFW_KEY_GRAVE_ACCENT) {
-    this->ui_manager.show_menu = !this->ui_manager.show_menu;
-  } else if (event.type == Event::Type::KeyDown && key == GLFW_KEY_1) {
-    this->renderer.set_wireframe(!this->renderer.get_wireframe());
+  // proccess key down events
+  if (event.type == Event::Type::KeyDown) {
+    if (key == GLFW_KEY_ESCAPE) {
+      this->exit();
+    } else if (key == GLFW_KEY_GRAVE_ACCENT) {
+      this->ui_manager.show_menu = !this->ui_manager.show_menu;
+    } else if (key == GLFW_KEY_1) {
+      this->renderer.set_wireframe(!this->renderer.get_wireframe());
+    }
+
+    if (key == GLFW_KEY_W) {
+      this->camera.set_key(render::Camera::Movement::Forward, true);
+    }
+    if (key == GLFW_KEY_A) {
+      this->camera.set_key(render::Camera::Movement::Left, true);
+    }
+    if (key == GLFW_KEY_S) {
+      this->camera.set_key(render::Camera::Movement::Backward, true);
+    }
+    if (key == GLFW_KEY_D) {
+      this->camera.set_key(render::Camera::Movement::Right, true);
+    }
+  }
+
+  // process events on key being released
+  if (event.type == Event::Type::KeyUp) {
+    if (key == GLFW_KEY_W) {
+      this->camera.set_key(render::Camera::Movement::Forward, false);
+    }
+    if (key == GLFW_KEY_A) {
+      this->camera.set_key(render::Camera::Movement::Left, false);
+    }
+    if (key == GLFW_KEY_S) {
+      this->camera.set_key(render::Camera::Movement::Backward, false);
+    }
+    if (key == GLFW_KEY_D) {
+      this->camera.set_key(render::Camera::Movement::Right, false);
+    }
   }
 }

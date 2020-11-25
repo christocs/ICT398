@@ -12,6 +12,8 @@
 #include "afk/render/Renderer.hpp"
 #include "afk/scene/SceneManager.hpp"
 #include "afk/ui/UiManager.hpp"
+#include "afk/ecs/system/CollisionSystem.hpp"
+#include "afk/ecs/system/PhysicsSystem.hpp"
 
 namespace afk {
   /**
@@ -38,7 +40,10 @@ namespace afk {
     prefab::PrefabManager prefab_manager = {};
     /** The scene subsystem. */
     scene::SceneManager scene_manager = {};
-
+    /** The collision subsystem. */
+    ecs::system::CollisionSystem collision_system = {};
+    /** The physics subsystem. */
+    ecs::system::PhysicsSystem physics_system = {};
   private:
     Engine()  = default;
     ~Engine() = default;
@@ -114,6 +119,14 @@ namespace afk {
      * @param event The key press event.
      */
     auto move_keyboard(event::Event event) -> void;
+
+    bool display_debug_physics_mesh = false;
+
+    // todo move this to a physics class of some sort
+    bool gravity_enabled = false;
+
+    // todo move this to a physics class of some sort
+    glm::vec3 gravity = {0.0f, -9.81f, 0.0f};
 
   private:
     /** Is the engine initialized? */

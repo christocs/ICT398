@@ -3,7 +3,9 @@
 #include <string>
 #include <variant>
 
+#include <glm/glm.hpp>
 #include "afk/NumericTypes.hpp"
+#include "afk/ecs/Entity.hpp"
 
 namespace afk {
   namespace event {
@@ -70,6 +72,32 @@ namespace afk {
       };
 
       /**
+       * Encapsulates a collision event.
+       */
+      struct Collision {
+        /** Representation of a single contact in a collision */
+        struct Contact {
+          /** Point of contact on collider 1 in world space */
+          glm::vec3 collider1_point;
+          /** Point of contact on collider 2 in world space */
+          glm::vec3 collider2_point;
+          /** normal of contact from the first to second body relative to the world space */
+          glm::vec3 normal;
+          /** get penetration depth of the collision */
+          f32 penetration_depth;
+        };
+
+        using ContactCollection = std::vector<Contact>;
+
+        /** The first entity in the collision */
+        ecs::Entity entity1;
+        /** The second entity in the collision */
+        ecs::Entity entity2;
+        /** The collection of collision contacts */
+        ContactCollection contacts = {};
+      };
+
+      /**
        * Denotes an event type.
        */
       enum class Type {
@@ -81,12 +109,13 @@ namespace afk {
         KeyRepeat,
         TextEnter,
         MouseScroll,
+        Collision,
       };
 
       /**
        * Encapsulates all possible event data.
        */
-      using Data = std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll>;
+      using Data = std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Collision>;
 
       /**
        * Returns the data contained in this event.

@@ -1,8 +1,11 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <unordered_map>
+#include <optional>
 
 #include "afk/NumericTypes.hpp"
+#include "afk/ecs/Entity.hpp"
 
 namespace afk {
   namespace render {
@@ -17,6 +20,8 @@ namespace afk {
       static constexpr glm::vec3 WORLD_UP = {0.0f, 1.0f, 0.0f};
       /** Represents a camera movement direction. */
       enum class Movement { Forward, Backward, Left, Right };
+      /** Represents an optional entity */
+      using OptionalEntity = std::optional<afk::ecs::Entity>;
 
       /**
        * Handles the mouse being moved.
@@ -33,6 +38,21 @@ namespace afk {
        * @param dt The delta time.
        */
       auto handle_key(Movement movement, f32 dt) -> void;
+
+      /**
+       * Determines if a key is currently being pressed
+       *
+       * @param movement The movement type.
+       */
+      auto get_key(Movement movement) const -> bool;
+
+      /**
+       * Sets if a key is currently being pressed
+       *
+       * @param movement The movement type.
+       * @param down True if a key is down.
+       */
+      auto set_key(Movement movement, bool down) -> void;
 
       /**
        * Returns the view matrix.
@@ -99,6 +119,30 @@ namespace afk {
        */
       auto get_up() const -> glm::vec3;
 
+      /**
+       * Returns the near clipping plane.
+       *
+       * @return The near clipping plane
+       */
+      auto get_near() const -> f32;
+
+      /**
+       * Returns the far clipping plane.
+       *
+       * @return The far clipping plane
+       */
+      auto get_far() const -> f32;
+
+     /**
+      * Set raycast entity
+      */
+      auto set_raycast_entity(OptionalEntity entity) -> void;
+
+      /**
+       * Get raycast entity
+       */
+      auto get_raycast_entity() const -> OptionalEntity;
+
     private:
       /** The field of view. */
       f32 fov = 75.0f;
@@ -115,6 +159,16 @@ namespace afk {
       glm::vec2 angles = {};
       /** The position. */
       glm::vec3 position = {};
+
+      using KeyStates = std::unordered_map<Movement, bool>;
+      /** Movement key states */
+      KeyStates key_states = {{Movement::Forward, false},
+                              {Movement::Left, false},
+                              {Movement::Right, false},
+                              {Movement::Backward, false}};
+
+      /** Entity with a collider that the camera is pointing at */
+      std::optional<afk::ecs::Entity> raycast_entity = std::nullopt;
     };
   }
 }

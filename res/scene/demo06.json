@@ -1,0 +1,106 @@
+{
+  "name": "demo06",
+  "entities": [
+    {
+      "name": "slopedtray",
+      "components": {
+        "Transform": {
+          "translation": { "x": 0.0, "y": 0.0, "z": 0.0 },
+          "scale": { "x": 1.0, "y": 1.0, "z": 1.0 },
+          "rotation": { "x": 0.0, "y": 0.0, "z": 0.0 }
+        }
+      }
+    },
+    {
+      "name": "basketball",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": -1.0,
+            "y": 10.0,
+            "z": -1.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 45.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "box",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": 4.0,
+            "y": 10.0,
+            "z": 4.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "box",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": -4.0,
+            "y": 10.0,
+            "z": -4.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "box",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": 2.0,
+            "y": 1.0,
+            "z": 2.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "Physics": {
+          "is_static": true
+        }
+      }
+    }
+  ]
+}

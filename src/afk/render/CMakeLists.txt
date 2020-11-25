@@ -7,6 +7,5 @@ target_sources(${PROJECT_NAME} PRIVATE
     Bone.cpp
     Mesh.cpp
     GlfwContext.cpp
-
     opengl/Renderer.cpp
 )

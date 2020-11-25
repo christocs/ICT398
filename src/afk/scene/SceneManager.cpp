@@ -52,22 +52,53 @@ auto SceneManager::load_scenes_from_dir(const path &dir_path) -> void {
       auto prefab =
           afk.prefab_manager.prefab_map.at(entity_json.at("name").get<string>());
 
-      for (const auto &[component_name, component_json] :
-           entity_json.at("components").items()) {
-        const auto &j  = component_json;
-        auto component = PrefabManager::COMPONENT_MAP.at(component_name);
+      if (entity_json.count("components") == 1) {
 
-        auto visitor =
-            Visitor{[j](ModelComponent &c) { c = j.get<ModelComponent>(); },
-                    [j](PositionComponent &c) { c = j.get<PositionComponent>(); },
-                    [j](VelocityComponent &c) { c = j.get<VelocityComponent>(); },
-                    [](auto) { afk_unreachable(); }};
+        const auto components_json = entity_json.at("components");
 
-        std::visit(visitor, component);
+        for (const auto &[component_name, component_json] : components_json.items()) {
+          const auto &j  = component_json;
+          auto component = PrefabManager::COMPONENT_MAP.at(component_name);
 
-        afk_assert(prefab.components.find(component_name) != prefab.components.end(),
-                   "Prefab missing component in entity");
-        prefab.components[component_name] = component;
+          auto visitor = Visitor{
+              [j](ModelsComponent &c) { c = j.get<ModelsComponent>(); },
+              [j](TransformComponent &c) { c = j.get<TransformComponent>(); },
+              [j](ColliderComponent &c) { c = j.get<ColliderComponent>(); },
+              [j, components_json_ref = std::ref(components_json), &prefab,
+               &afk](PhysicsComponent &c) {
+                c = j.get<PhysicsComponent>();
+
+                // no need to do checks if components are missing, as all prefabs already enforce these checks
+                // here we are just overwriting prefab components if they are defined
+
+                auto collider  = ColliderComponent{};
+                auto transform = TransformComponent{};
+
+                // if the scene defines the collider component, use the one in the scene, else use the one provided by the prefab
+                if (components_json_ref.get().count("Collider") == 1) {
+                  collider = components_json_ref.get().at("Collider").get<ColliderComponent>();
+                } else {
+                  collider = std::get<ColliderComponent>(prefab.components.at("Collider"));
+                }
+
+                // if the scene defines the transform component, use the one in the scene, else use the one provided by the prefab
+                if (components_json_ref.get().count("Transform") == 1) {
+                  transform =
+                      components_json_ref.get().at("Transform").get<TransformComponent>();
+                } else {
+                  transform = std::get<TransformComponent>(prefab.components.at("Collider"));
+                }
+
+                afk.physics_system.initialize_physics_component(c, collider, transform);
+              },
+              [](auto) { afk_unreachable(); }};
+
+          std::visit(visitor, component);
+
+          afk_assert(prefab.components.find(component_name) != prefab.components.end(),
+                     "Prefab missing component in entity");
+          prefab.components[component_name] = component;
+        }
       }
 
       scene.prefabs.push_back(prefab);
@@ -92,6 +123,10 @@ auto SceneManager::initialize() -> void {
 auto SceneManager::instantiate_scene(const std::string &name) const -> void {
   auto &afk         = afk::Engine::get();
   const auto &scene = this->scene_map.at(name);
+  auto &registry    = afk.ecs.registry;
+
+  // destroy all entities before loading the scene
+  registry.clear();
 
   for (const auto &prefab : scene.prefabs) {
     afk.prefab_manager.instantiate_prefab(prefab);

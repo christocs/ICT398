@@ -18,22 +18,22 @@ namespace afk {
       static constexpr const auto *SCENE_DIR = u8"res/scene";
 
       /**
-       * Instantiates all prefabs contained the specified scene.
+       * Initializes this scene manager.
+       */
+      auto initialize() -> void;
+
+      /**
+       * Instantiates all prefabs contained the specified scene and destroys all current entities.
        *
        * @param name The scene name.
        */
       auto instantiate_scene(const std::string &name) const -> void;
 
-      /**
-       * Initializes this config manager.
-       */
-      auto initialize() -> void;
-
       /** The map of loaded scenes. */
       SceneMap scene_map = {};
 
     private:
-      /** Is the renderer initialized? */
+      /** Is the scene manager initialized? */
       bool is_initialized = false;
 
       /**

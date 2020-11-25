@@ -16,42 +16,42 @@
 namespace afk {
   namespace render {
     /**
-     * Encapsulates a 3D vertex.
-     */
-    struct Vertex {
-      /** The max number of vertex bones. */
-      constexpr static usize MAX_VERTEX_BONES = 4;
-      /** The max number of bones. */
-      constexpr static usize MAX_BONES = 100;
-
-      /** The position. */
-      glm::vec3 position = {};
-      /** The normal vector. */
-      glm::vec3 normal = {};
-      /** The texture positions. */
-      glm::vec2 uvs = {};
-      /** The tangent. */
-      glm::vec3 tangent = {};
-      /** The bitangent. */
-      glm::vec3 bitangent = {};
-      /** The bone indices. */
-      Index bone_indices[MAX_VERTEX_BONES] = {};
-      /** The bone indices. */
-      f32 bone_weights[MAX_VERTEX_BONES] = {};
-
-      /**
-       * Pushes back a specified bone into the bone buffer.
-       *
-       * @param bone_index The bone index to use.
-       * @param bone_weight The weight of the bone.
-       */
-      auto push_back_bone(Index bone_index, f32 bone_weight) -> void;
-    };
-
-    /**
      * Encapsulates a 3D mesh.
      */
     struct Mesh {
+      /**
+       * Encapsulates a 3D vertex.
+       */
+      struct Vertex {
+        /** The max number of vertex bones. */
+        constexpr static usize MAX_VERTEX_BONES = 4;
+        /** The max number of bones. */
+        constexpr static usize MAX_BONES = 100;
+
+        /** The position. */
+        glm::vec3 position = {};
+        /** The normal vector. */
+        glm::vec3 normal = {};
+        /** The texture positions. */
+        glm::vec2 uvs = {};
+        /** The tangent. */
+        glm::vec3 tangent = {};
+        /** The bitangent. */
+        glm::vec3 bitangent = {};
+        /** The bone indices. */
+        Index bone_indices[MAX_VERTEX_BONES] = {};
+        /** The bone indices. */
+        f32 bone_weights[MAX_VERTEX_BONES] = {};
+
+        /**
+         * Pushes back a specified bone into the bone buffer.
+         *
+         * @param bone_index The bone index to use.
+         * @param bone_weight The weight of the bone.
+         */
+        auto push_back_bone(Index bone_index, f32 bone_weight) -> void;
+      };
+
       /** A collection of vertices. */
       using Vertices = std::vector<Vertex>;
       /** A collection of indices. */

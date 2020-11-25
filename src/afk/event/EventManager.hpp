@@ -173,7 +173,7 @@ namespace afk {
           {Event::Type::MouseDown, {}},   {Event::Type::MouseUp, {}},
           {Event::Type::MouseMove, {}},   {Event::Type::KeyDown, {}},
           {Event::Type::KeyUp, {}},       {Event::Type::TextEnter, {}},
-          {Event::Type::MouseScroll, {}},
+          {Event::Type::MouseScroll, {}}, {Event::Type::Collision, {}},
       };
     };
   }

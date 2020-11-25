@@ -1,0 +1,224 @@
+{
+  "name": "classroom",
+  "components": {
+    "Transform": {
+      "translation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "Models": [
+      {
+        "file_path": "res/model/classroom/classroom.obj",
+        "Transform": {
+          "translation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    ],
+    "Collider": {
+      "Transform": {
+        "translation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "Colliders": [
+        {
+          "Shape": {
+            "type": "box",
+            "x": 5.5,
+            "y": 1,
+            "z": 12
+          },
+          "Transform": {
+            "translation": {
+              "x": 0.0,
+              "y": -0.9,
+              "z": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 9999
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 5.5,
+            "y": 1,
+            "z": 13
+          },
+          "Transform": {
+            "translation": {
+              "x": 0.0,
+              "y": 4.9,
+              "z": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 9999
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 5,
+            "y": 5,
+            "z": 1
+          },
+          "Transform": {
+            "translation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 12.6
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 9999
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 5,
+            "y": 5,
+            "z": 1
+          },
+          "Transform": {
+            "translation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": -6.4
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 9999
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1,
+            "y": 5,
+            "z": 12
+          },
+          "Transform": {
+            "translation": {
+              "x": 6.05,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 9999
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1,
+            "y": 5,
+            "z": 12
+          },
+          "Transform": {
+            "translation": {
+              "x": -4.75,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 9999
+        }
+      ]
+    },
+    "Physics": {
+      "is_static": true
+    }
+  }
+}

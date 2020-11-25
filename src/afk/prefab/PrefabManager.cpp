@@ -33,6 +33,7 @@ using namespace afk::ecs::component;
 
 auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
   const auto prefab_dir = afk::io::get_resource_path(dir_path);
+  auto &afk             = afk::Engine::get();
 
   for (const auto &entry : directory_iterator{prefab_dir}) {
     const auto path = entry.path();
@@ -51,11 +52,33 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
       const auto &j  = component_json;
       auto component = this->COMPONENT_MAP.at(component_name);
 
-      auto visitor =
-          Visitor{[j](ModelComponent &c) { c = j.get<ModelComponent>(); },
-                  [j](PositionComponent &c) { c = j.get<PositionComponent>(); },
-                  [j](VelocityComponent &c) { c = j.get<VelocityComponent>(); },
-                  [](auto) { afk_unreachable(); }};
+      auto visitor = Visitor{[j](ModelsComponent &c) {
+                               c = j.get<ModelsComponent>();
+                             },
+                             [j](TransformComponent &c) {
+                               c = j.get<TransformComponent>();
+                             },
+                             [j](ColliderComponent &c) {
+                               c = j.get<ColliderComponent>();
+                             },
+                             [j, &components, &afk](PhysicsComponent &c) {
+                               c = j.get<PhysicsComponent>();
+                               afk_assert(components.count("Transform") == 1, "prefab must have a Transform component to instantiate a physics component");
+                               afk_assert(
+                                   components.count("Collider") == 1,
+                                   "prefab must have a collider component to "
+                                   "instantiate a collider component");
+
+                               const auto collider =
+                                   components.at("Collider").get<ColliderComponent>();
+
+                               const auto transform =
+                                   components.at("Transform").get<TransformComponent>();
+
+                               afk.physics_system.initialize_physics_component(
+                                   c, collider, transform);
+                             },
+                             [](auto) { afk_unreachable(); }};
 
       std::visit(visitor, component);
 
@@ -74,13 +97,26 @@ auto PrefabManager::load_prefabs_from_dir(const path &dir_path) -> void {
 }
 
 auto PrefabManager::initialize_component(const Json &json, Component &component) -> void {
-  auto visitor = Visitor{[json](ModelComponent &c) {
-                           auto &afk = afk::Engine::get();
-                           auto path = afk::io::get_resource_path(
-                               json.at("file_path").get<string>());
-                           c.model_handle = afk.renderer.get_model(path);
-                         },
-                         [](auto) {}};
+  auto visitor = Visitor{
+      [json](ModelsComponent &c) {
+        auto &afk = afk::Engine::get();
+
+        afk_assert(json.is_array(),
+                   "Models component does not contain an array");
+
+        // delete existing items in component
+        c.models.clear();
+
+        // add items from json
+        for (const auto &[_, model_json] : json.items()) {
+          auto j = model_json;
+          const auto path =
+              afk::io::get_resource_path(model_json.at("file_path").get<string>());
+          auto transform = model_json.at("Transform").get<TransformComponent>();
+          c.models.push_back({afk.renderer.get_model(path), std::move(transform)});
+        }
+      },
+      [](auto) {}};
 
   std::visit(visitor, component);
 }
@@ -91,14 +127,28 @@ auto PrefabManager::instantiate_prefab(const Prefab &prefab) const -> Entity {
 
   auto entity = registry.create();
 
-  auto visitor = Visitor{[&registry, entity](ModelComponent component) {
-                           registry.emplace<ModelComponent>(entity, component);
+  auto visitor = Visitor{[&registry, entity](ModelsComponent component) {
+                           registry.emplace<ModelsComponent>(entity, component);
                          },
-                         [&registry, entity](PositionComponent component) {
-                           registry.emplace<PositionComponent>(entity, component);
+                         [&registry, entity](TransformComponent component) {
+                           registry.emplace<TransformComponent>(entity, component);
                          },
-                         [&registry, entity](VelocityComponent component) {
-                           registry.emplace<VelocityComponent>(entity, component);
+                         [&registry, entity, &prefab, &afk](ColliderComponent component) {
+                           afk_assert(prefab.components.count("Transform") == 1, "prefab must have a Transform component to instantiate a collider component");
+                           // check that the "Transform" component is a transform component, then use it when instantiating the collider
+                           auto transform_visitor = Visitor{
+                               [entity, &afk, &component](TransformComponent transform) {
+                                 afk.collision_system.instantiate_collider_component(
+                                     entity, component, transform);
+                               },
+                               [](auto) { afk_unreachable(); }};
+
+                           std::visit(transform_visitor, prefab.components.at("Transform"));
+
+                           registry.emplace<ColliderComponent>(entity, component);
+                         },
+                         [&registry, entity](PhysicsComponent component) {
+                           registry.emplace<PhysicsComponent>(entity, component);
                          },
                          [](auto) { afk_unreachable(); }};
 
