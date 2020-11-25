@@ -319,15 +319,12 @@ auto CollisionSystem::get_debug_mesh() -> WireframeMesh {
     const auto &t = triangles[static_cast<u32>(i)];
 
     const auto v1 =
-        WireframeMesh::Vertex{.position = {t.point1.x, t.point1.y, t.point1.z},
-                              .color    = u32_color_to_vec4(t.color1)};
+        WireframeMesh::Vertex{{t.point1.x, t.point1.y, t.point1.z}, u32_color_to_vec4(t.color1)};
     const auto v2 =
-        WireframeMesh::Vertex{.position = {t.point2.x, t.point2.y, t.point2.z},
-                              .color    = u32_color_to_vec4(t.color2)};
+        WireframeMesh::Vertex{{t.point2.x, t.point2.y, t.point2.z}, u32_color_to_vec4(t.color2)};
 
     const auto v3 =
-        WireframeMesh::Vertex{.position = {t.point3.x, t.point3.y, t.point3.z},
-                              .color    = u32_color_to_vec4(t.color3)};
+        WireframeMesh::Vertex{{t.point3.x, t.point3.y, t.point3.z}, u32_color_to_vec4(t.color3)};
 
     mesh.vertices.push_back(v1);
     mesh.vertices.push_back(v2);
