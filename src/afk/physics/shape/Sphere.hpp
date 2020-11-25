@@ -1,12 +1,14 @@
 #pragma once
 
+#include "afk/NumericTypes.hpp"
+
 namespace afk {
   namespace physics {
     namespace shape {
       /**
        * Sphere shape (radius)
        */
-      using Sphere = float;
+      using Sphere = f32;
     }
   }
 }

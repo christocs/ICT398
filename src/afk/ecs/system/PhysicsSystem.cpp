@@ -347,7 +347,7 @@ auto PhysicsSystem::depenetrate_dynamic_rigid_bodies() -> u32 {
 }
 
 auto PhysicsSystem::get_shape_inertia_tensor(const Sphere &shape, f32 mass) -> glm::vec3 {
-  const auto single_axis_inertia = 0.4 * static_cast<double>(mass) * glm::pow(shape, 2);
+  const auto single_axis_inertia = 0.4f * mass * glm::pow<f32, f32>(shape, 2);
   return glm::vec3{single_axis_inertia, single_axis_inertia, single_axis_inertia};
 }
 
@@ -436,7 +436,7 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     const auto offset = collision_body.transform.translation - local_center_of_mass;
     auto offsets_squared = offset;
     for (auto i = glm::vec3::length_type{0}; i < 3; ++i) {
-      offsets_squared[i] = glm::pow<f32>(offsets_squared[i], 2);
+      offsets_squared[i] = glm::pow<f32, f32>(offsets_squared[i], 2);
     }
     auto offset_matrix      = glm::zero<glm::mat3>();
     const auto axis_offsets = glm::vec3{offsets_squared.y + offsets_squared.z,
