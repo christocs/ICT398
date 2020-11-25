@@ -118,8 +118,8 @@
     },
     "Physics": {
       "is_static": false,
-      "linear_dampening": 0.0,
-      "angular_dampening": 0.0,
+      "linear_dampening": 0.1,
+      "angular_dampening": 0.1,
       "linear_velocity": {
         "x": 0.0,
         "y": 0.0,

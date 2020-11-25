@@ -187,27 +187,18 @@ auto PhysicsSystem::apply_rigid_body_changes(f32 dt) -> void {
     // skip anything that is static
     if (!physics.is_static) {
 
-      // get linear dampening
-      const auto linear_dampening =
-          std::clamp(std::pow(1.0f - physics.linear_dampening, dt), 0.0f, 1.0f);
-
-      // get angular dampening
-      const auto angular_dampening =
-          std::clamp(std::pow(1.0f - physics.angular_dampening, dt), 0.0f, 1.0f);
-
       // integrate constant gravity acceleration
       if (afk.gravity_enabled) {
-        physics.linear_velocity += dt * afk.gravity * linear_dampening;
+        physics.linear_velocity += dt * afk.gravity;
       }
 
       // add new linear velocity
       // external forces is just force, so need to divide mass out (a = F/m)
       // a = F/m
-      physics.linear_velocity +=
-          physics.total_inverse_mass * physics.external_forces * linear_dampening;
+      physics.linear_velocity += physics.total_inverse_mass * physics.external_forces;
 
       // add new angular velocity
-      physics.angular_velocity += physics.external_torques * angular_dampening;
+      physics.angular_velocity += physics.external_torques;
 
       // integrate velocity to translation AFTER it has been calculated for semi-implicit euler integration
       transform.translation += physics.linear_velocity * dt;
@@ -215,6 +206,19 @@ auto PhysicsSystem::apply_rigid_body_changes(f32 dt) -> void {
       // integrate rotation AFTER it has been calculated for semi-implicit euler integration
       transform.rotation +=
           glm::quat(0.0f, physics.angular_velocity) * transform.rotation * 0.5f * dt;
+
+      // get linear dampening
+      const auto linear_dampening =
+          std::clamp(std::pow(1.0f - physics.linear_dampening, dt), 0.0f, 1.0f);
+
+      // apply linear dampening
+      physics.linear_velocity *= linear_dampening;
+
+      // get angular dampening
+      const auto angular_dampening =
+          std::clamp(std::pow(1.0f - physics.angular_dampening, dt), 0.0f, 1.0f);
+
+      physics.angular_dampening *= angular_dampening;
 
       // reset external forces and torque for the next update cycle
       // these only represent "moments" in acceleration
@@ -421,7 +425,8 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
 
     // Convert the collider inertia tensor into the local-space of the body
     // do not need to worry about scale, as we are assuming that the center of mass is at the center of each collider and each collider has an even distribution of mass
-    auto collider_inertia_tensor_in_body_space = glm::mat3_cast(collision_body.transform.rotation);
+    auto collider_inertia_tensor_in_body_space =
+        glm::mat3_cast(collision_body.transform.rotation);
     for (auto i = glm::vec3::length_type{0}; i < 3; ++i) {
       collider_inertia_tensor_in_body_space[i] *= collider_inertia_tensor[i];
     }
@@ -429,11 +434,11 @@ auto PhysicsSystem::get_local_inertia_tensor(const afk::ecs::component::Collider
     // use parallel axis theorem to move the inertia tensor
     // refer to https://www.real-world-physics-problems.com/parallel-axis-and-parallel-plane-theorem.html
     const auto offset = collision_body.transform.translation - local_center_of_mass;
-    auto offsets_squared                  = offset;
+    auto offsets_squared = offset;
     for (auto i = glm::vec3::length_type{0}; i < 3; ++i) {
       offsets_squared[i] = glm::pow(offsets_squared[i], 2);
     }
-    auto offset_matrix                    = glm::zero<glm::mat3>();
+    auto offset_matrix      = glm::zero<glm::mat3>();
     const auto axis_offsets = glm::vec3{offsets_squared.y + offsets_squared.z,
                                         offsets_squared.x + offsets_squared.z,
                                         offsets_squared.x + offsets_squared.y};
