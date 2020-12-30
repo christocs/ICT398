@@ -1,0 +1,157 @@
+{
+  "name": "classroom_simulation",
+  "entities": [
+    {
+      "name": "classroom",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "desk",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "basketball",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": 1.2,
+            "y": -0.2,
+            "z": 5.0
+          },
+          "scale": {
+            "x": 0.2,
+            "y": 0.2,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "Physics": {
+          "is_static": false,
+          "linear_dampening": 0.1,
+          "angular_dampening": 0.1,
+          "linear_velocity": {
+            "x": -10.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "basketball",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": 3.0,
+            "y": 0.3,
+            "z": 5.0
+          },
+          "scale": {
+            "x": 0.2,
+            "y": 0.2,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "Physics": {
+          "is_static": false,
+          "linear_dampening": 0.1,
+          "angular_dampening": 0.1,
+          "linear_velocity": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "box",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 5.0
+          },
+          "scale": {
+            "x": 0.1,
+            "y": 0.5,
+            "z": 0.5
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "box",
+      "components": {
+        "Transform": {
+          "translation": {
+            "x": -1.5,
+            "y": 0.0,
+            "z": 5.0
+          },
+          "scale": {
+            "x": 0.1,
+            "y": 0.5,
+            "z": 0.5
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    }
+  ]
+}

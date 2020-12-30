@@ -17,14 +17,16 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "afk/NumericTypes.hpp"
 #include "afk/debug/Assert.hpp"
 #include "afk/io/Log.hpp"
 #include "afk/io/Path.hpp"
+#include "afk/io/Time.hpp"
 #include "afk/physics/Transform.hpp"
-#include "afk/renderer/Animation.hpp"
-#include "afk/renderer/Mesh.hpp"
-#include "afk/renderer/Model.hpp"
-#include "afk/renderer/Texture.hpp"
+#include "afk/render/Animation.hpp"
+#include "afk/render/Mesh.hpp"
+#include "afk/render/Model.hpp"
+#include "afk/render/Texture.hpp"
 
 using namespace std::string_literals;
 using glm::mat4;
@@ -37,17 +39,22 @@ using std::unordered_map;
 using std::vector;
 using std::filesystem::path;
 
-using Afk::Animation;
-using Afk::ModelLoader;
-using Afk::Texture;
-using Afk::Transform;
-namespace Io = Afk::Io;
+using afk::io::ModelLoader;
+using afk::physics::Transform;
+using afk::render::Animation;
+using afk::render::Bone;
+using afk::render::Mesh;
+using afk::render::Model;
+using afk::render::Texture;
+using Vertex = afk::render::Mesh::Vertex;
 
+/** The assimp importer options to use. */
 constexpr unsigned ASSIMP_OPTIONS =
     aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs |
     aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace |
     aiProcess_GlobalScale | aiProcess_LimitBoneWeights;
 
+/** Maps the assimp texture types to engine ones. */
 constexpr auto assimp_texture_types =
     frozen::make_unordered_map<Texture::Type, aiTextureType>({
         {Texture::Type::Diffuse, aiTextureType_DIFFUSE},
@@ -56,23 +63,41 @@ constexpr auto assimp_texture_types =
         {Texture::Type::Height, aiTextureType_HEIGHT},
     });
 
-static auto to_glm(aiMatrix4x4t<float> m) -> mat4 {
+/**
+ * Converts the specified assimp matrix to a glm matrix.
+ *
+ * @param m The assimp matrix to convert.
+ * @return The converted glm matrix.
+ */
+static auto to_glm(aiMatrix4x4t<f32> m) -> mat4 {
   return mat4{m.a1, m.b1, m.c1, m.d1,  //
               m.a2, m.b2, m.c2, m.d2,  //
               m.a3, m.b3, m.c3, m.d3,  //
               m.a4, m.b4, m.c4, m.d4}; //
 }
 
-static auto to_glm(aiVector3t<float> v) -> vec3 {
+/**
+ * Converts the specified assimp vector to a glm vector.
+ *
+ * @param v The assimp vector to convert.
+ * @return The converted glm vector.
+ */
+static auto to_glm(aiVector3t<f32> v) -> vec3 {
   return vec3{v.x, v.y, v.z};
 }
 
-static auto to_glm(aiQuaterniont<float> q) -> quat {
+/**
+ * Converts the specified assimp quaternion to a glm quaternion.
+ *
+ * @param q The assimp quaternion to convert.
+ * @return The converted glm quaternion.
+ */
+static auto to_glm(aiQuaterniont<f32> q) -> quat {
   return quat{q.w, q.x, q.y, q.z};
 }
 
 auto ModelLoader::load(const path &file_path) -> Model {
-  const auto abs_path = Afk::get_absolute_path(file_path);
+  const auto abs_path = io::get_resource_path(file_path);
   auto importer       = Assimp::Importer{};
 
   this->model.file_path = file_path;
@@ -96,7 +121,7 @@ auto ModelLoader::load(const path &file_path) -> Model {
 auto ModelLoader::process_node(const aiScene *scene, const aiNode *node,
                                glm::mat4 transform) -> void {
   // Process all meshes at this node.
-  for (auto i = size_t{0}; i < node->mNumMeshes; ++i) {
+  for (auto i = usize{0}; i < node->mNumMeshes; ++i) {
     const auto *mesh = scene->mMeshes[node->mMeshes[i]];
 
     this->model.meshes.push_back(
@@ -104,7 +129,7 @@ auto ModelLoader::process_node(const aiScene *scene, const aiNode *node,
   }
 
   // Process all child nodes.
-  for (auto i = size_t{0}; i < node->mNumChildren; ++i) {
+  for (auto i = usize{0}; i < node->mNumChildren; ++i) {
     this->process_node(scene, node->mChildren[i], transform * to_glm(node->mTransformation));
   }
 }
@@ -132,7 +157,7 @@ auto ModelLoader::get_vertices(const aiMesh *mesh) -> Mesh::Vertices {
 
   vertices.reserve(mesh->mNumVertices);
 
-  for (auto i = size_t{0}; i < mesh->mNumVertices; ++i) {
+  for (auto i = usize{0}; i < mesh->mNumVertices; ++i) {
     auto vertex = Vertex{};
 
     vertex.position = to_glm(mesh->mVertices[i]);
@@ -155,88 +180,15 @@ auto ModelLoader::get_indices(const aiMesh *mesh) -> Mesh::Indices {
 
   indices.reserve(mesh->mNumFaces);
 
-  auto num_indices = 0;
-  for (auto i = size_t{0}; i < mesh->mNumFaces; ++i) {
+  for (auto i = usize{0}; i < mesh->mNumFaces; ++i) {
     const auto face = mesh->mFaces[i];
 
-    for (auto j = size_t{0}; j < face.mNumIndices; ++j) {
-      indices.push_back(static_cast<Afk::Index>(face.mIndices[j]));
-      ++num_indices;
+    for (auto j = usize{0}; j < face.mNumIndices; ++j) {
+      indices.push_back(static_cast<afk::render::Index>(face.mIndices[j]));
     }
   }
 
   return indices;
-}
-
-auto ModelLoader::get_bones(const aiMesh *mesh, Mesh::Vertices &vertices)
-    -> pair<Mesh::Bones, Mesh::BoneMap> {
-  auto bones    = Mesh::Bones{};
-  auto bone_map = Mesh::BoneMap{};
-
-  for (auto i = size_t{0}; i < mesh->mNumBones; ++i) {
-    const auto &assimp_bone = *mesh->mBones[i];
-
-    auto name = string{assimp_bone.mName.data};
-
-    if (bone_map.find(name) == bone_map.end()) {
-      auto bone           = Bone{};
-      bone.name           = name;
-      bone.index          = static_cast<Index>(bone_map.size());
-      bone.offset         = to_glm(assimp_bone.mOffsetMatrix);
-      bone_map[bone.name] = bone.index;
-      bones.push_back(std::move(bone));
-    }
-
-    const auto bone_index = bone_map.at(name);
-
-    for (auto j = size_t{0}; j < assimp_bone.mNumWeights; j++) {
-      const auto &assimp_weight = assimp_bone.mWeights[j];
-      const auto vertex_index   = static_cast<size_t>(assimp_weight.mVertexId);
-      const auto bone_weight    = assimp_weight.mWeight;
-
-      vertices[vertex_index].push_back_bone(bone_index, bone_weight);
-    }
-  }
-
-  return std::make_pair(bones, bone_map);
-}
-
-auto ModelLoader::get_animations(const aiScene *scene) -> Model::Animations {
-  auto animations = Model::Animations{};
-
-  for (auto i = size_t{0}; i < scene->mNumAnimations; ++i) {
-    const auto &assimp_animation = *scene->mAnimations[i];
-
-    auto animation       = Animation{};
-    animation.name       = string{assimp_animation.mName.data};
-    animation.frame_rate = static_cast<float>(assimp_animation.mTicksPerSecond);
-    animation.duration   = static_cast<float>(assimp_animation.mDuration);
-
-    for (auto j = size_t{0}; j < assimp_animation.mNumChannels; ++j) {
-      const auto &assimp_channel = *assimp_animation.mChannels[j];
-
-      auto channel = Animation::Channel{};
-      channel.name = string{assimp_channel.mNodeName.data};
-
-      for (auto k = size_t{0}; k < assimp_channel.mNumPositionKeys; ++k) {
-        auto frame        = Transform{};
-        frame.translation = to_glm(assimp_channel.mPositionKeys[k].mValue);
-        frame.scale       = to_glm(assimp_channel.mScalingKeys[k].mValue);
-        frame.rotation    = to_glm(assimp_channel.mRotationKeys[k].mValue);
-
-        channel.frames.push_back(frame);
-      }
-
-      animation.channels.push_back(std::move(channel));
-    }
-
-    Io::log << "Loaded animation " << animation.name << " with "
-            << animation.channels.size() << " channels.\n";
-
-    animations.push_back(std::move(animation));
-  }
-
-  return animations;
 }
 
 auto ModelLoader::get_material_textures(const aiMaterial *material, Texture::Type type)
@@ -279,6 +231,78 @@ auto ModelLoader::get_textures(const aiMaterial *material) -> Mesh::Textures {
                   std::make_move_iterator(height.end()));
 
   return textures;
+}
+
+auto ModelLoader::get_bones(const aiMesh *mesh, Mesh::Vertices &vertices)
+    -> pair<Mesh::Bones, Mesh::BoneMap> {
+  auto bones    = Mesh::Bones{};
+  auto bone_map = Mesh::BoneMap{};
+
+  for (auto i = usize{0}; i < mesh->mNumBones; ++i) {
+    const auto &assimp_bone = *mesh->mBones[i];
+
+    auto name = string{assimp_bone.mName.data};
+
+    if (bone_map.find(name) == bone_map.end()) {
+      auto bone           = Bone{};
+      bone.name           = name;
+      bone.index          = static_cast<render::Index>(bone_map.size());
+      bone.offset         = to_glm(assimp_bone.mOffsetMatrix);
+      bone_map[bone.name] = bone.index;
+      bones.push_back(std::move(bone));
+    }
+
+    const auto bone_index = bone_map.at(name);
+
+    for (auto j = usize{0}; j < assimp_bone.mNumWeights; j++) {
+      const auto &assimp_weight = assimp_bone.mWeights[j];
+      const auto vertex_index   = static_cast<usize>(assimp_weight.mVertexId);
+      const auto bone_weight    = assimp_weight.mWeight;
+
+      vertices[vertex_index].push_back_bone(bone_index, bone_weight);
+    }
+  }
+
+  return std::make_pair(bones, bone_map);
+}
+
+auto ModelLoader::get_animations(const aiScene *scene) -> Model::Animations {
+  auto animations = Model::Animations{};
+
+  for (auto i = usize{0}; i < scene->mNumAnimations; ++i) {
+    const auto &assimp_animation = *scene->mAnimations[i];
+
+    auto animation       = Animation{};
+    animation.name       = string{assimp_animation.mName.data};
+    animation.frame_rate = static_cast<f32>(assimp_animation.mTicksPerSecond);
+    animation.duration   = static_cast<f32>(assimp_animation.mDuration);
+
+    for (auto j = usize{0}; j < assimp_animation.mNumChannels; ++j) {
+      const auto &assimp_channel = *assimp_animation.mChannels[j];
+
+      auto channel = Animation::Channel{};
+      channel.name = string{assimp_channel.mNodeName.data};
+
+      for (auto k = usize{0}; k < assimp_channel.mNumPositionKeys; ++k) {
+        auto frame        = Transform{};
+        frame.translation = to_glm(assimp_channel.mPositionKeys[k].mValue);
+        frame.scale       = to_glm(assimp_channel.mScalingKeys[k].mValue);
+        frame.rotation    = to_glm(assimp_channel.mRotationKeys[k].mValue);
+
+        channel.frames.push_back(frame);
+      }
+
+      animation.channels.push_back(std::move(channel));
+    }
+
+    afk::io::log << afk::io::get_date_time() << "Loaded animation \""
+                 << animation.name << "\" with " << animation.channels.size()
+                 << " channels\n";
+
+    animations.push_back(std::move(animation));
+  }
+
+  return animations;
 }
 
 auto ModelLoader::get_texture_path(const path &file_path) const -> path {

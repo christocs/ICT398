@@ -1,0 +1,452 @@
+{
+  "name": "boxes",
+  "components": {
+    "Transform": {
+      "translation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "Models": [
+      {
+        "file_path": "res/model/box/box.obj",
+        "Transform": {
+          "translation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "scale": {
+            "x": 2.0,
+            "y": 2.0,
+            "z": 2.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      {
+        "file_path": "res/model/box/box.obj",
+        "Transform": {
+          "translation": {
+            "x": -1.5,
+            "y": -1.5,
+            "z": 1.5
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      {
+        "file_path": "res/model/box/box.obj",
+        "Transform": {
+          "translation": {
+            "x": 1.5,
+            "y": -1.5,
+            "z": 1.5
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      {
+        "file_path": "res/model/box/box.obj",
+        "Transform": {
+          "translation": {
+            "x": 1.5,
+            "y": -1.5,
+            "z": -1.5
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      {
+        "file_path": "res/model/box/box.obj",
+        "Transform": {
+          "translation": {
+            "x": -1.5,
+            "y": -1.5,
+            "z": -1.5
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      {
+        "file_path": "res/model/box/box.obj",
+        "Transform": {
+          "translation": {
+            "x": -1.5,
+            "y": 1.5,
+            "z": 1.5
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      {
+        "file_path": "res/model/box/box.obj",
+        "Transform": {
+          "translation": {
+            "x": 1.5,
+            "y": 1.5,
+            "z": 1.5
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      {
+        "file_path": "res/model/box/box.obj",
+        "Transform": {
+          "translation": {
+            "x": 1.5,
+            "y": 1.5,
+            "z": -1.5
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      {
+        "file_path": "res/model/box/box.obj",
+        "Transform": {
+          "translation": {
+            "x": -1.5,
+            "y": 1.5,
+            "z": -1.5
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    ],
+    "Collider": {
+      "Colliders": [
+        {
+          "Shape": {
+            "type": "box",
+            "x": 2.0,
+            "y": 2.0,
+            "z": 2.0
+          },
+          "Transform": {
+            "translation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 100.0
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "Transform": {
+            "translation": {
+              "x": -1.5,
+              "y": -1.5,
+              "z": -1.5
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 25.0
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "Transform": {
+            "translation": {
+              "x": -1.5,
+              "y": -1.5,
+              "z": 1.5
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 25.0
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "Transform": {
+            "translation": {
+              "x": 1.5,
+              "y": -1.5,
+              "z": 1.5
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 25.0
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "Transform": {
+            "translation": {
+              "x": 1.5,
+              "y": -1.5,
+              "z": -1.5
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 25.0
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "Transform": {
+            "translation": {
+              "x": -1.5,
+              "y": 1.5,
+              "z": -1.5
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 25.0
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "Transform": {
+            "translation": {
+              "x": -1.5,
+              "y": 1.5,
+              "z": 1.5
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 25.0
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "Transform": {
+            "translation": {
+              "x": 1.5,
+              "y": 1.5,
+              "z": 1.5
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 25.0
+        },
+        {
+          "Shape": {
+            "type": "box",
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "Transform": {
+            "translation": {
+              "x": 1.5,
+              "y": 1.5,
+              "z": -1.5
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "mass": 25.0
+        }
+      ]
+    },
+    "Physics": {
+      "is_static": false,
+      "linear_dampening": 0.1,
+      "angular_dampening": 0.1,
+      "linear_velocity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
 target_sources(${PROJECT_NAME} PRIVATE
-    Ui.cpp
+    UiManager.cpp
     Log.cpp
 )

@@ -3,12 +3,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
-using Afk::Transform;
+using afk::physics::Transform;
 using glm::mat4;
 
-Transform::Transform(GameObject e) {
-  this->owning_entity = e;
-}
+/// @cond DOXYGEN_IGNORE
+
 Transform::Transform(mat4 transform) {
   auto _scale       = glm::vec3{};
   auto _rotation    = glm::quat{};
@@ -22,18 +21,27 @@ Transform::Transform(mat4 transform) {
   this->scale       = _scale;
   this->rotation    = _rotation;
 }
-Transform::Transform(GameObject e, mat4 transform) {
-  this->owning_entity = e;
 
-  auto _scale       = glm::vec3{};
-  auto _rotation    = glm::quat{};
-  auto _translation = glm::vec3{};
-  auto _skew        = glm::vec3{};
-  auto _perspective = glm::vec4{};
+auto Transform::to_mat4() -> glm::mat4 {
+  auto matrix = mat4{1.0f};
 
-  glm::decompose(transform, _scale, _rotation, _translation, _skew, _perspective);
+  // Apply transformation
+  matrix = glm::translate(matrix, this->translation);
+  matrix *= glm::mat4_cast(this->rotation);
+  matrix = glm::scale(matrix, this->scale);
 
-  this->translation = _translation;
-  this->scale       = _scale;
-  this->rotation    = _rotation;
+  return matrix;
 }
+
+auto Transform::combined_transform_to_mat4(const Transform &child_transform) -> glm::mat4 {
+  auto matrix = this->to_mat4();
+
+  // Apply child transformation.
+  matrix = glm::translate(matrix, child_transform.translation);
+  matrix *= glm::mat4_cast(child_transform.rotation);
+  matrix = glm::scale(matrix, child_transform.scale);
+
+  return matrix;
+}
+
+/// @endcond

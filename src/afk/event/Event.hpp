@@ -1,96 +1,136 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 #include <variant>
 
-namespace Afk {
-  /**
-   * Various event types.
-   */
-  struct Event {
-    struct MouseMove {
-      double x = {};
-      double y = {};
-    };
+#include <glm/glm.hpp>
+#include "afk/NumericTypes.hpp"
+#include "afk/ecs/Entity.hpp"
 
-    struct MouseButton {
-      int button   = {};
-      bool control = {};
-      bool alt     = {};
-      bool shift   = {};
-    };
-
-    struct Key {
-      int key      = {};
-      int scancode = {};
-      bool control = {};
-      bool alt     = {};
-      bool shift   = {};
-    };
-
-    struct Text {
-      uint32_t codepoint = {};
-    };
-
-    struct MouseScroll {
-      double x = {};
-      double y = {};
-    };
-
-    struct Update {
-      float dt = {};
-    };
-
-    struct Render {};
-
-    // using struct of bool to get around luabind having no enum support
-    struct CollisionType {
-      bool enemy     = {};
-      bool prey      = {};
-      bool deathzone = {};
-    };
-    struct CollisionAction {
-      bool contact_start = {};
-      bool contact_stay = {};
-      bool contact_end = {};
-    };
-
-    struct Collision {
-      CollisionType type;
-      CollisionAction action;
-    };
-
-    // FIXME: Move to keyboard  handler.
-    enum class Action { Forward, Backward, Left, Right };
-
-    enum class Type {
-      MouseDown,
-      MouseUp,
-      MouseMove,
-      KeyDown,
-      KeyUp,
-      KeyRepeat,
-      TextEnter,
-      MouseScroll,
-      Update,
-      Render,
-      Collision
-    };
-
-    using Data =
-        std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Update, Render, Collision>;
-
+namespace afk {
+  namespace event {
     /**
-     * Unwrap variant sugar
-     * \todo put this in bindings instead
+     * Encapsulates an engine event.
      */
-    template<typename T>
-    auto get() -> T {
-      return std::get<T>(this->data);
-    }
+    struct Event {
+      /**
+       * Encapsulates a mouse move event.
+       */
+      struct MouseMove {
+        /** The x position of the cursor. */
+        f64 x = {};
+        /** The y position of the cursor. */
+        f64 y = {};
+      };
 
-    Data data = {};
-    Type type = {};
-  };
+      /**
+       * Encapsulates a mouse button event.
+       */
+      struct MouseButton {
+        /** The mouse button clicked. */
+        i32 button = {};
+        /** Was the control key held? */
+        bool control = {};
+        /** Was the alt key held? */
+        bool alt = {};
+        /** Was the shift key held? */
+        bool shift = {};
+      };
+
+      /**
+       * Encapsulates a key press event.
+       */
+      struct Key {
+        /** The key pressed. */
+        i32 key = {};
+        /** The scancode of the key pressed. */
+        i32 scancode = {};
+        /** Was the control key held? */
+        bool control = {};
+        /** Was the alt key held? */
+        bool alt = {};
+        /** Was the shift key held? */
+        bool shift = {};
+      };
+
+      /**
+       * Encapsulates a text input event.
+       */
+      struct Text {
+        /** The Unicode codepoint of the text entered. */
+        u32 codepoint = {};
+      };
+
+      /**
+       * Encapsulates a mouse scroll event.
+       */
+      struct MouseScroll {
+        /** The x axis of the scroll offset. */
+        f64 x = {};
+        /** The y axis of the scroll offset. */
+        f64 y = {};
+      };
+
+      /**
+       * Encapsulates a collision event.
+       */
+      struct Collision {
+        /** Representation of a single contact in a collision */
+        struct Contact {
+          /** Point of contact on collider 1 in world space */
+          glm::vec3 collider1_point;
+          /** Point of contact on collider 2 in world space */
+          glm::vec3 collider2_point;
+          /** normal of contact from the first to second body relative to the world space */
+          glm::vec3 normal;
+          /** get penetration depth of the collision */
+          f32 penetration_depth;
+        };
+
+        using ContactCollection = std::vector<Contact>;
+
+        /** The first entity in the collision */
+        ecs::Entity entity1;
+        /** The second entity in the collision */
+        ecs::Entity entity2;
+        /** The collection of collision contacts */
+        ContactCollection contacts = {};
+      };
+
+      /**
+       * Denotes an event type.
+       */
+      enum class Type {
+        MouseDown,
+        MouseUp,
+        MouseMove,
+        KeyDown,
+        KeyUp,
+        KeyRepeat,
+        TextEnter,
+        MouseScroll,
+        Collision,
+      };
+
+      /**
+       * Encapsulates all possible event data.
+       */
+      using Data = std::variant<std::monostate, MouseMove, MouseButton, Key, Text, MouseScroll, Collision>;
+
+      /**
+       * Returns the data contained in this event.
+       *
+       * @return The data contained in this event.
+       */
+      template<typename T>
+      auto get() -> T {
+        return std::get<T>(this->data);
+      }
+
+      /** The event data. */
+      Data data = {};
+      /** The event type. */
+      Type type = {};
+    };
+  }
 }
